@@ -1,14 +1,25 @@
-# dependencies
+# Dependencies
 node_modules/
-# env & secrets
+
+# Environment variables
 .env
-*.env
-!.env.example
-# build output
+.env.local
+.env.*.local
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Build and log outputs
 dist/
 build/
-# prisma
-server/prisma/*.db
-# logs & OS
+.vite/
 *.log
-.DS_Store
+npm-debug.log*
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.swp
