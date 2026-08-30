@@ -47,17 +47,23 @@ Lab 2 establishes reusable presentation rules based on the **Zen Green Theme**. 
 - **Destructive Button:** Soft red background `#FEE2E2`, dark red text `#DC2626`, hover state `#FCA5A5`.
 - **Busy / Loading State:** Submit button displays a spinning loader icon, white text "Submitting...", and enters `disabled` state (pointer-events disabled, opacity 0.75).
 
-### 3.3 Status and Priority Badges
+### 3.3 Status and Priority Badges (Color-Independent)
+All badges combine background color with distinct text labels and icon indicators so visual state does not rely on color alone:
 - **Status Badges:**
-  - `NEW`: Pale blue background `#E0F2FE`, dark blue text `#0369A1`.
-  - `IN_PROGRESS`: Pale amber background `#FEF3C7`, dark amber text `#B45309`.
-  - `RESOLVED`: Pale green background `#DCFCE7`, dark green text `#15803D`.
-  - `CLOSED`: Muted gray background `#F3F4F6`, dark gray text `#4B5563`.
+  - `NEW`: Pale blue background `#E0F2FE`, dark blue text `#0369A1`, dot icon `● NEW`.
+  - `IN_PROGRESS`: Pale amber background `#FEF3C7`, dark amber text `#B45309`, spinner/clock icon `⟳ In Progress`.
+  - `RESOLVED`: Pale green background `#DCFCE7`, dark green text `#15803D`, check icon `✓ Resolved`.
+  - `CLOSED`: Muted gray background `#F3F4F6`, dark gray text `#4B5563`, lock icon `🔒 Closed`.
 - **Priority Badges:**
   - `LOW`: Muted gray `#F3F4F6`.
   - `MEDIUM`: Amber `#FEF3C7` / `#B45309`.
   - `HIGH`: Orange `#FFEDD5` / `#C2410C`.
   - `URGENT`: Red `#FEE2E2` / `#B91C1C`.
+
+### 3.4 Accessibility Rules (Focus, Labels, Tooltips)
+- **Focus Rings:** All interactive inputs, selects, buttons, and links display a high-contrast visible focus outline (`2px solid #0B7A46`, 2px offset) when navigated via keyboard (`Tab`).
+- **Icon-Only Controls:** Every icon-only control (e.g., sort arrows, clear search button, action dropdowns) MUST include an explicit `aria-label` attribute and a browser tooltip (`title="Clear search"`).
+- **Form Controls:** Every input control is explicitly bound to its label using `htmlFor` / `id` pairs.
 
 ---
 
@@ -75,7 +81,7 @@ Lab 2 establishes reusable presentation rules based on the **Zen Green Theme**. 
   - My Tickets table enables horizontal scroll or responsive table wrapping.
 - **Mobile ($< 768\text{px}$):**
   - Single-column vertical stack layout.
-  - Inputs and buttons take 100% width with touch targets $\ge 44\text{px}$.
+  - Inputs and buttons take 100% width with touch targets $\ge 44\text{px}$ height.
   - My Tickets transforms from table into a card-based list view showing Ticket Number, Summary, Category, Status badge, and Created Date per card.
 
 ---
@@ -95,12 +101,12 @@ Lab 2 establishes reusable presentation rules based on the **Zen Green Theme**. 
 - **Section 5 (Actions):** Primary "Submit Ticket" button, Secondary "Cancel" button.
 
 ### 5.3 My Tickets Screen
-- **Filter Bar:** Search input (ticket no / summary), Category dropdown, Priority dropdown, Status dropdown, "Clear Filters" button, "Create Ticket" primary button.
+- **Filter Bar:** Search input (ticket no / summary), Category dropdown, Priority dropdown, Status dropdown, Sort dropdown (`createdAt` desc/asc, `ticketNumber` asc/desc), "Clear Filters" button, "Create Ticket" primary button.
 - **List View:**
   - Desktop: Table with columns (Ticket No, Date, Summary, Category, Priority, Status, Owner, Last Updated).
   - Mobile: Card list showing summary, status badge, ticket number, and date.
 - **Pagination Bar:** `Previous`, Page numbers (`1`, `2`, ...), `Next`, Item counter (`Showing 1 to 10 of 42 tickets`).
-- **States:** Loading spinner, Empty list state (no tickets created), No-results state (filters matched 0 tickets).
+- **States:** Loading spinner, Empty list state (0 tickets created), No-results state (filters matched 0 tickets).
 
 ### 5.4 Ticket Detail Screen (Read-Only)
 - **Header:** Back to My Tickets link, Ticket Number, Ticket Date, Status Badge, Priority Badge.
