@@ -314,3 +314,21 @@ All HTTP 4xx and 5xx API responses follow a consistent JSON error format:
   - `403 Forbidden`: Ticket belongs to another requester or attachment is already soft-removed.
   - `404 Not Found`: Attachment ID does not exist.
   - `500 Internal Server Error`: Failed to execute soft removal.
+
+---
+
+### 3.11 `DELETE /api/tickets/:id` (Compensation Rollback)
+- **Description:** Hard-delete a draft ticket and clean up any linked initial attachment files on disk as a compensation rollback if initial attachment upload fails during Step 2 of ticket creation.
+- **Query Parameters:** `requesterId` (required, int).
+- **Success Response (200 OK / 204 No Content):**
+```json
+{
+  "message": "Ticket compensation rollback completed successfully.",
+  "rolledBackTicketId": 101
+}
+```
+- **Error Responses:**
+  - `403 Forbidden`: Ticket belongs to another requester.
+  - `404 Not Found`: Ticket ID does not exist.
+  - `500 Internal Server Error`: Failed to execute compensation cleanup.
+

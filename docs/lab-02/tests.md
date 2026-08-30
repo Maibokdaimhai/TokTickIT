@@ -29,6 +29,7 @@ The testing strategy for Lab 2 follows **Test-Driven Development (TDD)** and mul
 | **API-08** | API | AC-07, AC-08, BR-10 | `POST /api/tickets/:id/attachments/:attId/remove` | Soft-removes attachment with reason; sets `isRemoved = true` | `server/tests/lab-02/attachments.api.test.ts` | Planned |
 | **API-09** | API | AC-07, BR-09 | `GET /api/tickets/:id/attachments/:attId` (Removed) | Returns 403 Forbidden for soft-removed file download attempt | `server/tests/lab-02/attachments.api.test.ts` | Planned |
 | **API-10** | API | AC-16, BR-12 | `GET /api/tickets` (Sorting) | Sorts list by `createdAt` (asc/desc) and `ticketNumber` (asc/desc) | `server/tests/lab-02/my-tickets.api.test.ts` | Planned |
+| **API-11** | API | AC-15, BR-16 | `DELETE /api/tickets/:id` (Rollback) | Deletes draft ticket and files if attachment upload fails during Step 2 | `server/tests/lab-02/create-ticket.api.test.ts` | Planned |
 | **UI-01** | UI | AC-02, BR-03 | Requester Selector Modal | Renders active requester options and testing disclaimer banner | `client/tests/lab-02/RequesterSelector.test.tsx` | Planned |
 | **UI-02** | UI | AC-04, BR-11 | Create Ticket Form Validation | Displays field error messages directly under summary & description | `client/tests/lab-02/CreateTicket.test.tsx` | Planned |
 | **UI-03** | UI | AC-13, FR-06 | Busy Submit State | Disables Submit button and shows spinner during request | `client/tests/lab-02/CreateTicket.test.tsx` | Planned |
@@ -62,7 +63,7 @@ The testing strategy for Lab 2 follows **Test-Driven Development (TDD)** and mul
 | **AC-12** (Inactive Requester Exclusion) | `API-01`, `UI-01` | Inactive requesters excluded from selection dropdown. |
 | **AC-13** (Busy Submit State) | `UI-03` | Submit button disabled with spinner while processing. |
 | **AC-14** (Responsive Viewports) | `E2E-03` | Verified across Desktop ($1200\text{px}$), Tablet ($800\text{px}$), Mobile ($390\text{px}$). |
-| **AC-15** (API Error Handling) | `UI-07`, `API-03` | Network/API failure shows safe error callout banner without app crash. |
+| **AC-15** (API Error & Compensation Rollback) | `UI-07`, `API-03`, `API-11` | Network failure shows safe error callout; Step 2 upload failure triggers compensation rollback (`DELETE /api/tickets/:id`). |
 | **AC-16** (Ticket List Sorting) | `API-10`, `UI-04` | Sorting by creation date and ticket number updates list order. |
 | **AC-17** (Empty Ticket List State) | `UI-08` | Renders dedicated friendly empty state when a requester has 0 tickets. |
 | **AC-18** (UI Accessibility & Focus) | `UI-09` | Renders visible keyboard focus rings, ARIA labels, and accessible tooltips. |

@@ -63,7 +63,10 @@ The IT department needs a user-friendly Requester portal to receive support requ
 - **BR-13 (Inactive User Exclusion):** If a user ID corresponds to an inactive requester (`isActive = false`), ticket creation or ticket list fetching for that ID MUST fail with HTTP 403 Forbidden.
 - **BR-14 (Safe Error Handling):** Backend API errors MUST return standardized JSON error objects without revealing internal system stack traces or sensitive database details.
 - **BR-15 (Transition to Lab 3):** All requester ownership checks MUST use `requesterId` foreign key references so that Lab 3 can seamlessly integrate real authentication tokens.
-- **BR-16 (Atomic Creation & Attachment Compensation Strategy):** When a ticket is created along with initial attachment uploads, the creation process MUST operate as an atomic unit. If saving any file to disk or database insertion of an attachment fails, the backend MUST execute compensation cleanup by rolling back the created ticket record and deleting any saved transient files, returning an HTTP 500 / 400 error. No orphaned ticket without its required attachments will be persisted.
+- **BR-16 (Two-Step Ticket Creation & Compensation Rollback Strategy):** Creating a ticket with initial supporting evidence follows a **two-step REST workflow**:
+  1. **Step 1 (Ticket Creation):** Client sends `POST /api/tickets` with JSON payload (`summary`, `description`, `categoryId`, `relatedSystemId`, `requestedPriority`, `requesterId`). The backend creates the ticket record in status `NEW` and returns `201 Created` with the assigned Ticket Number.
+  2. **Step 2 (Initial Attachment Uploads):** For each user-selected initial attachment, the client sends `POST /api/tickets/:id/attachments` with `multipart/form-data`.
+  3. **Compensation Rollback:** If any attachment upload fails during Step 2 (due to network error, file validation failure, or disk storage write error), the client MUST execute an automated compensation rollback by calling `DELETE /api/tickets/:id?requesterId=X`. The backend will delete the draft ticket record from PostgreSQL and clean up any partially saved files from disk, returning a clear error banner to the user while preserving user-entered form values in the UI. No orphaned ticket without its required attachments will remain in the system.
 
 ---
 
