@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { RequesterUser } from "../types.js";
+import { fetchRequesters } from "../api.js";
 
 interface RequesterContextType {
   selectedRequester: RequesterUser | null;
@@ -27,23 +28,54 @@ export const RequesterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  // Restore saved selection on load
+  // Restore & validate saved selection on startup
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (saved) {
+    let mounted = true;
+
+    const initContext = async () => {
+      try {
+        const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (!saved) {
+          if (mounted) setIsSelectorOpen(true);
+          return;
+        }
+
         const parsed = JSON.parse(saved);
-        if (parsed && parsed.id) {
-          setSelectedRequesterState(parsed);
+        if (!parsed || !parsed.id) {
+          if (mounted) {
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
+            setIsSelectorOpen(true);
+          }
+          return;
+        }
+
+        // Validate saved user against currently active users
+        const activeUsers = await fetchRequesters();
+        if (!mounted) return;
+
+        const activeMatch = activeUsers.find((u) => u.id === parsed.id);
+        if (activeMatch) {
+          setSelectedRequesterState(activeMatch);
         } else {
+          // Saved user is no longer active
+          localStorage.removeItem(LOCAL_STORAGE_KEY);
+          setSelectedRequesterState(null);
           setIsSelectorOpen(true);
         }
-      } else {
-        setIsSelectorOpen(true);
+      } catch {
+        if (mounted) {
+          localStorage.removeItem(LOCAL_STORAGE_KEY);
+          setSelectedRequesterState(null);
+          setIsSelectorOpen(true);
+        }
       }
-    } catch {
-      setIsSelectorOpen(true);
-    }
+    };
+
+    initContext();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (

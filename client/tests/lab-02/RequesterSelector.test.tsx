@@ -137,4 +137,39 @@ describe("RequesterSelectorModal UI Component", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(screen.getByTestId("selected-user").textContent).toBe("Jennifer Anderson");
   });
+
+  it("validates saved requester on startup and automatically opens modal if saved user is inactive", async () => {
+    // Pre-populate localStorage with an inactive/deactivated user #99
+    localStorage.setItem(
+      "toktickit_selected_requester_id",
+      JSON.stringify({ id: 99, name: "Deactivated User", email: "deactivated@example.com", department: "HR" })
+    );
+
+    (api.fetchRequesters as any).mockResolvedValue([
+      { id: 1, name: "Jennifer Anderson", email: "jennifer@example.com", department: "Engineering" },
+      { id: 2, name: "Michael Brown", email: "michael@example.com", department: "IT" },
+    ]);
+
+    // Render without clicking "Open Selector"
+    render(
+      <RequesterProvider>
+        <TestComponent />
+      </RequesterProvider>
+    );
+
+    // Modal should automatically open on startup because saved user #99 is inactive
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(localStorage.getItem("toktickit_selected_requester_id")).toBeNull();
+    });
+
+    // Dropdown auto-selects first available active user (User 1)
+    const select = screen.getByRole("combobox") as HTMLSelectElement;
+    expect(select.value).toBe("1");
+
+    // Submitting sets valid active user
+    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByTestId("selected-user").textContent).toBe("Jennifer Anderson");
+  });
 });
