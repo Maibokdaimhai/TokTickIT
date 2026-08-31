@@ -31,7 +31,13 @@ describe("GET /api/requesters — Development Requester Selector API", () => {
   });
 
   afterAll(async () => {
-    await getPrisma().$disconnect();
+    const prisma = getPrisma();
+    await prisma.requesterUser.deleteMany({
+      where: {
+        email: { in: ["test.active@example.com", "test.inactive@example.com"] },
+      },
+    });
+    await prisma.$disconnect();
   });
 
   it("should return 200 OK with list of active development requesters", async () => {

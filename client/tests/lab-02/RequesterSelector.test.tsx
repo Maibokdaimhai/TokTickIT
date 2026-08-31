@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { RequesterProvider, useRequester } from "../../src/context/RequesterContext.js";
 import { RequesterSelectorModal } from "../../src/components/RequesterSelectorModal.js";
@@ -51,7 +51,7 @@ describe("RequesterSelectorModal UI Component", () => {
     });
   });
 
-  it("renders safe error message when fetchRequesters API fails", async () => {
+  it("renders safe error message when fetchRequesters API fails and disables Continue button", async () => {
     (api.fetchRequesters as any).mockRejectedValue(new Error("Database connection failed"));
 
     render(
@@ -62,6 +62,79 @@ describe("RequesterSelectorModal UI Component", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Database connection failed/i)).toBeInTheDocument();
+      const continueBtn = screen.getByRole("button", { name: /Continue/i });
+      expect(continueBtn).toBeDisabled();
     });
+  });
+
+  it("resets stale draft selection on reopen and disables Continue if API fails during reopen", async () => {
+    // 1. Initial success fetch
+    (api.fetchRequesters as any).mockResolvedValue([
+      { id: 1, name: "Jennifer Anderson", email: "jennifer@example.com", department: "Engineering" },
+      { id: 2, name: "Michael Brown", email: "michael@example.com", department: "IT" },
+    ]);
+
+    render(
+      <RequesterProvider>
+        <TestComponent />
+      </RequesterProvider>
+    );
+
+    // Initial confirmation of User 1
+    await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByTestId("selected-user").textContent).toBe("Jennifer Anderson");
+
+    // 2. Open selector, select User 2, but click Cancel
+    fireEvent.click(screen.getByRole("button", { name: /Open Selector/i }));
+    await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "2" } });
+    fireEvent.click(screen.getByRole("button", { name: /Cancel/i }));
+
+    // 3. Mock API failure and reopen selector
+    (api.fetchRequesters as any).mockRejectedValue(new Error("Network Error"));
+    fireEvent.click(screen.getByRole("button", { name: /Open Selector/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Network Error/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Continue/i })).toBeDisabled();
+    });
+
+    // Context remains User 1
+    expect(screen.getByTestId("selected-user").textContent).toBe("Jennifer Anderson");
+  });
+
+  it("handles saved requester that becomes inactive by selecting first active user", async () => {
+    // Saved user #99 is inactive/missing from active API list
+    localStorage.setItem(
+      "toktickit_selected_requester_id",
+      JSON.stringify({ id: 99, name: "Old Inactive User", email: "old@example.com", department: "HR" })
+    );
+
+    (api.fetchRequesters as any).mockResolvedValue([
+      { id: 1, name: "Jennifer Anderson", email: "jennifer@example.com", department: "Engineering" },
+      { id: 2, name: "Michael Brown", email: "michael@example.com", department: "IT" },
+    ]);
+
+    render(
+      <RequesterProvider>
+        <TestComponent />
+      </RequesterProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Open Selector/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      const select = screen.getByRole("combobox") as HTMLSelectElement;
+      // Should auto-select User 1 (id: 1) instead of retaining stale invalid ID 99
+      expect(select.value).toBe("1");
+    });
+
+    // Clicking Continue updates context to active User 1
+    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByTestId("selected-user").textContent).toBe("Jennifer Anderson");
   });
 });

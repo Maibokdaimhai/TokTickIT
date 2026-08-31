@@ -16,21 +16,27 @@ export const RequesterSelectorModal: React.FC = () => {
     let mounted = true;
     setLoading(true);
     setError(null);
+    setSelectedId(selectedRequester ? selectedRequester.id : "");
 
     fetchRequesters()
       .then((data) => {
         if (!mounted) return;
         setRequesters(data);
-        if (selectedRequester) {
-          setSelectedId(selectedRequester.id);
+        const matching = selectedRequester ? data.find((r) => r.id === selectedRequester.id) : null;
+        if (matching) {
+          setSelectedId(matching.id);
         } else if (data.length > 0) {
           setSelectedId(data[0].id);
+        } else {
+          setSelectedId("");
         }
         setLoading(false);
       })
       .catch((err) => {
         if (!mounted) return;
         setError(err.message || "Failed to load development requesters");
+        setRequesters([]);
+        setSelectedId("");
         setLoading(false);
       });
 
@@ -48,6 +54,13 @@ export const RequesterSelectorModal: React.FC = () => {
       closeSelector();
     }
   };
+
+  const isConfirmDisabled =
+    loading ||
+    !!error ||
+    requesters.length === 0 ||
+    !selectedId ||
+    !requesters.some((r) => r.id === Number(selectedId));
 
   return (
     <div className="modal-backdrop" role="dialog" aria-labelledby="modal-title" aria-modal="true">
@@ -116,7 +129,7 @@ export const RequesterSelectorModal: React.FC = () => {
               type="button"
               className="btn-primary"
               onClick={handleConfirm}
-              disabled={loading || requesters.length === 0 || !selectedId}
+              disabled={isConfirmDisabled}
             >
               Continue
             </button>
