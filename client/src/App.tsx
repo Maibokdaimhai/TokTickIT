@@ -1,62 +1,51 @@
-import { useState } from "react";
-import { checkSystem, Category } from "./api.js";
+import React, { useState } from "react";
+import "./styles/theme.css";
+import { RequesterProvider, useRequester } from "./context/RequesterContext.js";
+import { Header } from "./components/Header.js";
+import { RequesterSelectorModal } from "./components/RequesterSelectorModal.js";
 
-type UiState = "idle" | "loading" | "success" | "error";
-
-export default function App() {
-  const [state, setState] = useState<UiState>("idle");
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string>("");
-
-  async function handleCheck() {
-    // TODO(Issue 4): set loading, call checkSystem(), then either
-    //   - success: store categories and show Online + the list, or
-    //   - error: show Offline + a useful message.
-    setState("loading");
-    setErrorMessage("");
-    try {
-      const res = await checkSystem();
-      setCategories(res.categories);
-      setState("success");
-    } catch (err: any) {
-      setErrorMessage(err.message || "Unable to connect to TokTickIT API");
-      setState("error");
-    }
-  }
+const MainContent: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<"my-tickets" | "create-ticket">("my-tickets");
+  const { selectedRequester } = useRequester();
 
   return (
-    <div className="container py-5" style={{ maxWidth: 640 }}>
-      <h1 className="h3 mb-4">
-        TokTickIT IT Service Desk
-      </h1>
+    <div style={{ minHeight: "100vh", backgroundColor: "var(--color-bg)" }}>
+      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+      <RequesterSelectorModal />
 
-      <button className="btn btn-primary mb-4" onClick={handleCheck} disabled={state === "loading"}>
-        {state === "loading" ? "Loading…" : "Check System"}
-      </button>
-
-    {/* TODO(Issue 4): render loading / success (Online + categories) / error (Offline) states. */}
-      {state === "success" && (
-        <div className="mt-3">
-          <p className="fw-bold">System Status: Online</p>
-          {categories.length > 0 && (
-            <div className="mt-3">
-              <p className="fw-bold">Supported Request Categories:</p>
-              <ul>
-                {categories.map((cat) => (
-                  <li key={cat.id}>{cat.name}</li>
-                ))}
-              </ul>
+      <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px 16px" }}>
+        {activeTab === "my-tickets" && (
+          <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "12px", border: "1px solid var(--color-border)" }}>
+            <h1 style={{ fontSize: "20px", color: "var(--color-primary)", marginBottom: "8px" }}>📋 My Tickets</h1>
+            <p style={{ color: "var(--color-text-secondary)", marginBottom: "16px" }}>
+              Viewing support tickets owned by <strong>{selectedRequester ? selectedRequester.name : "No user selected"}</strong>.
+            </p>
+            <div style={{ padding: "16px", backgroundColor: "var(--color-pale-green)", borderRadius: "8px", border: "1px solid #CBD5E1" }}>
+              ℹ️ Requester Context established! Ticket list component will be implemented in Issue 4.
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
 
-      {state === "error" && (
-        <div className="mt-3">
-          <p className="fw-bold">System Status: Offline</p>
-          <div className="text-danger">{errorMessage}</div>
-        </div>
-      )}
+        {activeTab === "create-ticket" && (
+          <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "12px", border: "1px solid var(--color-border)" }}>
+            <h1 style={{ fontSize: "20px", color: "var(--color-primary)", marginBottom: "8px" }}>➕ Create Support Ticket</h1>
+            <p style={{ color: "var(--color-text-secondary)", marginBottom: "16px" }}>
+              Creating a new ticket as <strong>{selectedRequester ? selectedRequester.name : "No user selected"}</strong>.
+            </p>
+            <div style={{ padding: "16px", backgroundColor: "var(--color-pale-green)", borderRadius: "8px", border: "1px solid #CBD5E1" }}>
+              ℹ️ Requester Context established! Create Ticket form component will be implemented in Issue 3.
+            </div>
+          </div>
+        )}
+      </main>
     </div>
+  );
+};
+
+export default function App() {
+  return (
+    <RequesterProvider>
+      <MainContent />
+    </RequesterProvider>
   );
 }
