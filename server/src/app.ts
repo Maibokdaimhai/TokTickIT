@@ -450,6 +450,108 @@ app.get("/api/tickets", async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/tickets/:id — Single Ticket Details (FR-11, BR-05, BR-15)
+app.get("/api/tickets/:id", async (req: Request, res: Response) => {
+  try {
+    const prisma = getPrisma();
+    const ticketIdParam = req.params.id;
+    const requesterIdParam = req.query.requesterId;
+
+    if (!isValidIntegerId(ticketIdParam)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "Ticket ID parameter must be a valid positive integer" },
+      });
+    }
+
+    if (!isValidIntegerId(requesterIdParam)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "requesterId query parameter must be a valid positive integer" },
+      });
+    }
+
+    const ticketId = Number(ticketIdParam);
+    const requesterId = Number(requesterIdParam);
+
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: ticketId },
+      include: {
+        requester: {
+          select: { id: true, name: true, email: true, department: true },
+        },
+        category: {
+          select: { id: true, name: true },
+        },
+        relatedSystem: {
+          select: { id: true, name: true },
+        },
+        attachments: {
+          orderBy: { createdAt: "asc" },
+          select: {
+            id: true,
+            ticketId: true,
+            fileName: true,
+            originalName: true,
+            mimeType: true,
+            fileSize: true,
+            isRemoved: true,
+            removalReason: true,
+            removedAt: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+
+    if (!ticket) {
+      return res.status(404).json({
+        error: { code: "NOT_FOUND", message: "Ticket not found" },
+      });
+    }
+
+    // BR-05 / AC-03 Requester ownership isolation check
+    if (ticket.requesterId !== requesterId) {
+      return res.status(403).json({
+        error: {
+          code: "FORBIDDEN",
+          message: "Access denied: ticket is owned by another requester",
+        },
+      });
+    }
+
+    return res.status(200).json({
+      id: ticket.id,
+      ticketNumber: ticket.ticketNumber,
+      requesterId: ticket.requesterId,
+      requester: ticket.requester,
+      category: ticket.category,
+      relatedSystem: ticket.relatedSystem,
+      requestedPriority: ticket.requestedPriority,
+      itPriority: ticket.itPriority,
+      status: ticket.status,
+      summary: ticket.summary,
+      description: ticket.description,
+      createdAt: ticket.createdAt.toISOString(),
+      updatedAt: ticket.updatedAt.toISOString(),
+      attachments: ticket.attachments.map((att) => ({
+        id: att.id,
+        ticketId: att.ticketId,
+        fileName: att.fileName,
+        originalName: att.originalName,
+        mimeType: att.mimeType,
+        fileSize: att.fileSize,
+        isRemoved: att.isRemoved,
+        removalReason: att.removalReason,
+        removedAt: att.removedAt ? att.removedAt.toISOString() : null,
+        createdAt: att.createdAt.toISOString(),
+      })),
+    });
+  } catch {
+    return res.status(500).json({
+      error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to retrieve ticket details" },
+    });
+  }
+});
+
 // POST /api/tickets/:id/attachments — Initial Attachment Upload (Step 2 of BR-16 / AC-15)
 app.post("/api/tickets/:id/attachments", (req: Request, res: Response) => {
   upload.single("file")(req, res, async (err: any) => {
@@ -579,6 +681,275 @@ app.post("/api/tickets/:id/attachments", (req: Request, res: Response) => {
       });
     }
   });
+});
+
+// GET /api/tickets/:id/attachments/:attachmentId — Stream/Download Active Attachment (BR-05, BR-09, AC-07)
+app.get("/api/tickets/:id/attachments/:attachmentId", async (req: Request, res: Response) => {
+  try {
+    const prisma = getPrisma();
+    const ticketIdParam = req.params.id;
+    const attachmentIdParam = req.params.attachmentId;
+    const requesterIdParam = req.query.requesterId;
+
+    if (!isValidIntegerId(ticketIdParam)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "Ticket ID parameter must be a valid positive integer" },
+      });
+    }
+
+    if (!isValidIntegerId(attachmentIdParam)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "Attachment ID parameter must be a valid positive integer" },
+      });
+    }
+
+    if (!isValidIntegerId(requesterIdParam)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "requesterId query parameter must be a valid positive integer" },
+      });
+    }
+
+    const ticketId = Number(ticketIdParam);
+    const attachmentId = Number(attachmentIdParam);
+    const requesterId = Number(requesterIdParam);
+
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: ticketId },
+    });
+
+    if (!ticket) {
+      return res.status(404).json({
+        error: { code: "NOT_FOUND", message: "Ticket not found" },
+      });
+    }
+
+    // BR-05 Ownership isolation check
+    if (ticket.requesterId !== requesterId) {
+      return res.status(403).json({
+        error: {
+          code: "FORBIDDEN",
+          message: "Access denied: ticket is owned by another requester",
+        },
+      });
+    }
+
+    const attachment = await prisma.attachment.findFirst({
+      where: { id: attachmentId, ticketId },
+    });
+
+    if (!attachment) {
+      return res.status(404).json({
+        error: { code: "NOT_FOUND", message: "Attachment not found" },
+      });
+    }
+
+    // BR-09 / AC-07 Block download of soft-removed attachments
+    if (attachment.isRemoved) {
+      return res.status(403).json({
+        error: {
+          code: "FORBIDDEN",
+          message: "Cannot download a removed attachment",
+        },
+      });
+    }
+
+    if (!attachment.filePath || !fs.existsSync(attachment.filePath)) {
+      return res.status(404).json({
+        error: { code: "NOT_FOUND", message: "File not found on storage" },
+      });
+    }
+
+    const safeFilename = attachment.originalName.replace(/"/g, '\\"');
+    res.setHeader("Content-Type", attachment.mimeType);
+    res.setHeader("Content-Disposition", `inline; filename="${safeFilename}"`);
+
+    const stream = fs.createReadStream(attachment.filePath);
+    return stream.pipe(res);
+  } catch {
+    return res.status(500).json({
+      error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to stream attachment" },
+    });
+  }
+});
+
+// GET /api/tickets/:id/attachments/:attachmentId/metadata — Attachment JSON Metadata (Active & Removed)
+app.get("/api/tickets/:id/attachments/:attachmentId/metadata", async (req: Request, res: Response) => {
+  try {
+    const prisma = getPrisma();
+    const ticketIdParam = req.params.id;
+    const attachmentIdParam = req.params.attachmentId;
+    const requesterIdParam = req.query.requesterId;
+
+    if (!isValidIntegerId(ticketIdParam)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "Ticket ID parameter must be a valid positive integer" },
+      });
+    }
+
+    if (!isValidIntegerId(attachmentIdParam)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "Attachment ID parameter must be a valid positive integer" },
+      });
+    }
+
+    if (!isValidIntegerId(requesterIdParam)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "requesterId query parameter must be a valid positive integer" },
+      });
+    }
+
+    const ticketId = Number(ticketIdParam);
+    const attachmentId = Number(attachmentIdParam);
+    const requesterId = Number(requesterIdParam);
+
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: ticketId },
+    });
+
+    if (!ticket) {
+      return res.status(404).json({
+        error: { code: "NOT_FOUND", message: "Ticket not found" },
+      });
+    }
+
+    if (ticket.requesterId !== requesterId) {
+      return res.status(403).json({
+        error: {
+          code: "FORBIDDEN",
+          message: "Access denied: ticket is owned by another requester",
+        },
+      });
+    }
+
+    const attachment = await prisma.attachment.findFirst({
+      where: { id: attachmentId, ticketId },
+    });
+
+    if (!attachment) {
+      return res.status(404).json({
+        error: { code: "NOT_FOUND", message: "Attachment not found" },
+      });
+    }
+
+    return res.status(200).json({
+      id: attachment.id,
+      ticketId: attachment.ticketId,
+      originalName: attachment.originalName,
+      mimeType: attachment.mimeType,
+      fileSize: attachment.fileSize,
+      isRemoved: attachment.isRemoved,
+      removalReason: attachment.removalReason,
+      removedAt: attachment.removedAt ? attachment.removedAt.toISOString() : null,
+      createdAt: attachment.createdAt.toISOString(),
+    });
+  } catch {
+    return res.status(500).json({
+      error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to retrieve attachment metadata" },
+    });
+  }
+});
+
+// POST /api/tickets/:id/attachments/:attachmentId/remove — Soft-remove Attachment (BR-09, BR-10, AC-07, AC-08)
+app.post("/api/tickets/:id/attachments/:attachmentId/remove", async (req: Request, res: Response) => {
+  try {
+    const prisma = getPrisma();
+    const ticketIdParam = req.params.id;
+    const attachmentIdParam = req.params.attachmentId;
+    const { requesterId: requesterIdParam, removalReason } = req.body;
+
+    if (!isValidIntegerId(ticketIdParam)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "Ticket ID parameter must be a valid positive integer" },
+      });
+    }
+
+    if (!isValidIntegerId(attachmentIdParam)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "Attachment ID parameter must be a valid positive integer" },
+      });
+    }
+
+    if (!isValidIntegerId(requesterIdParam)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "requesterId must be a valid positive integer" },
+      });
+    }
+
+    const trimmedReason = typeof removalReason === "string" ? removalReason.trim() : "";
+    if (!trimmedReason || trimmedReason.length < 3) {
+      return res.status(400).json({
+        error: {
+          code: "BAD_REQUEST",
+          message: "Removal reason is required and must be at least 3 characters",
+        },
+      });
+    }
+
+    const ticketId = Number(ticketIdParam);
+    const attachmentId = Number(attachmentIdParam);
+    const requesterId = Number(requesterIdParam);
+
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: ticketId },
+    });
+
+    if (!ticket) {
+      return res.status(404).json({
+        error: { code: "NOT_FOUND", message: "Ticket not found" },
+      });
+    }
+
+    // BR-05 Ownership isolation
+    if (ticket.requesterId !== requesterId) {
+      return res.status(403).json({
+        error: {
+          code: "FORBIDDEN",
+          message: "Access denied: ticket is owned by another requester",
+        },
+      });
+    }
+
+    const attachment = await prisma.attachment.findFirst({
+      where: { id: attachmentId, ticketId },
+    });
+
+    if (!attachment) {
+      return res.status(404).json({
+        error: { code: "NOT_FOUND", message: "Attachment not found" },
+      });
+    }
+
+    if (attachment.isRemoved) {
+      return res.status(400).json({
+        error: {
+          code: "BAD_REQUEST",
+          message: "Attachment is already removed",
+        },
+      });
+    }
+
+    const updated = await prisma.attachment.update({
+      where: { id: attachmentId },
+      data: {
+        isRemoved: true,
+        removalReason: trimmedReason,
+        removedAt: new Date(),
+      },
+    });
+
+    return res.status(200).json({
+      id: updated.id,
+      ticketId: updated.ticketId,
+      originalName: updated.originalName,
+      isRemoved: updated.isRemoved,
+      removalReason: updated.removalReason,
+      removedAt: updated.removedAt ? updated.removedAt.toISOString() : null,
+    });
+  } catch {
+    return res.status(500).json({
+      error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to execute attachment removal" },
+    });
+  }
 });
 
 // DELETE /api/tickets/:id — Compensation rollback for failed two-step creation (BR-16)

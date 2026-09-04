@@ -52,6 +52,25 @@ export interface Ticket {
   attachmentCount?: number;
 }
 
+export interface TicketDetail {
+  id: number;
+  ticketNumber: string;
+  requesterId: number;
+  requester: RequesterUser;
+  categoryId: number;
+  category: Category;
+  relatedSystemId: number;
+  relatedSystem: RelatedSystem;
+  summary: string;
+  description: string;
+  requestedPriority: Priority;
+  itPriority?: Priority | null;
+  status: TicketStatus;
+  createdAt: string;
+  updatedAt: string;
+  attachments: Attachment[];
+}
+
 export interface PaginationInfo {
   page: number;
   limit: number;

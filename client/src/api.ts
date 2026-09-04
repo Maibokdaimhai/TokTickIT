@@ -1,4 +1,4 @@
-import { RequesterUser, Category, RelatedSystem, Priority, Ticket, FetchTicketsParams, TicketsResponse } from "./types.js";
+import { RequesterUser, Category, RelatedSystem, Priority, Ticket, FetchTicketsParams, TicketsResponse, Attachment, TicketDetail } from "./types.js";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
@@ -135,6 +135,39 @@ export async function fetchMyTickets(params: FetchTicketsParams): Promise<Ticket
   }
 
   return data;
+}
+
+export async function fetchTicketDetail(ticketId: number, requesterId: number): Promise<TicketDetail> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}?requesterId=${requesterId}`);
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.error?.message || "Failed to fetch ticket details");
+  }
+  return data;
+}
+
+export async function removeAttachment(
+  ticketId: number,
+  attachmentId: number,
+  requesterId: number,
+  removalReason: string
+): Promise<Attachment> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/attachments/${attachmentId}/remove`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ requesterId, removalReason }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.error?.message || "Failed to remove attachment");
+  }
+  return data;
+}
+
+export function getAttachmentDownloadUrl(ticketId: number, attachmentId: number, requesterId: number): string {
+  return `${API_URL}/api/tickets/${ticketId}/attachments/${attachmentId}?requesterId=${requesterId}`;
 }
 
 

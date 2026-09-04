@@ -5,9 +5,10 @@ import { Category, Priority, TicketStatus, Ticket, PaginationInfo } from "../typ
 
 interface MyTicketsPageProps {
   onNavigateToCreate?: () => void;
+  onSelectTicket?: (ticketId: number) => void;
 }
 
-export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate }) => {
+export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate, onSelectTicket }) => {
   const { selectedRequester, openSelector } = useRequester();
 
   // Reference data
@@ -492,9 +493,23 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
                   </thead>
                   <tbody>
                     {tickets.map((t) => (
-                      <tr key={t.id}>
+                      <tr
+                        key={t.id}
+                        data-testid={`ticket-row-${t.id}`}
+                        onClick={() => onSelectTicket?.(t.id)}
+                        style={{ cursor: onSelectTicket ? "pointer" : "default" }}
+                      >
                         <td>
-                          <strong style={{ color: "var(--color-primary)" }}>{t.ticketNumber}</strong>
+                          <strong
+                            style={{
+                              color: "var(--color-primary)",
+                              textDecoration: onSelectTicket ? "underline" : "none",
+                              cursor: onSelectTicket ? "pointer" : "default",
+                            }}
+                            data-testid={`ticket-link-${t.id}`}
+                          >
+                            {t.ticketNumber}
+                          </strong>
                         </td>
                         <td>{formatDate(t.createdAt)}</td>
                         <td>
@@ -525,7 +540,13 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
               {/* Mobile Card View (< 768px) */}
               <div className="tickets-mobile-list">
                 {tickets.map((t) => (
-                  <div key={t.id} className="ticket-card">
+                  <div
+                    key={t.id}
+                    className="ticket-card"
+                    data-testid={`ticket-card-${t.id}`}
+                    onClick={() => onSelectTicket?.(t.id)}
+                    style={{ cursor: onSelectTicket ? "pointer" : "default" }}
+                  >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <strong style={{ color: "var(--color-primary)", fontSize: "14px" }}>
                         {t.ticketNumber}
