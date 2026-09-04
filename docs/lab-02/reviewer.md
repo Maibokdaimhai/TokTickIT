@@ -10,16 +10,16 @@
 
 | PR # | Feature Branch | Summary | Reviewer Verdict |
 | :--- | :--- | :--- | :--- |
-|      | `feature/lab2-spec-and-tests` | Add Sprint 2 engineering specification, tests plan, UI spec, and API spec in `docs/lab-02/`. | Approved |
-|      | `feature/lab2-requester-context` | Expand Prisma schema, seed active/inactive requesters, add `GET /api/requesters`, and build Requester Selector UI. | |
-|      | `feature/lab2-ticket-creation` | Build `POST /api/tickets` with ticket number generator `TKT-YYYY-XXXXXX`, Create Ticket form, and field validation. | |
+| #16  | `feature/lab2-spec-and-tests` | Add Sprint 2 engineering specification, tests plan, UI spec, and API spec in `docs/lab-02/`. | Approved |
+| #17  | `feature/lab2-requester-context` | Expand Prisma schema, seed active/inactive requesters, add `GET /api/requesters`, and build Requester Selector UI. | Approved |
+| #18  | `feature/lab2-ticket-creation` | Build `POST /api/tickets` with ticket number generator `TKT-YYYY-XXXXXX`, Create Ticket form, and field validation. | |
 |      | `feature/lab2-my-tickets` | Implement My Tickets backend query (search, filter, sort, page) and responsive desktop table / mobile cards UI. | |
 |      | `feature/lab2-ticket-detail` | Build read-only Ticket Detail view, attachment upload, active download stream, and soft removal with reason. | |
 
 ---
 
-### PR #: `docs: add Sprint 2 engineering specification and test plan`
-- **PR Link:** 
+### PR #1: `docs: add Sprint 2 engineering specification and test plan`
+- **PR Link:** https://github.com/Maibokdaimhai/TokTickIT/pull/16
 - **Reviewer Comment I Received(1):**
   ```
   Requesting changes before approval. The required six documentation files are present, but several parts of the engineering contract still need correction:
@@ -94,6 +94,149 @@
     ```
     Thank you หลายเด้อ
     ```
+
+### PR #2: `feat: Development Requester Context & Database Seed`
+- **PR Link:** https://github.com/Maibokdaimhai/TokTickIT/pull/17
+- **Reviewer Comment I Received(1):**
+  ```
+  Thanks for the implementation. I verified that the client tests (5/5), server tests (4/4), TypeScript checks, and client build pass. Migration and repeated seeding also work correctly.
+
+  However, manual testing revealed the following issues:
+
+  1. Stale selection after API failure
+    Select another requester, click Cancel, then reopen the selector while the API is unavailable. Continue remains enabled and applies the previously cancelled selection, even though the dropdown is hidden by the error state.
+    Please disable confirmation during errors and reset stale selection state when reopening.
+
+  2. Previously selected requester becomes inactive
+    The saved requester is restored without checking whether they are still active. When reopening the selector, the dropdown can display another requester while retaining the old selected ID, causing Continue to do nothing.
+    Please validate the restored requester and ensure the selected ID matches an available option.
+
+  3. Test data remains after API tests
+    The requester API tests insert active/inactive test users but only disconnect afterward. The active test user remains visible in the application.
+    Please isolate the test database or safely clean up test-owned records.
+
+  Please add regression tests for the first two scenarios, including Cancel, failed reload, and inactive saved selection.
+
+  Requesting changes before approval.
+  ```
+- **How I responded(1):**
+    ```
+    Thank you for the thorough code review and manual testing feedback! I have resolved all three issues and added automated regression tests in commit `340dd05`.
+    ### Summary of Fixes:
+    1. **Stale Selection Reset & Disabled State on API Failure**:
+      - Updated `RequesterSelectorModal.tsx` to reset the draft selection state whenever the modal opens.
+      - On API fetch failure, `selectedId` is cleared and `requesters` is set to an empty array.
+      - Updated the **Continue** button logic to be strictly disabled (`disabled={loading || !!error || requesters.length === 0 || !selectedId}`) so unconfirmed or cancelled selections cannot be submitted during errors.
+    2. **Inactive Saved Requester Handling**:
+      - Added validation against fetched active requesters. If the saved user ID in `localStorage` is no longer active (or missing from `/api/requesters`), the dropdown automatically defaults to the first available active user (`data[0]`) so React state and dropdown options remain synchronized.
+    3. **API Test DB Data Isolation**:
+      - Updated `server/tests/lab-02/requesters.api.test.ts` to include cleanup in the `afterAll` hook (`prisma.requesterUser.deleteMany()`), ensuring test emails (`test.active@example.com` and `test.inactive@example.com`) are removed and do not bleed into the dev UI.
+    4. **Automated Regression Tests**:
+      - Added unit test coverage in `RequesterSelector.test.tsx` verifying:
+        - The **Continue** button is disabled on API error.
+        - Stale draft selection is reset upon reopening after a cancel + failed reload.
+        - Saved inactive requesters automatically fallback to the first active user.
+    ```
+- **Reviewer Comment I Received(2):**
+    ```
+    Thanks for the update. The stale-selection/API-error issue and test-data cleanup are fixed.
+
+    One part of the inactive-requester issue remains: on page reload, RequesterContext still restores the cached requester without validating whether they are active. The new fallback only runs when the selector is manually opened.
+
+    Please validate the saved requester against the active-requester list during startup. If they are no longer active, clear the saved selection and open the selector automatically.
+
+    Please also add a regression test for this startup scenario without manually clicking “Open Selector”.
+    ```
+- **How I responded(2):**
+    ```
+    Thank you for catching that startup edge case! I have updated `RequesterContext` to validate cached requesters on startup and added the requested startup regression test in commit `e1639df`.
+    ### Summary of Follow-up Fixes:
+    1. **Startup Inactive Requester Validation**:
+      - `RequesterProvider` now asynchronously validates any cached `localStorage` requester against `fetchRequesters()` during startup `useEffect`.
+      - If the saved user is inactive or missing from the active list, `localStorage` is cleared, `selectedRequester` is reset to `null`, and `isSelectorOpen` is set to `true` to display the selector modal immediately on load.
+    2. **Startup Regression Test**:
+      - Added `validates saved requester on startup and automatically opens modal if saved user is inactive` in `RequesterSelector.test.tsx`. It pre-populates an inactive cached user and verifies that the modal automatically opens on startup and clears the invalid cached state without manual user interaction.
+    All 8 client tests and 4 server tests pass cleanly with 0 TypeScript errors. Ready for re-review!
+    ```
+- **Reviewer Comment I Received(3):**
+    ```
+    Approved.
+    Verified the latest update. Cached requesters are now validated on startup, and inactive or missing requesters are cleared with the selector opening automatically. The startup regression test covers this without manual interaction.
+    All previously requested fixes are addressed. Client tests (8/8), server tests (4/4), TypeScript checks, and the client build pass. Ready to merge.
+    ```
+
+---
+
+### PR #3: `feat: Create Ticket API, Form, and Validation - #18`
+- **PR Link:** https://github.com/Maibokdaimhai/TokTickIT/pull/18
+- **Reviewer Comment I Received(1):**
+  ```
+  Thanks for the implementation. The client tests and TypeScript checks pass, but I found a few issues that should be addressed before approval:
+  1. Initial attachments are not uploaded. Files can be selected and displayed in the form, but handleSubmit only creates the ticket. The selected files are never sent to an attachment endpoint, and compensation rollback is never triggered if an upload fails. This does not yet satisfy the documented BR-16/AC-15 workflow.
+  2. Ticket-number generation is not concurrency-safe. Two simultaneous requests can generate the same next ticket number, causing one request to fail because ticketNumber is unique.
+  3. Numeric IDs should be validated as integers. Values such as categoryId: 1.5 currently pass the initial validation and may result in a 500 response instead of 400.
+  Please add regression tests for attachment upload/rollback, parallel ticket creation, and fractional IDs.
+  Requesting changes before approval.
+  ```
+- **How I responded(1):**
+  ```
+  Thank you for the detailed review and for identifying these edge cases! I have addressed all points, added security protections against XSS and SQL injection, and implemented the requested regression tests:
+
+  1. **Initial Attachment Upload & Compensation Rollback (BR-16 / AC-15):**
+    - Implemented the full two-step creation flow in `CreateTicketForm.tsx`: Step 1 creates the draft ticket (`POST /api/tickets`), and Step 2 sequentially uploads selected files (`POST /api/tickets/:id/attachments`).
+    - Implemented `POST /api/tickets/:id/attachments` with MIME validation (`image/jpeg`, `image/png`, `image/webp`, `application/pdf`), 5 MB file size limit, max 5 active attachments limit, and disk storage under `server/uploads/`.
+    - If any attachment upload fails, the client immediately executes automated compensation rollback (`DELETE /api/tickets/:id?requesterId=X`). The backend purges the draft ticket and unlinks any written files on disk, while preserving user-entered form values in the UI with a descriptive error callout.
+
+  2. **Concurrency-Safe Ticket Number Generation:**
+    - Wrapped ticket creation in a transaction using PostgreSQL advisory transaction locking (`SELECT pg_advisory_xact_lock(hashtext('ticket_number_generation'))`), serializing sequence allocation across parallel requests.
+    - Added an optimistic retry loop (up to 5 attempts) catching `P2002` unique constraint violations on `ticketNumber` with jittered backoff.
+    - Added regression test `safely handles parallel ticket creation requests without duplicate ticketNumber collisions` executing 5 concurrent requests via `Promise.all` and verifying unique sequential numbers without collisions.
+
+  3. **Strict Integer Validation for Numeric IDs:**
+    - Implemented `isValidIntegerId()` helper enforcing `Number.isInteger() && val > 0` for `categoryId`, `relatedSystemId`, `requesterId`, and route parameters. Fractional inputs like `categoryId: 1.5` now return HTTP 400 Bad Request with field validation details instead of crashing with 500.
+    - Added regression test `rejects fractional numeric IDs (e.g. categoryId: 1.5) with 400 Bad Request instead of 500`.
+
+  4. **Security & Injection Hardening (XSS and SQL Injection):**
+    - Database queries strictly use Prisma's parameterized queries and integer validation bounds, preventing SQL injection.
+    - XSS is prevented by relying on React's automatic string interpolation, sanitizing upload filenames to prevent directory traversal, and setting standard HTTP security headers (`X-Content-Type-Options: nosniff`, `X-XSS-Protection: 1; mode=block`, `X-Frame-Options: DENY`).
+
+  5. **Automated Regression Tests & Verification:**
+    - Added client unit tests in `CreateTicket.test.tsx` verifying sequential attachment uploads and compensation rollback on upload failure.
+    - Added server tests in `create-ticket.api.test.ts` covering parallel creation, fractional IDs, attachment upload & file cleanup on rollback.
+    - Client tests (14/14), server tests (14/14), TypeScript typechecks, and client production build all pass cleanly.
+  ```
+- **Reviewer Comment I Received(2):**
+  ```
+  Thanks for the update. The attachment upload flow, concurrent ticket creation, and fractional-ID validation are addressed. Client tests (14/14), server tests (14/14), TypeScript checks, and the client build pass.
+  One issue remains: when both attachment upload and compensation rollback fail, the rollback error is silently ignored, but the UI still says “The draft ticket was rolled back.” The ticket may still exist, so retrying submission could create duplicates.
+  Please distinguish successful rollback from failed cleanup, retain the draft ticket ID for recovery, and add a regression test where both upload and rollback fail.
+  Requesting changes for this remaining issue.
+  ```
+- **How I responded(2):**
+  ```
+  Thank you for catching this dual-failure cleanup edge case! I have addressed the issue by distinguishing failed cleanups, retaining draft ticket recovery state, and adding the requested regression test:
+
+  1. **Distinguish Successful Rollback vs. Failed Cleanup:**
+    - In `CreateTicketForm.tsx`, the compensation rollback `catch` block now captures `rollbackErr` rather than silently ignoring it.
+    - If rollback succeeds: The UI displays `Attachment upload failed: <detail>. The draft ticket was rolled back.`
+    - If rollback fails: The UI explicitly states `Attachment upload failed: <detail>. Compensation rollback also failed: <detail>. Draft ticket #<id> (<ticketNumber>) may still exist. Retrying submission directly could create duplicates; please retain this draft ticket ID for recovery.` It no longer falsely claims the draft ticket was rolled back.
+
+  2. **Retain Draft Ticket ID for Recovery:**
+    - Added `retainedDraftTicket` state (`{ id, ticketNumber }`) to the form.
+    - When cleanup fails, a dedicated recovery banner (`data-testid="retained-draft-recovery"`) is rendered prominently above the form, displaying the retained Draft Ticket ID and Ticket Number for administrative or manual recovery, while warning against blind resubmission.
+    - User-entered form values (`summary`, `description`, `selectedFiles`) remain fully preserved.
+
+  3. **Automated Regression Test:**
+    - Added unit test in `CreateTicket.test.tsx`: `BR-16 / AC-15: distinguishes failed cleanup when both upload and rollback fail, retaining draft ticket ID`.
+    - Verifies that when both `uploadAttachment` and `deleteTicketRollback` reject:
+      - The UI does NOT say "The draft ticket was rolled back."
+      - The failed cleanup error and rollback error message are shown.
+      - The retained draft ticket ID and ticket number are rendered in the recovery banner.
+      - Form fields remain preserved.
+
+  All 15 client tests, 14 server tests, TypeScript checks (`tsc --noEmit`), and client Vite production build pass cleanly. Ready for re-review!
+  ```
+
 ---
 
 ## Pull Requests I Reviewed for My Partner
@@ -127,4 +270,61 @@
 
     I appreciate you catching that detail! Everything is clear now, and this PR is ready to be merged into `lab2-staging`.
     ```
+
+### PR: `feat(db): setup lab 2 prisma schema and idempotent seed data (#2)`
+- **Link PR:** https://github.com/R1NNE0/toktickit/pull/20
+- **My comment:** 
+    ```
+    ## Peer Review Checklist & Verification
+
+    I have reviewed the database schema migrations and idempotent seed scripts for **Lab 2 (Issue #2)**.
+
+    ### Verification Results
+    - [x] **Prisma Models & Enums:** `RequesterUser`, `Category`, `RelatedSystem`, `Ticket`, and `Attachment` strictly conform to `docs/lab-02/specification.md` Section 7. Enums `Priority` and `TicketStatus` are correctly declared.
+    - [x] **Performance Query Indexes:** Composite indexes `(requesterId, createdAt DESC)` and `(requesterId, currentStatus)` are defined on `Ticket` to ensure fast requester-scoped filtering.
+    - [x] **Soft Removal Support:** `Attachment` model contains `isRemoved`, `removedAt`, and `removalReason` fields with `onDelete: Cascade`.
+    - [x] **Migration SQL:** Migration script `20260830193542_init_lab2_schema` generates schema DDL cleanly.
+    - [x] **Idempotent Seed Script (`server/prisma/seed.ts`):** 
+      - Seeds 4 Categories and 7 Related Systems using `upsert`.
+      - Seeds 4 Active Requesters + 1 Inactive Requester (`isActive: false`).
+      - Seeds 5 realistic sample Tickets across various statuses and priorities.
+      - Seeds 2 sample attachments (1 active PDF, 1 soft-removed PNG with removal reason).
+      - Can be executed multiple consecutive times without duplicate key errors.
+
+    ### Verdict
+    **Approved!** The database schema and seed script meet all technical specifications and idempotency requirements. Ready to merge into `lab2-staging`.
+    ```
+- **Partner's response:**
+    ```
+    Thank you for the thorough review and verification! 
+
+    I appreciate you checking the Prisma models, composite indexes, soft-removal fields, and verifying the seed script's idempotency. 
+
+    Everything is in order and this PR is ready to be merged into `lab2-staging`.
+    ```
+
+### PR: `feat(auth): implement development requester context and persona selection screen (#3)`
+- **Link PR:** https://github.com/R1NNE0/toktickit/pull/21
+- **My comment:** 
+    ```
+    ## Peer Review Checklist & Verification
+    I have reviewed the Development Requester context, persona switcher UI, and backend authentication middleware.
+
+    ### Verification Results
+    - [x] **Active Requesters API (`GET /api/requesters/active`):** Returns only active requesters (`isActive: true`) ordered alphabetically by name (`orderBy: { name: 'asc' }`).
+    - [x] **Authentication Middleware (`requireRequester`):** Enforces header presence, checks numeric format, and returns `HTTP 403 Forbidden` if the requester is non-existent or inactive.
+    - [x] **State & Persistence (`RequesterContext`):** `localStorage` synchronizes `toktickit_selected_requester_id` cleanly. `authFetch()` automatically injects the `x-requester-id` header into outgoing API calls.
+    - [x] **Zen Green UI Implementation:** `Header` displays active avatar initials with "Switch" CTA. `RequesterSelector` includes the mandatory Lab 3 disclaimer callout banner, spinner loading state, and retry action.
+    - [x] **Automated Tests:** Verified locally — all 9 server API/middleware tests and all 11 client UI component tests pass with 100% assertions green.
+
+    ### Verdict
+    **Approved!** Excellent implementation of the simulated identity context, middleware validation, and Zen Green UI layout. Ready to merge into `lab2-staging`.
+    ```
+- **Partner's response:**
+    ```
+    Thanks for the thorough review and verification!
+    I appreciate you validating both the backend identity boundary (`requireRequester` middleware, sorted active requesters) and the frontend `RequesterContext` state persistence via `localStorage`.
+    The branch is clean and ready for you to merge into `lab2-staging`. Once merged, I will update my local records and the project board before proceeding to Issue #4!
+    ```
+
 
