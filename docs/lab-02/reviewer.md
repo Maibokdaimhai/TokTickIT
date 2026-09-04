@@ -276,6 +276,49 @@
 
   All 23 client tests (4 test suites), 20 server tests (5 test suites), TypeScript checks (`tsc --noEmit`), and Vite production build pass cleanly with 0 errors. Ready for re-review!
   ```
+- **Reviewer Comment I Received(2):**
+  ```
+  Approved.
+  Verified the latest update. Stale responses are now discarded, and pagination resets to page 1 when switching requesters. Regression tests cover both scenarios and pass.
+  Client tests (23/23), server tests (20/20), TypeScript checks, and the client build pass.
+  All requested review changes are addressed. Ready to merge.
+  ```
+- **How I responded(2):**
+  ```
+  ( ^^)b
+  ```
+---
+
+### PR #5: `feat: Ticket Detail Screen & Soft Attachment Lifecycle`
+- **PR Link:** https://github.com/Maibokdaimhai/TokTickIT/pull/20
+- **Reviewer Comment I Received(1):**
+  ```
+  Thanks for the implementation. Client tests (29/29), server tests (34/34), TypeScript checks, and the client build pass.
+  One issue remains: an attachment uploaded with a UTF-8 filename such as หลักฐาน.pdf is saved successfully with HTTP 201, but downloading it returns HTTP 500. The download endpoint inserts the Unicode filename directly into the Content-Disposition header.
+  Please use a Unicode-compatible header formatter, or provide an ASCII fallback with an encoded filename* parameter. Add a regression test confirming that a Thai-named file uploads and downloads successfully.
+  Requesting changes before approval.
+  ```
+- **How I responded(1):**
+  ```
+  I have addressed the Unicode filename download issue and added the requested automated regression test:
+
+  1. Unicode-Compatible Content-Disposition Header (RFC 6266 / RFC 5987):
+     - Implemented formatContentDisposition helper in server/src/app.ts:
+       * Generates an ASCII fallback for the standard filename="..." parameter by replacing non-ASCII characters with safe underscores.
+       * Generates an RFC 5987 encoded filename*=UTF-8''<percent-encoded> parameter so modern browsers and HTTP clients restore the original UTF-8/Thai filename.
+       * Prevents Node.js HTTP header parser from throwing ERR_INVALID_CHAR on non-ISO-8859-1 codepoints.
+
+  2. UTF-8 Filename Decoding on Multipart Upload:
+     - Implemented decodeFilename in server/src/app.ts to decode multipart file originalname values that Busboy/Multer parses as Latin-1, ensuring original Thai filenames (e.g. หลักฐาน.pdf) are preserved accurately in the database and sanitized on disk.
+
+  3. Automated Regression Test:
+     - In server/tests/lab-02/attachments.api.test.ts:
+       * Added "streams active attachment with UTF-8 / Thai filename using RFC 6266 and RFC 5987 Content-Disposition without 500 errors".
+       * Uploads an attachment with Thai filename หลักฐาน.pdf (verifying HTTP 201 and originalName preserved).
+       * Downloads the attachment via GET /api/tickets/:id/attachments/:attachmentId (verifying HTTP 200, Content-Type, Content-Disposition header containing inline and encoded filename*=UTF-8''...).
+
+  All 35 server tests (7 test suites), 29 client tests (5 test suites), TypeScript checks (tsc), and Vite production build pass cleanly.
+  ```
 
 ---
 
