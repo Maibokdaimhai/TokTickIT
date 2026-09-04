@@ -205,6 +205,37 @@
     - Added server tests in `create-ticket.api.test.ts` covering parallel creation, fractional IDs, attachment upload & file cleanup on rollback.
     - Client tests (14/14), server tests (14/14), TypeScript typechecks, and client production build all pass cleanly.
   ```
+- **Reviewer Comment I Received(2):**
+  ```
+  Thanks for the update. The attachment upload flow, concurrent ticket creation, and fractional-ID validation are addressed. Client tests (14/14), server tests (14/14), TypeScript checks, and the client build pass.
+  One issue remains: when both attachment upload and compensation rollback fail, the rollback error is silently ignored, but the UI still says “The draft ticket was rolled back.” The ticket may still exist, so retrying submission could create duplicates.
+  Please distinguish successful rollback from failed cleanup, retain the draft ticket ID for recovery, and add a regression test where both upload and rollback fail.
+  Requesting changes for this remaining issue.
+  ```
+- **How I responded(2):**
+  ```
+  Thank you for catching this dual-failure cleanup edge case! I have addressed the issue by distinguishing failed cleanups, retaining draft ticket recovery state, and adding the requested regression test:
+
+  1. **Distinguish Successful Rollback vs. Failed Cleanup:**
+    - In `CreateTicketForm.tsx`, the compensation rollback `catch` block now captures `rollbackErr` rather than silently ignoring it.
+    - If rollback succeeds: The UI displays `Attachment upload failed: <detail>. The draft ticket was rolled back.`
+    - If rollback fails: The UI explicitly states `Attachment upload failed: <detail>. Compensation rollback also failed: <detail>. Draft ticket #<id> (<ticketNumber>) may still exist. Retrying submission directly could create duplicates; please retain this draft ticket ID for recovery.` It no longer falsely claims the draft ticket was rolled back.
+
+  2. **Retain Draft Ticket ID for Recovery:**
+    - Added `retainedDraftTicket` state (`{ id, ticketNumber }`) to the form.
+    - When cleanup fails, a dedicated recovery banner (`data-testid="retained-draft-recovery"`) is rendered prominently above the form, displaying the retained Draft Ticket ID and Ticket Number for administrative or manual recovery, while warning against blind resubmission.
+    - User-entered form values (`summary`, `description`, `selectedFiles`) remain fully preserved.
+
+  3. **Automated Regression Test:**
+    - Added unit test in `CreateTicket.test.tsx`: `BR-16 / AC-15: distinguishes failed cleanup when both upload and rollback fail, retaining draft ticket ID`.
+    - Verifies that when both `uploadAttachment` and `deleteTicketRollback` reject:
+      - The UI does NOT say "The draft ticket was rolled back."
+      - The failed cleanup error and rollback error message are shown.
+      - The retained draft ticket ID and ticket number are rendered in the recovery banner.
+      - Form fields remain preserved.
+
+  All 15 client tests, 14 server tests, TypeScript checks (`tsc --noEmit`), and client Vite production build pass cleanly. Ready for re-review!
+  ```
 
 ---
 

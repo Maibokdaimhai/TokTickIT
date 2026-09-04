@@ -30,6 +30,7 @@ export const CreateTicketForm: React.FC<CreateTicketFormProps> = ({ onTicketCrea
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [createdTicket, setCreatedTicket] = useState<Ticket | null>(null);
+  const [retainedDraftTicket, setRetainedDraftTicket] = useState<{ id: number; ticketNumber: string } | null>(null);
 
   // Fetch reference data (Categories & Related Systems)
   useEffect(() => {
@@ -162,19 +163,26 @@ export const CreateTicketForm: React.FC<CreateTicketFormProps> = ({ onTicketCrea
             await uploadAttachment(ticket.id, file, selectedRequester.id);
           }
         } catch (uploadErr: any) {
+          const uploadDetail = uploadErr?.message || "Failed to upload one or more attachments.";
+
           // Compensation Rollback: delete draft ticket and remove uploaded files
           try {
             await deleteTicketRollback(ticket.id, selectedRequester.id);
-          } catch {
-            // Rollback error fallback
+            setRetainedDraftTicket(null);
+            setApiError(`Attachment upload failed: ${uploadDetail}. The draft ticket was rolled back.`);
+          } catch (rollbackErr: any) {
+            const rollbackDetail = rollbackErr?.message || "Automatic cleanup failed.";
+            setRetainedDraftTicket({ id: ticket.id, ticketNumber: ticket.ticketNumber });
+            setApiError(
+              `Attachment upload failed: ${uploadDetail}. Compensation rollback also failed: ${rollbackDetail}. Draft ticket #${ticket.id} (${ticket.ticketNumber}) may still exist. Retrying submission directly could create duplicates; please retain this draft ticket ID for recovery.`
+            );
           }
-          const errorDetail = uploadErr?.message || "Failed to upload one or more attachments.";
-          setApiError(`Attachment upload failed: ${errorDetail}. The draft ticket was rolled back.`);
           setIsSubmitting(false);
           return;
         }
       }
 
+      setRetainedDraftTicket(null);
       setCreatedTicket(ticket);
       setIsSubmitting(false);
 
@@ -194,6 +202,7 @@ export const CreateTicketForm: React.FC<CreateTicketFormProps> = ({ onTicketCrea
     setFieldErrors({});
     setApiError(null);
     setCreatedTicket(null);
+    setRetainedDraftTicket(null);
     if (categories.length > 0) setCategoryId(categories[0].id);
     if (relatedSystems.length > 0) setRelatedSystemId(relatedSystems[0].id);
     setRequestedPriority("MEDIUM");
@@ -229,6 +238,43 @@ export const CreateTicketForm: React.FC<CreateTicketFormProps> = ({ onTicketCrea
       {apiError && (
         <div className="form-error-msg" style={{ padding: "12px 16px", backgroundColor: "#FEE2E2", border: "1px solid #FCA5A5", borderRadius: "8px", marginBottom: "20px", color: "#991B1B" }}>
           ⚠️ <strong>Submission Error:</strong> {apiError}
+        </div>
+      )}
+
+      {/* Retained Draft Recovery Callout when cleanup fails */}
+      {retainedDraftTicket && (
+        <div
+          data-testid="retained-draft-recovery"
+          style={{
+            padding: "14px 16px",
+            backgroundColor: "#FEF2F2",
+            border: "2px solid #EF4444",
+            borderRadius: "8px",
+            marginBottom: "20px",
+            color: "#991B1B",
+          }}
+        >
+          <div style={{ fontSize: "15px", fontWeight: "bold", marginBottom: "4px" }}>
+            🚨 Cleanup Failed: Draft Ticket Retained for Recovery
+          </div>
+          <p style={{ margin: "0 0 8px 0", fontSize: "13px", lineHeight: "1.4" }}>
+            Attachment upload and automatic rollback cleanup both failed.
+            Draft ticket <strong>#{retainedDraftTicket.id}</strong> (<strong>{retainedDraftTicket.ticketNumber}</strong>) may still exist.
+            Retrying submission directly may cause duplicate tickets. Please retain this draft ticket ID for recovery or support.
+          </p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: "13px" }}>
+              Retained Draft Ticket ID: <strong>#{retainedDraftTicket.id}</strong> ({retainedDraftTicket.ticketNumber})
+            </span>
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ fontSize: "12px", padding: "4px 8px" }}
+              onClick={() => setRetainedDraftTicket(null)}
+            >
+              Dismiss Warning
+            </button>
+          </div>
         </div>
       )}
 

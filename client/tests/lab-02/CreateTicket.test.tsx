@@ -226,4 +226,61 @@ describe("CreateTicketForm Component (Lab 2)", () => {
       expect(screen.queryByText(/Ticket Created Successfully!/i)).toBeNull();
     });
   });
+
+  it("BR-16 / AC-15: distinguishes failed cleanup when both upload and rollback fail, retaining draft ticket ID", async () => {
+    (api.createTicket as any).mockResolvedValue({
+      id: 404,
+      ticketNumber: "TKT-2026-000404",
+      status: "NEW",
+    });
+    (api.uploadAttachment as any).mockRejectedValue(new Error("File storage write failure"));
+    (api.deleteTicketRollback as any).mockRejectedValue(new Error("Database connection lost during rollback"));
+
+    const { container } = render(
+      <RequesterProvider>
+        <CreateTicketForm />
+      </RequesterProvider>
+    );
+
+    await waitFor(() => expect(screen.getByText("Account and Access")).toBeInTheDocument());
+
+    const summaryInput = screen.getByLabelText(/Summary/i) as HTMLInputElement;
+    const descInput = screen.getByLabelText(/Detailed Description/i) as HTMLTextAreaElement;
+
+    fireEvent.change(summaryInput, { target: { value: "Dual Failure Summary Test" } });
+    fireEvent.change(descInput, { target: { value: "Dual failure description content for testing cleanup failure." } });
+
+    // Select file
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const testFile = new File(["dummy content"], "error-report.pdf", { type: "application/pdf" });
+    fireEvent.change(fileInput, { target: { files: [testFile] } });
+
+    // Submit form
+    fireEvent.click(screen.getByRole("button", { name: /Submit Ticket/i }));
+
+    await waitFor(() => {
+      expect(api.createTicket).toHaveBeenCalledTimes(1);
+      expect(api.uploadAttachment).toHaveBeenCalledWith(404, testFile, 1);
+      expect(api.deleteTicketRollback).toHaveBeenCalledWith(404, 1);
+
+      // Must NOT falsely state that ticket was rolled back
+      expect(screen.queryByText(/The draft ticket was rolled back\./i)).toBeNull();
+
+      // Must distinguish failed cleanup and mention rollback failure
+      expect(screen.getByText(/Compensation rollback also failed: Database connection lost during rollback/i)).toBeInTheDocument();
+
+      // Must retain and display the draft ticket ID and ticket number for recovery
+      expect(screen.getByTestId("retained-draft-recovery")).toBeInTheDocument();
+      expect(screen.getByText(/Retained Draft Ticket ID:/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/#404/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/TKT-2026-000404/i).length).toBeGreaterThan(0);
+
+      // Form fields must remain preserved
+      expect(summaryInput.value).toBe("Dual Failure Summary Test");
+      expect(descInput.value).toBe("Dual failure description content for testing cleanup failure.");
+
+      // Success banner must NOT be rendered
+      expect(screen.queryByText(/Ticket Created Successfully!/i)).toBeNull();
+    });
+  });
 });
