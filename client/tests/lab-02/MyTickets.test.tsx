@@ -311,4 +311,198 @@ describe("MyTicketsPage Component (Lab 2)", () => {
       );
     });
   });
+
+  it("REGRESSION: ignores stale out-of-order responses when switching requesters or filters", async () => {
+    const requesterB = {
+      id: 2,
+      name: "Marcus Vance",
+      email: "marcus.vance@example.com",
+      department: "Marketing",
+      isActive: true,
+    };
+
+    (api.fetchRequesters as any).mockResolvedValue([mockRequester, requesterB]);
+
+    let resolveRequesterA: any;
+    const delayedPromiseA = new Promise((resolve) => {
+      resolveRequesterA = resolve;
+    });
+
+    const ticketsB = [
+      {
+        id: 201,
+        ticketNumber: "TKT-2026-B00001",
+        summary: "Marcus VPN issue",
+        category: { id: 2, name: "Software" },
+        relatedSystem: { id: 3, name: "VPN" },
+        requestedPriority: "MEDIUM" as const,
+        status: "NEW" as const,
+        createdAt: "2026-09-02T10:00:00.000Z",
+        updatedAt: "2026-09-02T10:00:00.000Z",
+        attachmentCount: 0,
+      },
+    ];
+
+    (api.fetchMyTickets as any).mockImplementation((params: any) => {
+      if (params.requesterId === 1) {
+        return delayedPromiseA;
+      }
+      return Promise.resolve({
+        tickets: ticketsB,
+        pagination: { page: 1, limit: 10, totalItems: 1, totalPages: 1 },
+      });
+    });
+
+    const ContextSwitchWrapper: React.FC = () => {
+      const { setSelectedRequester } = useRequester();
+      return (
+        <div>
+          <button
+            onClick={() => setSelectedRequester(requesterB)}
+            data-testid="switch-to-marcus-btn"
+          >
+            Switch to Marcus
+          </button>
+          <MyTicketsPage />
+        </div>
+      );
+    };
+
+    render(
+      <RequesterProvider>
+        <ContextSwitchWrapper />
+      </RequesterProvider>
+    );
+
+    // Initial render triggered fetch for Requester 1 (which is currently pending)
+    await waitFor(() => {
+      expect(api.fetchMyTickets).toHaveBeenCalledWith(
+        expect.objectContaining({ requesterId: 1 })
+      );
+    });
+
+    // Switch to Requester 2 while Requester 1 is still pending
+    fireEvent.click(screen.getByTestId("switch-to-marcus-btn"));
+
+    // Requester 2 resolves and shows Marcus's ticket
+    await waitFor(() => {
+      expect(screen.getAllByText("TKT-2026-B00001")[0]).toBeInTheDocument();
+      expect(screen.getAllByText("Marcus VPN issue")[0]).toBeInTheDocument();
+    });
+
+    // Now Requester 1's delayed response finally resolves with Jennifer's tickets
+    resolveRequesterA({
+      tickets: sampleTickets,
+      pagination: { page: 1, limit: 10, totalItems: 2, totalPages: 1 },
+    });
+
+    // Wait a tick to allow promise to process
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Stale response must NOT overwrite Requester 2's data
+    expect(screen.getAllByText("TKT-2026-B00001")[0]).toBeInTheDocument();
+    expect(screen.queryByText("Laptop keyboard not responding")).not.toBeInTheDocument();
+  });
+
+  it("REGRESSION: resets page to 1 when switching requesters from a later page", async () => {
+    const requesterB = {
+      id: 2,
+      name: "Marcus Vance",
+      email: "marcus.vance@example.com",
+      department: "Marketing",
+      isActive: true,
+    };
+
+    (api.fetchRequesters as any).mockResolvedValue([mockRequester, requesterB]);
+
+    const ticketsPage1 = [sampleTickets[0]];
+    const ticketsPage2 = [sampleTickets[1]];
+    const ticketsB = [
+      {
+        id: 201,
+        ticketNumber: "TKT-2026-B00001",
+        summary: "Marcus ticket on page 1",
+        category: { id: 2, name: "Software" },
+        relatedSystem: { id: 3, name: "VPN" },
+        requestedPriority: "MEDIUM" as const,
+        status: "NEW" as const,
+        createdAt: "2026-09-02T10:00:00.000Z",
+        updatedAt: "2026-09-02T10:00:00.000Z",
+        attachmentCount: 0,
+      },
+    ];
+
+    (api.fetchMyTickets as any).mockImplementation((params: any) => {
+      if (params.requesterId === 1) {
+        if (params.page === 1) {
+          return Promise.resolve({
+            tickets: ticketsPage1,
+            pagination: { page: 1, limit: 1, totalItems: 2, totalPages: 2 },
+          });
+        }
+        return Promise.resolve({
+          tickets: ticketsPage2,
+          pagination: { page: 2, limit: 1, totalItems: 2, totalPages: 2 },
+        });
+      }
+      // Requester 2 only has 1 page
+      if (params.page === 1) {
+        return Promise.resolve({
+          tickets: ticketsB,
+          pagination: { page: 1, limit: 1, totalItems: 1, totalPages: 1 },
+        });
+      }
+      // Page 2 for Requester 2 would be empty!
+      return Promise.resolve({
+        tickets: [],
+        pagination: { page: 2, limit: 1, totalItems: 1, totalPages: 1 },
+      });
+    });
+
+    const ContextSwitchWrapper: React.FC = () => {
+      const { setSelectedRequester } = useRequester();
+      return (
+        <div>
+          <button
+            onClick={() => setSelectedRequester(requesterB)}
+            data-testid="switch-to-marcus-btn"
+          >
+            Switch to Marcus
+          </button>
+          <MyTicketsPage />
+        </div>
+      );
+    };
+
+    render(
+      <RequesterProvider>
+        <ContextSwitchWrapper />
+      </RequesterProvider>
+    );
+
+    // Initial load: Requester 1, page 1
+    await waitFor(() => expect(screen.getAllByText("TKT-2026-000101")[0]).toBeInTheDocument());
+
+    // Navigate to page 2 for Requester 1
+    const nextBtn = screen.getByRole("button", { name: /Next page/i });
+    fireEvent.click(nextBtn);
+
+    await waitFor(() => expect(screen.getAllByText("TKT-2026-000102")[0]).toBeInTheDocument());
+
+    // Now user is on page 2. Switch identity to Requester 2.
+    fireEvent.click(screen.getByTestId("switch-to-marcus-btn"));
+
+    // Verify Requester 2 requests page 1 (NOT page 2) and renders Marcus's ticket
+    await waitFor(() => {
+      expect(api.fetchMyTickets).toHaveBeenCalledWith(
+        expect.objectContaining({ requesterId: 2, page: 1 })
+      );
+      expect(screen.getAllByText("TKT-2026-B00001")[0]).toBeInTheDocument();
+    });
+
+    // Verify page 2 was NOT requested for Requester 2
+    expect(api.fetchMyTickets).not.toHaveBeenCalledWith(
+      expect.objectContaining({ requesterId: 2, page: 2 })
+    );
+  });
 });

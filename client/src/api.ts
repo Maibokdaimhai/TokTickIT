@@ -128,7 +128,7 @@ export async function fetchMyTickets(params: FetchTicketsParams): Promise<Ticket
     query.append("limit", String(params.limit));
   }
 
-  const res = await fetch(`${API_URL}/api/tickets?${query.toString()}`);
+  const res = await fetch(`${API_URL}/api/tickets?${query.toString()}`, { signal: params.signal });
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data?.error?.message || "Failed to fetch tickets");

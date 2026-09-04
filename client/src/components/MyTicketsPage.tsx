@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRequester } from "../context/RequesterContext.js";
 import { fetchCategories, fetchMyTickets } from "../api.js";
 import { Category, Priority, TicketStatus, Ticket, PaginationInfo } from "../types.js";
@@ -22,6 +22,11 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
   const [sort, setSort] = useState<"createdAt_desc" | "createdAt_asc" | "ticketNumber_asc" | "ticketNumber_desc">("createdAt_desc");
   const [page, setPage] = useState<number>(1);
   const limit = 10;
+
+  // Track previous requester ID to reset page when requester changes
+  const prevRequesterIdRef = useRef<number | undefined>(selectedRequester?.id);
+  const [retryKey, setRetryKey] = useState<number>(0);
+  const loadTickets = () => setRetryKey((k) => k + 1);
 
   // Tickets & loading state
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -86,13 +91,25 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
     sort !== "createdAt_desc"
   );
 
-  // Fetch tickets for current requester
-  const loadTickets = useCallback(() => {
+  // Fetch tickets for current requester with cancellation and stale response discard
+  useEffect(() => {
+    let isCancelled = false;
+    const controller = new AbortController();
+
     if (!selectedRequester) {
       setLoading(false);
       setTickets([]);
       setPagination(null);
       return;
+    }
+
+    // If requester changed and page was not 1, reset page to 1 and wait for reset render
+    if (prevRequesterIdRef.current !== selectedRequester.id) {
+      prevRequesterIdRef.current = selectedRequester.id;
+      if (page !== 1) {
+        setPage(1);
+        return;
+      }
     }
 
     setLoading(true);
@@ -107,22 +124,28 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
       sort,
       page,
       limit,
+      signal: controller.signal,
     })
       .then((res) => {
-        setTickets(res.tickets);
-        setPagination(res.pagination);
-        setLoading(false);
+        if (!isCancelled) {
+          setTickets(res.tickets);
+          setPagination(res.pagination);
+          setLoading(false);
+        }
       })
       .catch((err: any) => {
+        if (isCancelled || err?.name === "AbortError") {
+          return;
+        }
         setError(err.message || "Failed to load support tickets.");
         setLoading(false);
       });
-  }, [selectedRequester, debouncedSearch, categoryId, priority, status, sort, page]);
 
-  // Refetch tickets whenever filters, requester, or page changes
-  useEffect(() => {
-    loadTickets();
-  }, [loadTickets]);
+    return () => {
+      isCancelled = true;
+      controller.abort();
+    };
+  }, [selectedRequester?.id, debouncedSearch, categoryId, priority, status, sort, page, retryKey]);
 
   // Helper badge formatters
   const renderPriorityBadge = (p: Priority) => {

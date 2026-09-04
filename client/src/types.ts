@@ -73,5 +73,6 @@ export interface FetchTicketsParams {
   sort?: "createdAt_desc" | "createdAt_asc" | "ticketNumber_asc" | "ticketNumber_desc";
   page?: number;
   limit?: number;
+  signal?: AbortSignal;
 }
 

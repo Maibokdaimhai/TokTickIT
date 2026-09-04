@@ -167,7 +167,7 @@
 
 ---
 
-### PR #3: `feat: Create Ticket API, Form, and Validation - #18`
+### PR #3: `feat: Create Ticket API, Form, and Validation`
 - **PR Link:** https://github.com/Maibokdaimhai/TokTickIT/pull/18
 - **Reviewer Comment I Received(1):**
   ```
@@ -235,6 +235,46 @@
       - Form fields remain preserved.
 
   All 15 client tests, 14 server tests, TypeScript checks (`tsc --noEmit`), and client Vite production build pass cleanly. Ready for re-review!
+
+---
+
+### PR #4: `feat: My Tickets List, Search, Filters, and Pagination`
+- **PR Link:** https://github.com/Maibokdaimhai/TokTickIT/pull/19
+- **Reviewer Comment I Received(1):**
+  ```
+  Thanks for the implementation. Client tests (21/21), server tests (20/20), TypeScript checks, and the client build pass.
+
+  However, additional component tests confirmed two issues:
+
+  1. **Stale responses after switching requesters:** A delayed response for Requester A can overwrite Requester B’s list after switching identities. Please cancel outdated requests or ignore responses that no longer belong to the latest request. This should also cover search/filter changes.
+
+  2. **Pagination is not reset on requester change:** Switching from page 2 of Requester A to Requester B still requests page 2. If B has only one page, the UI incorrectly shows an empty state with no pagination controls. Please reset to page 1 when the requester changes.
+
+  Please add regression tests for out-of-order responses and requester switching from a later page.
+
+  Requesting changes before approval.
+  ```
+- **How I responded(1):**
+  ```
+  Thank you for the thorough review and for catching these two asynchronous lifecycle and state reset edge cases! I have addressed both issues and added the requested automated regression tests:
+
+  1. **Cancellation & Out-of-Order Response Protection:**
+    - Updated `fetchMyTickets` in `client/src/api.ts` to accept and pass an optional `signal?: AbortSignal` down to native `fetch()`.
+    - In `client/src/components/MyTicketsPage.tsx`, wrapped ticket fetching in an `useEffect` equipped with an `AbortController` and `isCancelled` flag.
+    - Whenever `selectedRequester?.id`, `debouncedSearch`, `categoryId`, `priority`, `status`, `sort`, or `page` changes, the previous in-flight request is immediately aborted via `controller.abort()` and flagged with `isCancelled = true`.
+    - Any delayed response from an earlier request is safely discarded and will never overwrite the latest active requester or filter state.
+
+  2. **Pagination Reset on Requester Identity Change:**
+    - In `MyTicketsPage.tsx`, added a `prevRequesterIdRef` reference tracking the active requester.
+    - When `selectedRequester.id` changes, if `page !== 1`, the component immediately calls `setPage(1)` and suppresses fetching with the old page number for the new requester.
+    - This ensures switching to a new requester always requests `page: 1` and never erroneously triggers an empty state due to an out-of-range page index.
+
+  3. **Automated Regression Tests:**
+    - In `client/tests/lab-02/MyTickets.test.tsx`:
+      - Added `REGRESSION: ignores stale out-of-order responses when switching requesters or filters`: Simulates a slow pending promise for Requester A that resolves after Requester B's data has already loaded, verifying that Requester A's delayed response does not overwrite Requester B's tickets.
+      - Added `REGRESSION: resets page to 1 when switching requesters from a later page`: Simulates navigating to page 2 for Requester A and switching to Requester B (who has only 1 page), verifying that `page: 1` is requested and rendered, and `page: 2` is never called for Requester B.
+
+  All 23 client tests (4 test suites), 20 server tests (5 test suites), TypeScript checks (`tsc --noEmit`), and Vite production build pass cleanly with 0 errors. Ready for re-review!
   ```
 
 ---
