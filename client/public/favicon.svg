@@ -1,0 +1,58 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="toktickGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#008A4D" />
+      <stop offset="0.55" stop-color="#006B3C" />
+      <stop offset="1" stop-color="#004627" />
+    </linearGradient>
+    <linearGradient id="ticketSheen" x1="8" y1="6" x2="56" y2="30" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff" stop-opacity="0.3" />
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+    <filter id="ticketShadow" x="0" y="2" width="64" height="62" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Ticket Body with distinctive side notches -->
+  <path
+    d="M10 14C10 9.58172 13.5817 6 18 6H46C50.4183 6 54 9.58172 54 14V25C51.2386 25 49 27.2386 49 30C49 32.7614 51.2386 35 54 35V50C54 54.4183 50.4183 58 46 58H18C13.5817 58 10 54.4183 10 50V35C12.7614 35 15 32.7614 15 30C15 27.2386 12.7614 25 10 25V14Z"
+    fill="url(#toktickGrad)"
+    filter="url(#ticketShadow)"
+  />
+
+  <!-- Ticket subtle border -->
+  <path
+    d="M10 14C10 9.58172 13.5817 6 18 6H46C50.4183 6 54 9.58172 54 14V25C51.2386 25 49 27.2386 49 30C49 32.7614 51.2386 35 54 35V50C54 54.4183 50.4183 58 46 58H18C13.5817 58 10 54.4183 10 50V35C12.7614 35 15 32.7614 15 30C15 27.2386 12.7614 25 10 25V14Z"
+    stroke="rgba(255, 255, 255, 0.25)"
+    stroke-width="1.5"
+  />
+
+  <!-- Sheen reflection top half -->
+  <path
+    d="M10 14C10 9.58172 13.5817 6 18 6H46C50.4183 6 54 9.58172 54 14V25C51.2386 25 49 27.2386 49 30H15C15 27.2386 12.7614 25 10 25V14Z"
+    fill="url(#ticketSheen)"
+  />
+
+  <!-- Subtle dashed perforation line -->
+  <line x1="16" y1="30" x2="48" y2="30" stroke="rgba(255, 255, 255, 0.25)" stroke-width="1.5" stroke-dasharray="3 3" />
+
+  <!-- The "Tick" (Checkmark) with IT Tech aesthetic -->
+  <path
+    d="M20 31L28 39L44 21"
+    stroke="#A7F3D0"
+    stroke-width="5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M20 31L28 39L44 21"
+    stroke="#34D399"
+    stroke-width="3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- IT Pulse / Status Node Accent -->
+  <circle cx="44" cy="21" r="3.5" fill="#FBBF24" stroke="#FFFFFF" stroke-width="1.5" />
+</svg>

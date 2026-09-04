@@ -1,7 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect } from "vitest";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import App from "../../src/App.js";
-import * as api from "../../src/api.js";
 
 describe("App", () => {
   it("renders the TokTickIT heading", () => {
@@ -11,15 +10,16 @@ describe("App", () => {
 
   it("renders navigation tabs for My Tickets and Create Ticket", () => {
     render(<App />);
-    expect(screen.getByRole("button", { name: /My Tickets/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Create Ticket/i })).toBeInTheDocument();
+    const nav = screen.getByRole("navigation");
+    expect(within(nav).getByRole("button", { name: /My Tickets/i })).toBeInTheDocument();
+    expect(within(nav).getByRole("button", { name: /Create Ticket/i })).toBeInTheDocument();
   });
 
   it("switches navigation tabs when clicked", () => {
     render(<App />);
-    const createTabBtn = screen.getByRole("button", { name: /Create Ticket/i });
+    const nav = screen.getByRole("navigation");
+    const createTabBtn = within(nav).getByRole("button", { name: /Create Ticket/i });
     fireEvent.click(createTabBtn);
     expect(screen.getByText(/Create Support Ticket/i)).toBeInTheDocument();
   });
 });
-

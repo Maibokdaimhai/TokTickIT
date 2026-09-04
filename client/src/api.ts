@@ -1,4 +1,4 @@
-import { RequesterUser, Category, RelatedSystem, Priority, Ticket } from "./types.js";
+import { RequesterUser, Category, RelatedSystem, Priority, Ticket, FetchTicketsParams, TicketsResponse } from "./types.js";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
@@ -101,4 +101,40 @@ export async function uploadAttachment(ticketId: number, file: File, requesterId
 
   return data;
 }
+
+export async function fetchMyTickets(params: FetchTicketsParams): Promise<TicketsResponse> {
+  const query = new URLSearchParams();
+  query.append("requesterId", String(params.requesterId));
+
+  if (params.search && params.search.trim()) {
+    query.append("search", params.search.trim());
+  }
+  if (params.category !== undefined && params.category !== null) {
+    query.append("category", String(params.category));
+  }
+  if (params.priority) {
+    query.append("priority", params.priority);
+  }
+  if (params.status) {
+    query.append("status", params.status);
+  }
+  if (params.sort) {
+    query.append("sort", params.sort);
+  }
+  if (params.page !== undefined) {
+    query.append("page", String(params.page));
+  }
+  if (params.limit !== undefined) {
+    query.append("limit", String(params.limit));
+  }
+
+  const res = await fetch(`${API_URL}/api/tickets?${query.toString()}`);
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.error?.message || "Failed to fetch tickets");
+  }
+
+  return data;
+}
+
 
