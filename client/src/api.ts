@@ -83,3 +83,22 @@ export async function deleteTicketRollback(ticketId: number, requesterId: number
     throw new Error("Failed to roll back draft ticket");
   }
 }
+
+export async function uploadAttachment(ticketId: number, file: File, requesterId: number): Promise<any> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("requesterId", String(requesterId));
+
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/attachments`, {
+    method: "POST",
+    body: formData,
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.error?.message || "Failed to upload attachment");
+  }
+
+  return data;
+}
+

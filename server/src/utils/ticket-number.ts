@@ -1,10 +1,12 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 
 /**
  * Generates a unique, sequential annual Ticket Number in format TKT-YYYY-XXXXXX (BR-01)
  * Example: TKT-2026-000001, TKT-2026-000002
  */
-export async function generateTicketNumber(prisma: PrismaClient): Promise<string> {
+export async function generateTicketNumber(
+  prisma: PrismaClient | Prisma.TransactionClient
+): Promise<string> {
   const currentYear = new Date().getFullYear();
   const yearPrefix = `TKT-${currentYear}-`;
 
@@ -16,7 +18,7 @@ export async function generateTicketNumber(prisma: PrismaClient): Promise<string
       },
     },
     orderBy: {
-      id: "desc",
+      ticketNumber: "desc",
     },
     select: {
       ticketNumber: true,

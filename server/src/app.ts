@@ -1,5 +1,8 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
+import multer from "multer";
+import fs from "fs";
+import path from "path";
 import { getPrisma } from "./prisma.js";
 import { generateTicketNumber } from "./utils/ticket-number.js";
 import { Priority } from "@prisma/client";
@@ -8,6 +11,30 @@ export const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Setup local uploads storage for attachments (BR-16)
+const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, UPLOAD_DIR);
+  },
+  filename: (_req, file, cb) => {
+    const safeOriginal = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, "_");
+    const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeOriginal}`;
+    cb(null, uniqueName);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5 MB max (BR-07)
+  },
+});
 
 // API Health Check
 app.get("/api/health", (_req: Request, res: Response) => {
@@ -76,6 +103,20 @@ app.get("/api/requesters", async (_req: Request, res: Response) => {
   }
 });
 
+/**
+ * Validates that an ID is a strict positive integer (rejects 1.5, -1, NaN, non-integer strings)
+ */
+function isValidIntegerId(val: unknown): boolean {
+  if (typeof val === "number") {
+    return Number.isInteger(val) && val > 0;
+  }
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    return /^[1-9]\d*$/.test(trimmed);
+  }
+  return false;
+}
+
 // POST /api/tickets — Create Ticket
 app.post("/api/tickets", async (req: Request, res: Response) => {
   try {
@@ -100,18 +141,15 @@ app.post("/api/tickets", async (req: Request, res: Response) => {
       validationDetails.push("Requested Priority must be one of LOW, MEDIUM, HIGH, or URGENT.");
     }
 
-    const parsedCategoryId = Number(categoryId);
-    if (isNaN(parsedCategoryId) || parsedCategoryId <= 0) {
+    if (!isValidIntegerId(categoryId)) {
       validationDetails.push("Category ID must be a valid positive integer.");
     }
 
-    const parsedRelatedSystemId = Number(relatedSystemId);
-    if (isNaN(parsedRelatedSystemId) || parsedRelatedSystemId <= 0) {
+    if (!isValidIntegerId(relatedSystemId)) {
       validationDetails.push("Related System ID must be a valid positive integer.");
     }
 
-    const parsedRequesterId = Number(requesterId);
-    if (isNaN(parsedRequesterId) || parsedRequesterId <= 0) {
+    if (!isValidIntegerId(requesterId)) {
       validationDetails.push("Requester ID must be a valid positive integer.");
     }
 
@@ -124,6 +162,10 @@ app.post("/api/tickets", async (req: Request, res: Response) => {
         },
       });
     }
+
+    const parsedCategoryId = Number(categoryId);
+    const parsedRelatedSystemId = Number(relatedSystemId);
+    const parsedRequesterId = Number(requesterId);
 
     // BR-13 Check if Requester exists and is ACTIVE
     const requester = await prisma.requesterUser.findUnique({
@@ -165,27 +207,56 @@ app.post("/api/tickets", async (req: Request, res: Response) => {
       });
     }
 
-    // BR-01 Generate Ticket Number (TKT-YYYY-XXXXXX)
-    const ticketNumber = await generateTicketNumber(prisma);
+    // BR-01 Concurrency-safe Ticket Number generation with optimistic retry loop & transaction advisory lock
+    let retries = 5;
+    let ticket = null;
 
-    // Create Ticket record with initial status NEW (BR-02, BR-05)
-    const ticket = await prisma.ticket.create({
-      data: {
-        ticketNumber,
-        requesterId: parsedRequesterId,
-        categoryId: parsedCategoryId,
-        relatedSystemId: parsedRelatedSystemId,
-        summary: trimmedSummary,
-        description: trimmedDescription,
-        requestedPriority: requestedPriority as Priority,
-        status: "NEW",
-      },
-      include: {
-        requester: { select: { id: true, name: true, email: true, department: true } },
-        category: { select: { id: true, name: true } },
-        relatedSystem: { select: { id: true, name: true } },
-      },
-    });
+    while (retries > 0) {
+      try {
+        ticket = await prisma.$transaction(async (tx) => {
+          try {
+            // PostgreSQL transaction-level advisory lock serializes ticket number allocation under parallel load
+            await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('ticket_number_generation'))`;
+          } catch {
+            // Fallback gracefully if mock DB doesn't support pg_advisory_xact_lock
+          }
+
+          const ticketNumber = await generateTicketNumber(tx);
+
+          return await tx.ticket.create({
+            data: {
+              ticketNumber,
+              requesterId: parsedRequesterId,
+              categoryId: parsedCategoryId,
+              relatedSystemId: parsedRelatedSystemId,
+              summary: trimmedSummary,
+              description: trimmedDescription,
+              requestedPriority: requestedPriority as Priority,
+              status: "NEW",
+            },
+            include: {
+              requester: { select: { id: true, name: true, email: true, department: true } },
+              category: { select: { id: true, name: true } },
+              relatedSystem: { select: { id: true, name: true } },
+            },
+          });
+        });
+
+        break;
+      } catch (err: any) {
+        if (
+          err?.code === "P2002" &&
+          (err?.meta?.target?.includes("ticketNumber") || String(err?.message).includes("ticketNumber"))
+        ) {
+          retries--;
+          if (retries === 0) throw err;
+          // Jittered backoff before retrying ticket number allocation
+          await new Promise((resolve) => setTimeout(resolve, Math.random() * 25 + 10));
+          continue;
+        }
+        throw err;
+      }
+    }
 
     return res.status(201).json(ticket);
   } catch {
@@ -198,24 +269,158 @@ app.post("/api/tickets", async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/tickets/:id/attachments — Initial Attachment Upload (Step 2 of BR-16 / AC-15)
+app.post("/api/tickets/:id/attachments", (req: Request, res: Response) => {
+  upload.single("file")(req, res, async (err: any) => {
+    if (err) {
+      if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({
+          error: { code: "BAD_REQUEST", message: "File size exceeds 5 MB limit" },
+        });
+      }
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: err.message || "Failed to process uploaded file" },
+      });
+    }
+
+    try {
+      const prisma = getPrisma();
+      const ticketIdParam = req.params.id;
+      const requesterIdParam = req.body.requesterId;
+
+      if (!isValidIntegerId(ticketIdParam)) {
+        if (req.file?.path && fs.existsSync(req.file.path)) {
+          try { fs.unlinkSync(req.file.path); } catch {}
+        }
+        return res.status(400).json({
+          error: { code: "BAD_REQUEST", message: "Ticket ID parameter must be a valid positive integer" },
+        });
+      }
+
+      if (!isValidIntegerId(requesterIdParam)) {
+        if (req.file?.path && fs.existsSync(req.file.path)) {
+          try { fs.unlinkSync(req.file.path); } catch {}
+        }
+        return res.status(400).json({
+          error: { code: "BAD_REQUEST", message: "requesterId must be a valid positive integer" },
+        });
+      }
+
+      const ticketId = Number(ticketIdParam);
+      const requesterId = Number(requesterIdParam);
+
+      if (!req.file) {
+        return res.status(400).json({
+          error: { code: "BAD_REQUEST", message: "File attachment is required" },
+        });
+      }
+
+      // BR-06 Allowed MIME types validation
+      const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+      if (!ALLOWED_MIME_TYPES.includes(req.file.mimetype)) {
+        if (req.file.path && fs.existsSync(req.file.path)) {
+          try { fs.unlinkSync(req.file.path); } catch {}
+        }
+        return res.status(400).json({
+          error: {
+            code: "BAD_REQUEST",
+            message: "Only image (JPEG, PNG, WebP) and PDF files are allowed",
+          },
+        });
+      }
+
+      // Check Ticket Existence
+      const ticket = await prisma.ticket.findUnique({
+        where: { id: ticketId },
+      });
+
+      if (!ticket) {
+        if (req.file.path && fs.existsSync(req.file.path)) {
+          try { fs.unlinkSync(req.file.path); } catch {}
+        }
+        return res.status(404).json({
+          error: { code: "NOT_FOUND", message: "Ticket not found" },
+        });
+      }
+
+      // BR-05 Ownership isolation check
+      if (ticket.requesterId !== requesterId) {
+        if (req.file.path && fs.existsSync(req.file.path)) {
+          try { fs.unlinkSync(req.file.path); } catch {}
+        }
+        return res.status(403).json({
+          error: {
+            code: "FORBIDDEN",
+            message: "Access denied: ticket is owned by another requester",
+          },
+        });
+      }
+
+      // BR-08 Enforce max 5 active attachments limit
+      const activeCount = await prisma.attachment.count({
+        where: { ticketId, isRemoved: false },
+      });
+
+      if (activeCount >= 5) {
+        if (req.file.path && fs.existsSync(req.file.path)) {
+          try { fs.unlinkSync(req.file.path); } catch {}
+        }
+        return res.status(400).json({
+          error: {
+            code: "ATTACHMENT_LIMIT_EXCEEDED",
+            message: "Ticket already has the maximum of 5 active attachments",
+          },
+        });
+      }
+
+      // Save attachment in database
+      const attachment = await prisma.attachment.create({
+        data: {
+          ticketId,
+          fileName: req.file.filename,
+          originalName: path.basename(req.file.originalname),
+          mimeType: req.file.mimetype,
+          fileSize: req.file.size,
+          filePath: req.file.path,
+        },
+      });
+
+      return res.status(201).json(attachment);
+    } catch {
+      if (req.file?.path && fs.existsSync(req.file.path)) {
+        try { fs.unlinkSync(req.file.path); } catch {}
+      }
+      return res.status(500).json({
+        error: {
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to upload attachment",
+        },
+      });
+    }
+  });
+});
+
 // DELETE /api/tickets/:id — Compensation rollback for failed two-step creation (BR-16)
 app.delete("/api/tickets/:id", async (req: Request, res: Response) => {
   try {
     const prisma = getPrisma();
-    const ticketId = Number(req.params.id);
-    const requesterId = Number(req.query.requesterId);
+    const ticketIdParam = req.params.id;
+    const requesterIdParam = req.query.requesterId;
 
-    if (isNaN(ticketId) || ticketId <= 0) {
+    if (!isValidIntegerId(ticketIdParam)) {
       return res.status(400).json({
-        error: { code: "BAD_REQUEST", message: "Invalid Ticket ID parameter" },
+        error: { code: "BAD_REQUEST", message: "Ticket ID parameter must be a valid positive integer" },
       });
     }
 
-    if (isNaN(requesterId) || requesterId <= 0) {
+    if (!isValidIntegerId(requesterIdParam)) {
       return res.status(400).json({
-        error: { code: "BAD_REQUEST", message: "requesterId query parameter is required" },
+        error: { code: "BAD_REQUEST", message: "requesterId query parameter must be a valid positive integer" },
       });
     }
+
+    const ticketId = Number(ticketIdParam);
+    const requesterId = Number(requesterIdParam);
 
     const ticket = await prisma.ticket.findUnique({
       where: { id: ticketId },
@@ -237,7 +442,23 @@ app.delete("/api/tickets/:id", async (req: Request, res: Response) => {
       });
     }
 
-    // Delete ticket record
+    // Clean up physical files from disk under server/uploads/
+    const attachments = await prisma.attachment.findMany({
+      where: { ticketId },
+      select: { filePath: true },
+    });
+
+    for (const att of attachments) {
+      if (att.filePath && fs.existsSync(att.filePath)) {
+        try {
+          fs.unlinkSync(att.filePath);
+        } catch {
+          // ignore unlink error
+        }
+      }
+    }
+
+    // Delete ticket record (cascades to delete attachment records in DB)
     await prisma.ticket.delete({
       where: { id: ticketId },
     });

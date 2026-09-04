@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useRequester } from "../context/RequesterContext.js";
-import { fetchCategories, fetchRelatedSystems, createTicket } from "../api.js";
+import { fetchCategories, fetchRelatedSystems, createTicket, deleteTicketRollback, uploadAttachment } from "../api.js";
 import { Category, RelatedSystem, Priority, Ticket } from "../types.js";
 
 interface CreateTicketFormProps {
@@ -140,6 +140,7 @@ export const CreateTicketForm: React.FC<CreateTicketFormProps> = ({ onTicketCrea
     }
 
     setIsSubmitting(true);
+    setApiError(null);
 
     try {
       const payload = {
@@ -151,7 +152,29 @@ export const CreateTicketForm: React.FC<CreateTicketFormProps> = ({ onTicketCrea
         requestedPriority,
       };
 
+      // Step 1: Create Ticket (BR-16)
       const ticket = await createTicket(payload);
+
+      // Step 2: Upload initial attachments if any (BR-16 / AC-15)
+      if (selectedFiles.length > 0) {
+        try {
+          for (const file of selectedFiles) {
+            await uploadAttachment(ticket.id, file, selectedRequester.id);
+          }
+        } catch (uploadErr: any) {
+          // Compensation Rollback: delete draft ticket and remove uploaded files
+          try {
+            await deleteTicketRollback(ticket.id, selectedRequester.id);
+          } catch {
+            // Rollback error fallback
+          }
+          const errorDetail = uploadErr?.message || "Failed to upload one or more attachments.";
+          setApiError(`Attachment upload failed: ${errorDetail}. The draft ticket was rolled back.`);
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       setCreatedTicket(ticket);
       setIsSubmitting(false);
 

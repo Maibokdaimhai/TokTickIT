@@ -147,6 +147,52 @@ describe("Create Ticket API & Reference Endpoints (Lab 2)", () => {
       expect(res.status).toBe(403);
       expect(res.body.error.code).toBe("FORBIDDEN");
     });
+
+    it("rejects fractional numeric IDs (e.g. categoryId: 1.5) with 400 Bad Request instead of 500", async () => {
+      const payload = {
+        requesterId: 1.5,
+        categoryId: 2.7,
+        relatedSystemId: 3.14,
+        summary: "[Test Ticket] Fractional ID validation test",
+        description: "[Test Ticket] Testing that fractional IDs are caught by integer validation",
+        requestedPriority: "LOW",
+      };
+
+      const res = await supertest(app).post("/api/tickets").send(payload);
+
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe("BAD_REQUEST");
+      expect(res.body.error.details).toContain("Category ID must be a valid positive integer.");
+      expect(res.body.error.details).toContain("Related System ID must be a valid positive integer.");
+      expect(res.body.error.details).toContain("Requester ID must be a valid positive integer.");
+    });
+
+    it("safely handles parallel ticket creation requests without duplicate ticketNumber collisions", async () => {
+      const requests = Array.from({ length: 5 }, (_, i) =>
+        supertest(app)
+          .post("/api/tickets")
+          .send({
+            requesterId: activeRequesterId,
+            categoryId,
+            relatedSystemId,
+            summary: `[Test Ticket] Concurrency creation test ticket ${i + 1}`,
+            description: `[Test Ticket] Testing parallel creation to ensure unique sequential ticket numbers ${i + 1}`,
+            requestedPriority: "LOW",
+          })
+      );
+
+      const responses = await Promise.all(requests);
+
+      for (const res of responses) {
+        expect(res.status).toBe(201);
+        expect(res.body).toHaveProperty("ticketNumber");
+        expect(res.body.ticketNumber).toMatch(/^TKT-\d{4}-\d{6}$/);
+      }
+
+      const ticketNumbers = responses.map((r) => r.body.ticketNumber);
+      const uniqueNumbers = new Set(ticketNumbers);
+      expect(uniqueNumbers.size).toBe(ticketNumbers.length);
+    });
   });
 
   describe("API-11: DELETE /api/tickets/:id (Compensation Rollback)", () => {
@@ -174,6 +220,52 @@ describe("Create Ticket API & Reference Endpoints (Lab 2)", () => {
       // 3. Verify ticket is removed from DB
       const findTicket = await getPrisma().ticket.findUnique({ where: { id: ticketId } });
       expect(findTicket).toBeNull();
+    });
+
+    it("uploads initial attachment to draft ticket and cleans up physical file on rollback", async () => {
+      // 1. Create a draft ticket
+      const createRes = await supertest(app).post("/api/tickets").send({
+        requesterId: activeRequesterId,
+        categoryId,
+        relatedSystemId,
+        summary: "[Test Ticket] Draft ticket for file rollback test",
+        description: "[Test Ticket] Testing physical file cleanup on compensation rollback",
+        requestedPriority: "LOW",
+      });
+
+      expect(createRes.status).toBe(201);
+      const ticketId = createRes.body.id;
+
+      // 2. Upload an attachment via POST /api/tickets/:id/attachments
+      const uploadRes = await supertest(app)
+        .post(`/api/tickets/${ticketId}/attachments`)
+        .field("requesterId", activeRequesterId)
+        .attach("file", Buffer.from("dummy pdf content for testing"), "test-evidence.pdf");
+
+      expect(uploadRes.status).toBe(201);
+      expect(uploadRes.body).toHaveProperty("id");
+      expect(uploadRes.body.originalName).toBe("test-evidence.pdf");
+      expect(uploadRes.body.mimeType).toBe("application/pdf");
+
+      const attachmentInDb = await getPrisma().attachment.findUnique({
+        where: { id: uploadRes.body.id },
+      });
+      expect(attachmentInDb).not.toBeNull();
+
+      // 3. Trigger compensation rollback DELETE /api/tickets/:id
+      const deleteRes = await supertest(app)
+        .delete(`/api/tickets/${ticketId}?requesterId=${activeRequesterId}`);
+
+      expect(deleteRes.status).toBe(200);
+
+      // 4. Verify ticket and attachment record deleted from DB
+      const ticketAfterDelete = await getPrisma().ticket.findUnique({ where: { id: ticketId } });
+      expect(ticketAfterDelete).toBeNull();
+
+      const attachmentAfterDelete = await getPrisma().attachment.findUnique({
+        where: { id: uploadRes.body.id },
+      });
+      expect(attachmentAfterDelete).toBeNull();
     });
 
     it("returns 403 Forbidden if attempting rollback on ticket owned by another requester", async () => {

@@ -9,6 +9,8 @@ vi.mock("../../src/api.js", () => ({
   fetchCategories: vi.fn(),
   fetchRelatedSystems: vi.fn(),
   createTicket: vi.fn(),
+  deleteTicketRollback: vi.fn(),
+  uploadAttachment: vi.fn(),
   fetchRequesters: vi.fn(),
 }));
 
@@ -133,6 +135,95 @@ describe("CreateTicketForm Component (Lab 2)", () => {
       // Values preserved
       expect(summaryInput.value).toBe("Preserved Summary Content");
       expect(descInput.value).toBe("Preserved Description Content text for testing.");
+    });
+  });
+
+  it("BR-16 / AC-15: uploads selected initial attachments sequentially after ticket creation", async () => {
+    (api.createTicket as any).mockResolvedValue({
+      id: 202,
+      ticketNumber: "TKT-2026-000202",
+      status: "NEW",
+    });
+    (api.uploadAttachment as any).mockResolvedValue({
+      id: 1,
+      ticketId: 202,
+      fileName: "test-evidence.png",
+      originalName: "evidence.png",
+    });
+
+    const { container } = render(
+      <RequesterProvider>
+        <CreateTicketForm />
+      </RequesterProvider>
+    );
+
+    await waitFor(() => expect(screen.getByText("Account and Access")).toBeInTheDocument());
+
+    fireEvent.change(screen.getByLabelText(/Summary/i), { target: { value: "Summary with initial attachment" } });
+    fireEvent.change(screen.getByLabelText(/Detailed Description/i), { target: { value: "Detailed description of problem with screenshot attached." } });
+
+    // Select file
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const testFile = new File(["dummy content"], "evidence.png", { type: "image/png" });
+    fireEvent.change(fileInput, { target: { files: [testFile] } });
+
+    // Verify file item rendered in UI
+    expect(screen.getByText(/evidence.png/i)).toBeInTheDocument();
+
+    // Submit form
+    fireEvent.click(screen.getByRole("button", { name: /Submit Ticket/i }));
+
+    await waitFor(() => {
+      expect(api.createTicket).toHaveBeenCalledTimes(1);
+      expect(api.uploadAttachment).toHaveBeenCalledWith(202, testFile, 1);
+      expect(screen.getByText(/Ticket Created Successfully!/i)).toBeInTheDocument();
+      expect(screen.getByText(/TKT-2026-000202/i)).toBeInTheDocument();
+    });
+  });
+
+  it("BR-16 / AC-15: executes compensation rollback when attachment upload fails and preserves form values", async () => {
+    (api.createTicket as any).mockResolvedValue({
+      id: 303,
+      ticketNumber: "TKT-2026-000303",
+      status: "NEW",
+    });
+    (api.uploadAttachment as any).mockRejectedValue(new Error("File storage write failure"));
+    (api.deleteTicketRollback as any).mockResolvedValue(undefined);
+
+    const { container } = render(
+      <RequesterProvider>
+        <CreateTicketForm />
+      </RequesterProvider>
+    );
+
+    await waitFor(() => expect(screen.getByText("Account and Access")).toBeInTheDocument());
+
+    const summaryInput = screen.getByLabelText(/Summary/i) as HTMLInputElement;
+    const descInput = screen.getByLabelText(/Detailed Description/i) as HTMLTextAreaElement;
+
+    fireEvent.change(summaryInput, { target: { value: "Rollback Summary Test" } });
+    fireEvent.change(descInput, { target: { value: "Rollback Description content for testing rollback preservation." } });
+
+    // Select file
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const testFile = new File(["dummy content"], "screenshot.pdf", { type: "application/pdf" });
+    fireEvent.change(fileInput, { target: { files: [testFile] } });
+
+    // Submit form
+    fireEvent.click(screen.getByRole("button", { name: /Submit Ticket/i }));
+
+    await waitFor(() => {
+      expect(api.createTicket).toHaveBeenCalledTimes(1);
+      expect(api.uploadAttachment).toHaveBeenCalledWith(303, testFile, 1);
+      // Compensation rollback must be called
+      expect(api.deleteTicketRollback).toHaveBeenCalledWith(303, 1);
+      // Error banner rendered
+      expect(screen.getByText(/Attachment upload failed: File storage write failure/i)).toBeInTheDocument();
+      // Form fields must be preserved
+      expect(summaryInput.value).toBe("Rollback Summary Test");
+      expect(descInput.value).toBe("Rollback Description content for testing rollback preservation.");
+      // Success banner must NOT be rendered
+      expect(screen.queryByText(/Ticket Created Successfully!/i)).toBeNull();
     });
   });
 });
