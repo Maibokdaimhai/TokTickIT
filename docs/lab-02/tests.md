@@ -17,28 +17,28 @@ The testing strategy for Lab 2 follows **Test-Driven Development (TDD)** and mul
 
 | Test ID | Level / Type | Requirement / AC | What It Tests | Expected Result | Automated Test File Path | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **UNIT-01** | Unit | BR-01, FR-04 | Ticket number generator utility | Generates sequential string matching `TKT-YYYY-XXXXXX` | `server/tests/lab-02/create-ticket.api.test.ts` | Planned |
+| **UNIT-01** | Unit | BR-01, FR-04 | Ticket number generator utility | Generates sequential string matching `TKT-YYYY-XXXXXX` | `server/tests/lab-02/create-ticket.api.test.ts` | Passed |
 | **UNIT-02** | Unit | BR-06, BR-07 | Attachment validator utility | Accepts valid PDF/image $\le 5\text{MB}$; rejects `.exe` or $>5\text{MB}$ | `server/tests/lab-02/attachments.api.test.ts` | Planned |
-| **API-01** | API | AC-12, BR-04 | `GET /api/requesters` | Returns 200 OK with active requesters; excludes inactive | `server/tests/lab-02/requesters.api.test.ts` | Planned |
-| **API-02** | API | AC-01, BR-01, BR-02 | `POST /api/tickets` (Valid) | Returns 201 Created with generated ticket number and status `NEW` | `server/tests/lab-02/create-ticket.api.test.ts` | Planned |
-| **API-03** | API | AC-04, BR-11 | `POST /api/tickets` (Invalid) | Returns 400 Bad Request with field validation details | `server/tests/lab-02/create-ticket.api.test.ts` | Planned |
-| **API-04** | API | AC-09, AC-10, BR-12 | `GET /api/tickets` (List & Search) | Returns paginated list owned by requester; supports search & filtering | `server/tests/lab-02/my-tickets.api.test.ts` | Planned |
-| **API-05** | API | AC-03, BR-05 | `GET /api/tickets` (Ownership) | Does not return tickets belonging to other requesters | `server/tests/lab-02/my-tickets.api.test.ts` | Planned |
+| **API-01** | API | AC-12, BR-04 | `GET /api/requesters` | Returns 200 OK with active requesters; excludes inactive | `server/tests/lab-02/requesters.api.test.ts` | Passed |
+| **API-02** | API | AC-01, BR-01, BR-02 | `POST /api/tickets` (Valid) | Returns 201 Created with generated ticket number and status `NEW` | `server/tests/lab-02/create-ticket.api.test.ts` | Passed |
+| **API-03** | API | AC-04, BR-11 | `POST /api/tickets` (Invalid) | Returns 400 Bad Request with field validation details | `server/tests/lab-02/create-ticket.api.test.ts` | Passed |
+| **API-04** | API | AC-09, AC-10, BR-12 | `GET /api/tickets` (List & Search) | Returns paginated list owned by requester; supports search & filtering | `server/tests/lab-02/my-tickets.api.test.ts` | Passed |
+| **API-05** | API | AC-03, BR-05 | `GET /api/tickets` (Ownership) | Does not return tickets belonging to other requesters | `server/tests/lab-02/my-tickets.api.test.ts` | Passed |
 | **API-06** | API | AC-03, BR-05 | `GET /api/tickets/:id` (Unauthorized) | Returns 403 Forbidden for ticket owned by another requester | `server/tests/lab-02/ticket-detail.api.test.ts` | Planned |
 | **API-07** | API | AC-05, AC-06, BR-08 | `POST /api/tickets/:id/attachments` | Uploads valid file; enforces max 5 active attachments limit | `server/tests/lab-02/attachments.api.test.ts` | Planned |
 | **API-08** | API | AC-07, AC-08, BR-10 | `POST /api/tickets/:id/attachments/:attId/remove` | Soft-removes attachment with reason; sets `isRemoved = true` | `server/tests/lab-02/attachments.api.test.ts` | Planned |
 | **API-09** | API | AC-07, BR-09 | `GET /api/tickets/:id/attachments/:attId` (Removed) | Returns 403 Forbidden for soft-removed file download attempt | `server/tests/lab-02/attachments.api.test.ts` | Planned |
-| **API-10** | API | AC-16, BR-12 | `GET /api/tickets` (Sorting) | Sorts list by `createdAt` (asc/desc) and `ticketNumber` (asc/desc) | `server/tests/lab-02/my-tickets.api.test.ts` | Planned |
-| **API-11** | API | AC-15, BR-16 | `DELETE /api/tickets/:id` (Rollback) | Deletes draft ticket and files if attachment upload fails during Step 2 | `server/tests/lab-02/create-ticket.api.test.ts` | Planned |
-| **UI-01** | UI | AC-02, BR-03 | Requester Selector Modal | Renders active requester options and testing disclaimer banner | `client/tests/lab-02/RequesterSelector.test.tsx` | Planned |
-| **UI-02** | UI | AC-04, BR-11 | Create Ticket Form Validation | Displays field error messages directly under summary & description | `client/tests/lab-02/CreateTicket.test.tsx` | Planned |
-| **UI-03** | UI | AC-13, FR-06 | Busy Submit State | Disables Submit button and shows spinner during request | `client/tests/lab-02/CreateTicket.test.tsx` | Planned |
-| **UI-04** | UI | AC-09, AC-10 | My Tickets Table & Filters | Renders table columns, updates on filter change, handles pagination | `client/tests/lab-02/MyTickets.test.tsx` | Planned |
-| **UI-05** | UI | AC-11, BR-05 | Context Switch Ticket Reset | Switching requester clears previous requester's list and loads new list | `client/tests/lab-02/MyTickets.test.tsx` | Planned |
+| **API-10** | API | AC-16, BR-12 | `GET /api/tickets` (Sorting) | Sorts list by `createdAt` (asc/desc) and `ticketNumber` (asc/desc) | `server/tests/lab-02/my-tickets.api.test.ts` | Passed |
+| **API-11** | API | AC-15, BR-16 | `DELETE /api/tickets/:id` (Rollback) | Deletes draft ticket and files if attachment upload fails during Step 2 | `server/tests/lab-02/create-ticket.api.test.ts` | Passed |
+| **UI-01** | UI | AC-02, BR-03 | Requester Selector Modal | Renders active requester options and testing disclaimer banner | `client/tests/lab-02/RequesterSelector.test.tsx` | Passed |
+| **UI-02** | UI | AC-04, BR-11 | Create Ticket Form Validation | Displays field error messages directly under summary & description | `client/tests/lab-02/CreateTicket.test.tsx` | Passed |
+| **UI-03** | UI | AC-13, FR-06 | Busy Submit State | Disables Submit button and shows spinner during request | `client/tests/lab-02/CreateTicket.test.tsx` | Passed |
+| **UI-04** | UI | AC-09, AC-10 | My Tickets Table & Filters | Renders table columns, updates on filter change, handles pagination | `client/tests/lab-02/MyTickets.test.tsx` | Passed |
+| **UI-05** | UI | AC-11, BR-05 | Context Switch Ticket Reset | Switching requester clears previous requester's list and loads new list | `client/tests/lab-02/MyTickets.test.tsx` | Passed |
 | **UI-06** | UI | AC-07, AC-08 | Soft Remove Modal & Reason | Requires removal reason before confirming soft removal | `client/tests/lab-02/AttachmentSection.test.tsx` | Planned |
-| **UI-07** | UI | AC-15, BR-14 | API Failure Handling & Retention | Shows safe error callout banner on 500 error while preserving form data | `client/tests/lab-02/CreateTicket.test.tsx` | Planned |
-| **UI-08** | UI | AC-09, AC-17 | Empty vs No-Results State | Renders empty state when 0 tickets exist; no-results state when search fails | `client/tests/lab-02/MyTickets.test.tsx` | Planned |
-| **UI-09** | UI | AC-18 | UI Accessibility & Focus | Renders visible focus rings, ARIA labels, and accessible tooltips | `client/tests/lab-02/CreateTicket.test.tsx` | Planned |
+| **UI-07** | UI | AC-15, BR-14 | API Failure Handling & Retention | Shows safe error callout banner on 500 error while preserving form data | `client/tests/lab-02/CreateTicket.test.tsx` | Passed |
+| **UI-08** | UI | AC-09, AC-17 | Empty vs No-Results State | Renders empty state when 0 tickets exist; no-results state when search fails | `client/tests/lab-02/MyTickets.test.tsx` | Passed |
+| **UI-09** | UI | AC-18 | UI Accessibility & Focus | Renders visible focus rings, ARIA labels, and accessible tooltips | `client/tests/lab-02/CreateTicket.test.tsx` | Passed |
 | **E2E-01** | E2E | AC-01, AC-09 | End-to-End Ticket Flow | Select Requester $\rightarrow$ Create Ticket $\rightarrow$ Verify in My Tickets | `e2e/lab-02/requester-ticket-flow.spec.ts` | Planned |
 | **E2E-02** | E2E | AC-05, AC-07 | End-to-End Attachment Flow | Upload attachment $\rightarrow$ Soft-remove with reason $\rightarrow$ Verify blocked download | `e2e/lab-02/requester-ticket-flow.spec.ts` | Planned |
 | **E2E-03** | E2E | AC-14 | Responsive Viewport Journey | Completes full workflow across Desktop, Tablet, and Mobile viewports | `e2e/lab-02/requester-ticket-flow.spec.ts` | Planned |

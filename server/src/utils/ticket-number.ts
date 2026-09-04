@@ -10,33 +10,31 @@ export async function generateTicketNumber(
   const currentYear = new Date().getFullYear();
   const yearPrefix = `TKT-${currentYear}-`;
 
-  // Find the last created ticket for the current year
-  const lastTicket = await prisma.ticket.findFirst({
+  // Find all tickets for the current year to determine the highest numeric sequence
+  const tickets = await prisma.ticket.findMany({
     where: {
       ticketNumber: {
         startsWith: yearPrefix,
       },
-    },
-    orderBy: {
-      ticketNumber: "desc",
     },
     select: {
       ticketNumber: true,
     },
   });
 
-  let nextSequence = 1;
+  let maxSequence = 0;
 
-  if (lastTicket && lastTicket.ticketNumber) {
-    const parts = lastTicket.ticketNumber.split("-");
-    if (parts.length === 3) {
+  for (const t of tickets) {
+    const parts = t.ticketNumber.split("-");
+    if (parts.length === 3 && /^\d+$/.test(parts[2])) {
       const parsedSeq = parseInt(parts[2], 10);
-      if (!isNaN(parsedSeq)) {
-        nextSequence = parsedSeq + 1;
+      if (parsedSeq > maxSequence) {
+        maxSequence = parsedSeq;
       }
     }
   }
 
+  const nextSequence = maxSequence + 1;
   const paddedSequence = String(nextSequence).padStart(6, "0");
   return `${yearPrefix}${paddedSequence}`;
 }

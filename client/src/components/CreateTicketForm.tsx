@@ -290,18 +290,18 @@ export const CreateTicketForm: React.FC<CreateTicketFormProps> = ({ onTicketCrea
 
       <form onSubmit={handleSubmit} noValidate>
         {/* Read-Only Ticket Header Info */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", padding: "16px", backgroundColor: "var(--color-bg)", borderRadius: "8px", marginBottom: "24px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", padding: "16px", backgroundColor: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "8px", marginBottom: "24px" }}>
           <div>
-            <span style={{ fontSize: "12px", color: "var(--color-text-secondary)", display: "block" }}>Ticket Number</span>
+            <span style={{ fontSize: "12px", fontWeight: "700", color: "#475569", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "2px" }}>Ticket Number</span>
             <strong style={{ fontSize: "15px", color: "var(--color-primary)" }}>TKT-2026-AUTO (Assigned on Submit)</strong>
           </div>
           <div>
-            <span style={{ fontSize: "12px", color: "var(--color-text-secondary)", display: "block" }}>Date Created</span>
-            <strong style={{ fontSize: "15px" }}>{todayStr}</strong>
+            <span style={{ fontSize: "12px", fontWeight: "700", color: "#475569", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "2px" }}>Date Created</span>
+            <strong style={{ fontSize: "15px", color: "var(--color-text-primary)" }}>{todayStr}</strong>
           </div>
           <div>
-            <span style={{ fontSize: "12px", color: "var(--color-text-secondary)", display: "block" }}>Requester Identity</span>
-            <strong style={{ fontSize: "15px" }}>
+            <span style={{ fontSize: "12px", fontWeight: "700", color: "#475569", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "2px" }}>Requester Identity</span>
+            <strong style={{ fontSize: "15px", color: "var(--color-text-primary)" }}>
               {selectedRequester ? `${selectedRequester.name} (${selectedRequester.department})` : "None Selected"}
             </strong>
           </div>

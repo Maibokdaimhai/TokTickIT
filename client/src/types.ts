@@ -51,3 +51,28 @@ export interface Ticket {
   attachments?: Attachment[];
   attachmentCount?: number;
 }
+
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+export interface TicketsResponse {
+  tickets: Ticket[];
+  pagination: PaginationInfo;
+}
+
+export interface FetchTicketsParams {
+  requesterId: number;
+  search?: string;
+  category?: number;
+  priority?: Priority;
+  status?: TicketStatus;
+  sort?: "createdAt_desc" | "createdAt_asc" | "ticketNumber_asc" | "ticketNumber_desc";
+  page?: number;
+  limit?: number;
+  signal?: AbortSignal;
+}
+

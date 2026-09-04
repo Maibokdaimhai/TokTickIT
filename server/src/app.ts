@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import { getPrisma } from "./prisma.js";
 import { generateTicketNumber } from "./utils/ticket-number.js";
-import { Priority } from "@prisma/client";
+import { Priority, TicketStatus } from "@prisma/client";
 
 export const app = express();
 
@@ -265,6 +265,187 @@ app.post("/api/tickets", async (req: Request, res: Response) => {
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to create support ticket",
       },
+    });
+  }
+});
+
+// GET /api/tickets — Retrieve paginated tickets owned by requester with search, filter, and sort (Section 3.5)
+app.get("/api/tickets", async (req: Request, res: Response) => {
+  try {
+    const prisma = getPrisma();
+    const {
+      requesterId: requesterIdParam,
+      search,
+      category: categoryParam,
+      priority,
+      status,
+      sort = "createdAt_desc",
+      page: pageParam = "1",
+      limit: limitParam = "10",
+    } = req.query;
+
+    if (!requesterIdParam) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "requesterId query parameter is required" },
+      });
+    }
+
+    if (!isValidIntegerId(requesterIdParam)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "requesterId query parameter must be a valid positive integer" },
+      });
+    }
+
+    const requesterId = Number(requesterIdParam);
+
+    // Verify requester existence and active status (BR-04, BR-05)
+    const requester = await prisma.requesterUser.findUnique({
+      where: { id: requesterId },
+    });
+
+    if (!requester || !requester.isActive) {
+      return res.status(403).json({
+        error: { code: "FORBIDDEN", message: "Requester is invalid, missing, or inactive" },
+      });
+    }
+
+    // Validate page and limit
+    if (!isValidIntegerId(pageParam)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "page parameter must be a valid positive integer" },
+      });
+    }
+
+    if (!isValidIntegerId(limitParam)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "limit parameter must be a valid positive integer" },
+      });
+    }
+
+    const page = Number(pageParam);
+    const limit = Number(limitParam);
+
+    if (limit > 50) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "limit parameter cannot exceed 50" },
+      });
+    }
+
+    // Validate sort
+    const validSorts = ["createdAt_desc", "createdAt_asc", "ticketNumber_asc", "ticketNumber_desc"];
+    if (typeof sort !== "string" || !validSorts.includes(sort)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: `sort parameter must be one of: ${validSorts.join(", ")}` },
+      });
+    }
+
+    // Build WHERE clause
+    const where: any = {
+      requesterId,
+    };
+
+    // Category filter
+    if (categoryParam !== undefined && categoryParam !== "") {
+      if (!isValidIntegerId(categoryParam)) {
+        return res.status(400).json({
+          error: { code: "BAD_REQUEST", message: "category parameter must be a valid positive integer" },
+        });
+      }
+      where.categoryId = Number(categoryParam);
+    }
+
+    // Priority filter
+    if (priority !== undefined && priority !== "") {
+      const validPriorities = ["LOW", "MEDIUM", "HIGH", "URGENT"];
+      if (typeof priority !== "string" || !validPriorities.includes(priority)) {
+        return res.status(400).json({
+          error: { code: "BAD_REQUEST", message: `priority parameter must be one of: ${validPriorities.join(", ")}` },
+        });
+      }
+      where.requestedPriority = priority as Priority;
+    }
+
+    // Status filter
+    if (status !== undefined && status !== "") {
+      const validStatuses = ["NEW", "IN_PROGRESS", "RESOLVED", "CLOSED"];
+      if (typeof status !== "string" || !validStatuses.includes(status)) {
+        return res.status(400).json({
+          error: { code: "BAD_REQUEST", message: `status parameter must be one of: ${validStatuses.join(", ")}` },
+        });
+      }
+      where.status = status as TicketStatus;
+    }
+
+    // Search filter (summary or ticketNumber, case-insensitive)
+    if (typeof search === "string" && search.trim().length > 0) {
+      const trimmedSearch = search.trim();
+      where.OR = [
+        { summary: { contains: trimmedSearch, mode: "insensitive" } },
+        { ticketNumber: { contains: trimmedSearch, mode: "insensitive" } },
+      ];
+    }
+
+    // Sort order
+    let orderBy: any = { createdAt: "desc" };
+    if (sort === "createdAt_asc") orderBy = { createdAt: "asc" };
+    else if (sort === "ticketNumber_asc") orderBy = { ticketNumber: "asc" };
+    else if (sort === "ticketNumber_desc") orderBy = { ticketNumber: "desc" };
+
+    // Query total count and paginated records
+    const [totalItems, tickets] = await Promise.all([
+      prisma.ticket.count({ where }),
+      prisma.ticket.findMany({
+        where,
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
+        select: {
+          id: true,
+          ticketNumber: true,
+          createdAt: true,
+          summary: true,
+          category: { select: { id: true, name: true } },
+          relatedSystem: { select: { id: true, name: true } },
+          requestedPriority: true,
+          itPriority: true,
+          status: true,
+          updatedAt: true,
+          attachments: {
+            where: { isRemoved: false },
+            select: { id: true },
+          },
+        },
+      }),
+    ]);
+
+    const formattedTickets = tickets.map((t) => ({
+      id: t.id,
+      ticketNumber: t.ticketNumber,
+      createdAt: t.createdAt.toISOString(),
+      summary: t.summary,
+      category: t.category,
+      relatedSystem: t.relatedSystem,
+      requestedPriority: t.requestedPriority,
+      itPriority: t.itPriority,
+      status: t.status,
+      updatedAt: t.updatedAt.toISOString(),
+      attachmentCount: t.attachments.length,
+    }));
+
+    const totalPages = totalItems === 0 ? 0 : Math.ceil(totalItems / limit);
+
+    return res.status(200).json({
+      tickets: formattedTickets,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages,
+      },
+    });
+  } catch {
+    return res.status(500).json({
+      error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to query ticket list" },
     });
   }
 });
