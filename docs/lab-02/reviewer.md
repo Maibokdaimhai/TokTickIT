@@ -276,6 +276,29 @@
 
   All 23 client tests (4 test suites), 20 server tests (5 test suites), TypeScript checks (`tsc --noEmit`), and Vite production build pass cleanly with 0 errors. Ready for re-review!
   ```
+- **Reviewer Comment I Received(2):**
+  ```
+  Approved.
+  Verified the latest update. Stale responses are now discarded, and pagination resets to page 1 when switching requesters. Regression tests cover both scenarios and pass.
+  Client tests (23/23), server tests (20/20), TypeScript checks, and the client build pass.
+  All requested review changes are addressed. Ready to merge.
+  ```
+- **How I responded(2):**
+  ```
+  ( ^^)b
+  ```
+---
+
+### PR #5: `feat: Ticket Detail Screen & Soft Attachment Lifecycle`
+- **PR Link:** https://github.com/Maibokdaimhai/TokTickIT/pull/20
+- **Reviewer Comment I Received(1):**
+  ```
+  (Awaiting peer reviewer feedback)
+  ```
+- **How I responded(1):**
+  ```
+  (Awaiting peer reviewer response)
+  ```
 
 ---
 
