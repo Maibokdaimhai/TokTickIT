@@ -279,6 +279,33 @@ describe("Attachments Lifecycle & Soft Removal API (Lab 2)", () => {
     expect(res.headers["content-disposition"]).toContain("inline");
   });
 
+  it("streams active attachment with UTF-8 / Thai filename using RFC 6266 and RFC 5987 Content-Disposition without 500 errors", async () => {
+    const thaiFilename = "หลักฐาน.pdf";
+    const uploadRes = await supertest(app)
+      .post(`/api/tickets/${ticketId}/attachments`)
+      .field("requesterId", userAId)
+      .attach("file", Buffer.from("%PDF-1.4 mock thai pdf content"), {
+        filename: thaiFilename,
+        contentType: "application/pdf",
+      });
+
+    expect(uploadRes.status).toBe(201);
+    expect(uploadRes.body.originalName).toBe(thaiFilename);
+
+    const attachmentId = uploadRes.body.id;
+
+    // Download the UTF-8 named attachment
+    const downloadRes = await supertest(app)
+      .get(`/api/tickets/${ticketId}/attachments/${attachmentId}`)
+      .query({ requesterId: userAId });
+
+    expect(downloadRes.status).toBe(200);
+    expect(downloadRes.headers["content-type"]).toBe("application/pdf");
+    expect(downloadRes.headers["content-disposition"]).toContain("inline");
+    expect(downloadRes.headers["content-disposition"]).toContain("filename*=");
+    expect(downloadRes.headers["content-disposition"]).toContain(encodeURIComponent(thaiFilename));
+  });
+
   it("returns 403 Forbidden when attempting to download an attachment belonging to another requester", async () => {
     const prisma = getPrisma();
     const activeAtt = await prisma.attachment.findFirst({

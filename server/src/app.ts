@@ -18,12 +18,29 @@ if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
+/**
+ * Decodes a multipart original filename that may have been parsed as Latin-1 by Busboy/Multer.
+ * Preserves already-decoded Unicode strings and plain ASCII.
+ */
+export function decodeFilename(name: string): string {
+  if (!name) return name;
+  for (let i = 0; i < name.length; i++) {
+    if (name.charCodeAt(i) > 255) return name;
+  }
+  if (/^[\x00-\x7F]*$/.test(name)) return name;
+  try {
+    return Buffer.from(name, "latin1").toString("utf8");
+  } catch {
+    return name;
+  }
+}
+
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     cb(null, UPLOAD_DIR);
   },
   filename: (_req, file, cb) => {
-    const safeOriginal = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, "_");
+    const safeOriginal = path.basename(decodeFilename(file.originalname)).replace(/[^a-zA-Z0-9._-]/g, "_");
     const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeOriginal}`;
     cb(null, uniqueName);
   },
@@ -661,7 +678,7 @@ app.post("/api/tickets/:id/attachments", (req: Request, res: Response) => {
         data: {
           ticketId,
           fileName: req.file.filename,
-          originalName: path.basename(req.file.originalname),
+          originalName: path.basename(decodeFilename(req.file.originalname)),
           mimeType: req.file.mimetype,
           fileSize: req.file.size,
           filePath: req.file.path,
@@ -682,6 +699,26 @@ app.post("/api/tickets/:id/attachments", (req: Request, res: Response) => {
     }
   });
 });
+
+/**
+ * Formats a Content-Disposition header with RFC 6266 / RFC 5987 Unicode support:
+ * - ASCII fallback in filename="..." (non-ASCII characters replaced with '_')
+ * - UTF-8 encoded filename in filename*=UTF-8''...
+ */
+export function formatContentDisposition(
+  disposition: "inline" | "attachment",
+  originalName: string = "attachment"
+): string {
+  const safeName = originalName || "attachment";
+  const asciiFallback = safeName
+    .replace(/[^\x20-\x7E]/g, "_")
+    .replace(/["\\]/g, "_");
+  const encoded = encodeURIComponent(safeName).replace(
+    /['()*]/g,
+    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
+  );
+  return `${disposition}; filename="${asciiFallback}"; filename*=UTF-8''${encoded}`;
+}
 
 // GET /api/tickets/:id/attachments/:attachmentId — Stream/Download Active Attachment (BR-05, BR-09, AC-07)
 app.get("/api/tickets/:id/attachments/:attachmentId", async (req: Request, res: Response) => {
@@ -759,9 +796,8 @@ app.get("/api/tickets/:id/attachments/:attachmentId", async (req: Request, res: 
       });
     }
 
-    const safeFilename = attachment.originalName.replace(/"/g, '\\"');
     res.setHeader("Content-Type", attachment.mimeType);
-    res.setHeader("Content-Disposition", `inline; filename="${safeFilename}"`);
+    res.setHeader("Content-Disposition", formatContentDisposition("inline", attachment.originalName));
 
     const stream = fs.createReadStream(attachment.filePath);
     return stream.pipe(res);
