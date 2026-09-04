@@ -185,10 +185,6 @@ export const CreateTicketForm: React.FC<CreateTicketFormProps> = ({ onTicketCrea
       setRetainedDraftTicket(null);
       setCreatedTicket(ticket);
       setIsSubmitting(false);
-
-      if (onTicketCreated) {
-        onTicketCreated(ticket);
-      }
     } catch (err: any) {
       setApiError(err.message || "An unexpected error occurred while creating the ticket.");
       setIsSubmitting(false);
@@ -228,9 +224,20 @@ export const CreateTicketForm: React.FC<CreateTicketFormProps> = ({ onTicketCrea
           <p style={{ margin: "4px 0 12px 0", color: "#15803D" }}>
             Official Ticket Number: <strong>{createdTicket.ticketNumber}</strong> | Initial Status: <strong>{createdTicket.status}</strong>
           </p>
-          <button type="button" className="btn-secondary" onClick={resetForm}>
-            Submit Another Ticket
-          </button>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button type="button" className="btn-secondary" onClick={resetForm}>
+              Submit Another Ticket
+            </button>
+            {onTicketCreated && (
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => onTicketCreated(createdTicket)}
+              >
+                View in My Tickets
+              </button>
+            )}
+          </div>
         </div>
       )}
 

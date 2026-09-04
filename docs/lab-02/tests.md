@@ -35,13 +35,14 @@ The testing strategy for Lab 2 follows **Test-Driven Development (TDD)** and mul
 | **UI-03** | UI | AC-13, FR-06 | Busy Submit State | Disables Submit button and shows spinner during request | `client/tests/lab-02/CreateTicket.test.tsx` | Passed |
 | **UI-04** | UI | AC-09, AC-10 | My Tickets Table & Filters | Renders table columns, updates on filter change, handles pagination | `client/tests/lab-02/MyTickets.test.tsx` | Passed |
 | **UI-05** | UI | AC-11, BR-05 | Context Switch Ticket Reset | Switching requester clears previous requester's list and loads new list | `client/tests/lab-02/MyTickets.test.tsx` | Passed |
-| **UI-06** | UI | AC-07, AC-08 | Soft Remove Modal & Reason | Requires removal reason before confirming soft removal | `client/tests/lab-02/TicketDetail.test.tsx` | Passed |
+| **UI-06** | UI | AC-07, AC-08 | Soft Remove Modal & Reason | Requires removal reason before confirming soft removal | `client/tests/lab-02/AttachmentSection.test.tsx` | Passed |
 | **UI-07** | UI | AC-15, BR-14 | API Failure Handling & Retention | Shows safe error callout banner on 500 error while preserving form data | `client/tests/lab-02/CreateTicket.test.tsx` | Passed |
 | **UI-08** | UI | AC-09, AC-17 | Empty vs No-Results State | Renders empty state when 0 tickets exist; no-results state when search fails | `client/tests/lab-02/MyTickets.test.tsx` | Passed |
 | **UI-09** | UI | AC-18 | UI Accessibility & Focus | Renders visible focus rings, ARIA labels, and accessible tooltips | `client/tests/lab-02/CreateTicket.test.tsx` | Passed |
-| **E2E-01** | E2E | AC-01, AC-09 | End-to-End Ticket Flow | Select Requester $\rightarrow$ Create Ticket $\rightarrow$ Verify in My Tickets | `e2e/lab-02/requester-ticket-flow.spec.ts` | Planned |
-| **E2E-02** | E2E | AC-05, AC-07 | End-to-End Attachment Flow | Upload attachment $\rightarrow$ Soft-remove with reason $\rightarrow$ Verify blocked download | `e2e/lab-02/requester-ticket-flow.spec.ts` | Planned |
-| **E2E-03** | E2E | AC-14 | Responsive Viewport Journey | Completes full workflow across Desktop, Tablet, and Mobile viewports | `e2e/lab-02/requester-ticket-flow.spec.ts` | Planned |
+| **UI-10** | UI | AC-03, FR-11 | Read-Only Ticket Detail View | Displays read-only ticket details, classification, and back navigation | `client/tests/lab-02/RequesterTicketDetail.test.tsx` | Passed |
+| **E2E-01** | E2E | AC-01, AC-09 | End-to-End Ticket Flow | Select Requester $\rightarrow$ Create Ticket $\rightarrow$ Verify in My Tickets | `e2e/lab-02/requester-ticket-flow.spec.ts` | Passed |
+| **E2E-02** | E2E | AC-05, AC-07 | End-to-End Attachment Flow | Upload attachment $\rightarrow$ Soft-remove with reason $\rightarrow$ Verify blocked download | `e2e/lab-02/requester-ticket-flow.spec.ts` | Passed |
+| **E2E-03** | E2E | AC-14 | Responsive Viewport Journey | Completes full workflow across Desktop, Tablet, and Mobile viewports | `e2e/lab-02/requester-ticket-flow.spec.ts` | Passed |
 
 ---
 
@@ -51,7 +52,7 @@ The testing strategy for Lab 2 follows **Test-Driven Development (TDD)** and mul
 | :--- | :--- | :--- |
 | **AC-01** (Ticket Creation Success) | `API-02`, `UI-03`, `E2E-01` | Backend saves record; UI displays Ticket Number `TKT-YYYY-XXXXXX`. |
 | **AC-02** (Requester Selection Prompt) | `UI-01`, `E2E-01` | Modal prompts when no active requester is selected. |
-| **AC-03** (Cross-Requester Ticket Isolation) | `API-05`, `API-06`, `UI-05` | Direct requests to another user's tickets return HTTP 403 Forbidden. |
+| **AC-03** (Cross-Requester Ticket Isolation) | `API-05`, `API-06`, `UI-05`, `UI-10` | Direct requests to another user's tickets return HTTP 403 Forbidden. |
 | **AC-04** (Form Validation & Retention) | `API-03`, `UI-02` | Invalid inputs render inline messages below controls; values retained. |
 | **AC-05** (Valid Attachment Upload) | `API-07`, `E2E-02` | Valid PDF/image $\le 5\text{MB}$ saved and displayed in active list. |
 | **AC-06** (Invalid Attachment Rejection) | `UNIT-02`, `API-07` | Invalid mime type or file $>5\text{MB}$ rejected with clear error. |
@@ -72,13 +73,13 @@ The testing strategy for Lab 2 follows **Test-Driven Development (TDD)** and mul
 
 ## 4. Responsive and Visual Checklist
 
-- [ ] **Color Tokens:** Header uses `#006B3C`, secondary accents use `#0B7A46`, section highlights use `#EAF6EF`, background uses `#F5F7F6`, text uses charcoal `#1A2E26`.
-- [ ] **Field Controls:** Labels above inputs; required asterisk (`*`) present; editable fields white; read-only fields soft gray-green/ivory.
-- [ ] **Validation Error Placement:** Validation errors appear directly below affected controls in red text.
-- [ ] **Button States:** Primary green solid, secondary outlined, disabled/busy state with spinner.
-- [ ] **Desktop Viewport ($\ge 992\text{px}$):** Multi-column layout centered with max-width $1200\text{px}$; full My Tickets data table.
-- [ ] **Tablet Viewport ($768-991\text{px}$):** Two-column layout where applicable; full width summary and description.
-- [ ] **Mobile Viewport ($< 768\text{px}$):** Single-column vertical stack; My Tickets converted to touch-friendly card list; no horizontal scrolling; buttons $\ge 44\text{px}$.
+- [x] **Color Tokens:** Header uses `#006B3C`, secondary accents use `#0B7A46`, section highlights use `#EAF6EF`, background uses `#F5F7F6`, text uses charcoal `#1A2E26`.
+- [x] **Field Controls:** Labels above inputs; required asterisk (`*`) present; editable fields white; read-only fields soft gray-green/ivory.
+- [x] **Validation Error Placement:** Validation errors appear directly below affected controls in red text.
+- [x] **Button States:** Primary green solid, secondary outlined, disabled/busy state with spinner.
+- [x] **Desktop Viewport ($\ge 992\text{px}$):** Multi-column layout centered with max-width $1200\text{px}$; full My Tickets data table.
+- [x] **Tablet Viewport ($768-991\text{px}$):** Two-column layout where applicable; full width summary and description.
+- [x] **Mobile Viewport ($< 768\text{px}$):** Single-column vertical stack; My Tickets converted to touch-friendly card list; no horizontal scrolling; buttons $\ge 44\text{px}$.
 
 ---
 
@@ -103,7 +104,8 @@ npx playwright test e2e/lab-02/requester-ticket-flow.spec.ts
 
 ## 6. Final Results Summary
 
-- **Backend API Unit & Integration Tests:** 34/34 Passed (7 test suites: `health`, `categories`, `requesters`, `ticket-detail`, `attachments`, `my-tickets`, `create-ticket`)
-- **Frontend UI Component Tests:** 29/29 Passed (5 test suites: `App`, `RequesterSelector`, `TicketDetail`, `CreateTicket`, `MyTickets`)
-- **Playwright E2E Tests:** Ready for manual & automated execution (`e2e/lab-02/requester-ticket-flow.spec.ts`)
-- **Regression / Security Ownership Checks:** Passed (Ownership 403 Forbidden, Soft-removal download block, Advisory sequence locking, Pagination reset on requester change)
+- **Backend API Unit & Integration Tests:** 35/35 Passed (7 test suites: `health`, `categories`, `requesters`, `ticket-detail`, `attachments`, `my-tickets`, `create-ticket`)
+- **Frontend UI Component Tests:** 29/29 Passed (6 test suites: `App`, `RequesterSelector`, `RequesterTicketDetail`, `AttachmentSection`, `CreateTicket`, `MyTickets`)
+- **Playwright E2E Tests:** 3/3 Passed (`e2e/lab-02/requester-ticket-flow.spec.ts` covering `E2E-01`, `E2E-02`, and `E2E-03`)
+- **Visual Screenshot Evidence:** 13/13 captured in `artifacts/lab-02/screenshots/` (5 Create Ticket, 4 My Tickets, 4 Ticket Detail)
+- **Regression / Security Ownership Checks:** Passed (Cross-requester 403 Forbidden, Soft-removal download block, Advisory sequence locking, Pagination reset on requester change, RFC 5987 Unicode attachment downloads)
