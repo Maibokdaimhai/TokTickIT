@@ -1,62 +1,63 @@
-import { useState } from "react";
-import { checkSystem, Category } from "./api.js";
+import React, { useState } from "react";
+import "./styles/theme.css";
+import { RequesterProvider, useRequester } from "./context/RequesterContext.js";
+import { Header } from "./components/Header.js";
+import { RequesterSelectorModal } from "./components/RequesterSelectorModal.js";
+import { CreateTicketForm } from "./components/CreateTicketForm.js";
+import { MyTicketsPage } from "./components/MyTicketsPage.js";
+import { TicketDetailPage } from "./components/TicketDetailPage.js";
 
-type UiState = "idle" | "loading" | "success" | "error";
+const MainContent: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<"my-tickets" | "create-ticket">("my-tickets");
+  const [selectedTicketId, setSelectedTicketId] = useState<number | undefined>(undefined);
+  const { selectedRequester } = useRequester();
 
-export default function App() {
-  const [state, setState] = useState<UiState>("idle");
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string>("");
+  // Reset selected ticket if requester identity changes
+  React.useEffect(() => {
+    setSelectedTicketId(undefined);
+  }, [selectedRequester?.id]);
 
-  async function handleCheck() {
-    // TODO(Issue 4): set loading, call checkSystem(), then either
-    //   - success: store categories and show Online + the list, or
-    //   - error: show Offline + a useful message.
-    setState("loading");
-    setErrorMessage("");
-    try {
-      const res = await checkSystem();
-      setCategories(res.categories);
-      setState("success");
-    } catch (err: any) {
-      setErrorMessage(err.message || "Unable to connect to TokTickIT API");
-      setState("error");
-    }
-  }
+  const handleTabChange = (tab: "my-tickets" | "create-ticket") => {
+    setActiveTab(tab);
+    setSelectedTicketId(undefined);
+  };
 
   return (
-    <div className="container py-5" style={{ maxWidth: 640 }}>
-      <h1 className="h3 mb-4">
-        TokTickIT IT Service Desk
-      </h1>
+    <div style={{ minHeight: "100vh", backgroundColor: "var(--color-bg)" }}>
+      <Header activeTab={activeTab} setActiveTab={handleTabChange} />
+      <RequesterSelectorModal />
 
-      <button className="btn btn-primary mb-4" onClick={handleCheck} disabled={state === "loading"}>
-        {state === "loading" ? "Loading…" : "Check System"}
-      </button>
+      <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px 16px" }}>
+        {activeTab === "my-tickets" && !selectedTicketId && (
+          <MyTicketsPage
+            onNavigateToCreate={() => handleTabChange("create-ticket")}
+            onSelectTicket={(id) => setSelectedTicketId(id)}
+          />
+        )}
 
-    {/* TODO(Issue 4): render loading / success (Online + categories) / error (Offline) states. */}
-      {state === "success" && (
-        <div className="mt-3">
-          <p className="fw-bold">System Status: Online</p>
-          {categories.length > 0 && (
-            <div className="mt-3">
-              <p className="fw-bold">Supported Request Categories:</p>
-              <ul>
-                {categories.map((cat) => (
-                  <li key={cat.id}>{cat.name}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
+        {activeTab === "my-tickets" && selectedTicketId && (
+          <TicketDetailPage
+            ticketId={selectedTicketId}
+            onBack={() => setSelectedTicketId(undefined)}
+          />
+        )}
 
-      {state === "error" && (
-        <div className="mt-3">
-          <p className="fw-bold">System Status: Offline</p>
-          <div className="text-danger">{errorMessage}</div>
-        </div>
-      )}
+        {activeTab === "create-ticket" && (
+          <CreateTicketForm
+            onTicketCreated={() => {
+              handleTabChange("my-tickets");
+            }}
+          />
+        )}
+      </main>
     </div>
+  );
+};
+
+export default function App() {
+  return (
+    <RequesterProvider>
+      <MainContent />
+    </RequesterProvider>
   );
 }

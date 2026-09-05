@@ -18,6 +18,9 @@ build/
 .vite/
 *.log
 npm-debug.log*
+uploads/
+server/uploads/
+test-results/
 
 # IDE / Editor files
 .vscode/

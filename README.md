@@ -7,8 +7,12 @@ IT Service Desk application built with React, Vite, Express, Prisma, and Postgre
 - Docker Desktop
 
 ## Installation & Setup
-
+ 
 1. **Install Dependencies:**
+   - **Root (Playwright & Dev Tools):**
+     ```bash
+     npm install
+     ```
    - **Server:**
      ```bash
      cd server && npm install
@@ -30,13 +34,12 @@ IT Service Desk application built with React, Vite, Express, Prisma, and Postgre
    cp .env.example .env
    ```
 
-4. **Sync Database Schema:**
+4. **Sync Database Schema & Seed Data:**
    ```bash
    cd server
    npx prisma db push
+   npm run prisma:seed
    ```
-
-
 
 ## Running the Application
 
@@ -56,6 +59,18 @@ IT Service Desk application built with React, Vite, Express, Prisma, and Postgre
 
 ## Running Tests
 
-- **Client Tests:** `cd client && npm test`
-- **Server Tests:** `cd server && npm test`
+- **Client Component Tests:**
+  ```bash
+  cd client && npm test
+  ```
+- **Server API & Unit Tests:**
+  ```bash
+  cd server && npm test
+  ```
+- **End-to-End Tests (Playwright):**
+  ```bash
+  npm run test:e2e
+  # or
+  npx playwright test
+  ```
  
