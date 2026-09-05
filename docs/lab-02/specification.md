@@ -185,15 +185,15 @@ The REST API exposes the following endpoints (detailed in [`api-spec.md`](file:/
 ---
 
 ## 10. Product Definition of Done (DoD)
-
+ 
 The Lab 2 software increment is complete only when:
-- [ ] All approved scope features (Requester Context, Create Ticket, My Tickets, Ticket Detail, Attachment upload/download/soft-remove) are fully implemented.
-- [ ] Database schema is updated, migrated via Prisma, and populated with idempotent seed data.
-- [ ] All 18 Acceptance Criteria (AC-01 through AC-18) are satisfied and verified by automated tests.
-- [ ] All automated unit, API, UI, responsive, and Playwright E2E tests pass cleanly on the `main` branch.
-- [ ] Zen Green Design System standards and responsive layout rules are satisfied across Desktop, Tablet, and Mobile viewports.
-- [ ] All required documentation files (`specification.md`, `tests.md`, `ui-spec.md`, `api-spec.md`, `reviewer.md`, `ai-use.md`) are complete and accurate.
-- [ ] README setup and test instructions are up to date.
+- [x] All approved scope features (Requester Context, Create Ticket, My Tickets, Ticket Detail, Attachment upload/download/soft-remove) are fully implemented.
+- [x] Database schema is updated, migrated via Prisma, and populated with idempotent seed data.
+- [x] All 18 Acceptance Criteria (AC-01 through AC-18) are satisfied and verified by automated tests.
+- [x] All automated unit, API, UI, responsive, and Playwright E2E tests pass cleanly on the `main` branch.
+- [x] Zen Green Design System standards and responsive layout rules are satisfied across Desktop, Tablet, and Mobile viewports.
+- [x] All required documentation files (`specification.md`, `tests.md`, `ui-spec.md`, `api-spec.md`, `reviewer.md`, `ai-use.md`) are complete and accurate.
+- [x] README setup and test instructions are up to date.
 
 ---
 
