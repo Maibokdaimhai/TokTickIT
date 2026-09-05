@@ -16,7 +16,7 @@ vi.mock("../../src/api.js", () => ({
   ),
 }));
 
-describe("TicketDetailPage Component (Lab 2)", () => {
+describe("AttachmentSection Component (Lab 2)", () => {
   const mockRequester = {
     id: 1,
     name: "Jennifer Anderson",
@@ -85,21 +85,6 @@ describe("TicketDetailPage Component (Lab 2)", () => {
     );
   };
 
-  it("FR-11: loads and displays read-only ticket details and system classification", async () => {
-    renderComponent();
-
-    await waitFor(() => {
-      expect(screen.getByTestId("ticket-number-heading")).toHaveTextContent("TKT-2026-000101");
-    });
-
-    expect(screen.getByTestId("detail-category")).toHaveTextContent("Hardware");
-    expect(screen.getByTestId("detail-related-system")).toHaveTextContent("Corporate Laptop");
-    expect(screen.getByTestId("detail-summary")).toHaveTextContent("Laptop battery drains quickly");
-    expect(screen.getByTestId("detail-description")).toHaveTextContent("My laptop battery drains in less than an hour");
-    expect(screen.getByText("HIGH")).toBeInTheDocument();
-    expect(screen.getByText(/● NEW/i)).toBeInTheDocument();
-  });
-
   it("FR-12: renders active attachment with download action and soft-removed attachment with reason", async () => {
     renderComponent();
 
@@ -127,24 +112,19 @@ describe("TicketDetailPage Component (Lab 2)", () => {
       expect(screen.getByTestId("btn-remove-11")).toBeInTheDocument();
     });
 
-    // Click remove button
     fireEvent.click(screen.getByTestId("btn-remove-11"));
 
-    // Modal should be open
     expect(screen.getByTestId("soft-remove-modal")).toBeInTheDocument();
     expect(screen.getByText(/Are you sure you want to remove/i)).toBeInTheDocument();
 
     const confirmBtn = screen.getByTestId("btn-confirm-removal");
     const reasonTextarea = screen.getByTestId("removal-reason-textarea");
 
-    // Initially empty -> Confirm button is disabled
     expect(confirmBtn).toBeDisabled();
 
-    // Enter 2 characters -> Still disabled
     fireEvent.change(reasonTextarea, { target: { value: "ab" } });
     expect(confirmBtn).toBeDisabled();
 
-    // Enter 3 or more characters -> Confirm button enabled
     fireEvent.change(reasonTextarea, { target: { value: "Wrong document version" } });
     expect(confirmBtn).not.toBeDisabled();
   });
@@ -189,7 +169,6 @@ describe("TicketDetailPage Component (Lab 2)", () => {
       );
     });
 
-    // Modal closes and attachment card reflects removed state
     await waitFor(() => {
       expect(screen.queryByTestId("soft-remove-modal")).not.toBeInTheDocument();
       expect(screen.getByTestId("attachment-removed-11")).toBeInTheDocument();
@@ -224,19 +203,6 @@ describe("TicketDetailPage Component (Lab 2)", () => {
       );
     });
 
-    // Add attachment button should not be rendered
     expect(screen.queryByTestId("btn-add-attachment")).not.toBeInTheDocument();
-  });
-
-  it("calls onBack when clicking Back to My Tickets link", async () => {
-    const onBackMock = vi.fn();
-    renderComponent(101, onBackMock);
-
-    await waitFor(() => {
-      expect(screen.getByTestId("btn-back-to-tickets")).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByTestId("btn-back-to-tickets"));
-    expect(onBackMock).toHaveBeenCalledTimes(1);
   });
 });

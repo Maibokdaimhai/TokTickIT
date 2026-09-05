@@ -320,6 +320,17 @@
   All 35 server tests (7 test suites), 29 client tests (5 test suites), TypeScript checks (tsc), and Vite production build pass cleanly.
   ```
 
+### PR #6: `test(lab-02): E2E test verification and visual screenshot evidence collection`
+- **PR Link:** https://github.com/Maibokdaimhai/TokTickIT/pull/21
+- **Reviewer Comment I Received(1):**
+  ```
+  Waiting for review.
+  ```
+- **How I responded(1):**
+  ```
+  Waiting for review.
+  ```
+
 ---
 
 ## Pull Requests I Reviewed for My Partner
@@ -409,5 +420,72 @@
     I appreciate you validating both the backend identity boundary (`requireRequester` middleware, sorted active requesters) and the frontend `RequesterContext` state persistence via `localStorage`.
     The branch is clean and ready for you to merge into `lab2-staging`. Once merged, I will update my local records and the project board before proceeding to Issue #4!
     ```
+
+### PR: `feat(ticket): implement create ticket form with file upload and idempotency (#4)`
+- **Link PR:** https://github.com/R1NNE0/toktickit/pull/22
+- **My comment:** 
+    ```
+    ## Peer Review Checklist & Verification — Issue #4
+
+    I have reviewed the ticket creation workflow, attachment handling, concurrency-safe ticket numbering, and idempotency protection for **Lab 2 (Issue #4)**.
+
+    ### Verification Results
+    - [x] **Prisma Schema & Idempotency Key:** Added `idempotencyKey` field to `Ticket` model with `@@unique([requesterId, idempotencyKey])`. Re-submitting duplicate requests with identical key returns existing ticket without duplicating records.
+    - [x] **Ticket Numbering & Validation (`POST /api/tickets`):** Generates sequential `TKT-YYYY-XXXXXX` ticket numbers. Enforces `x-requester-id` context, input trimming, non-empty text validation, and valid Category/Related System relation checks.
+    - [x] **Attachment Upload Constraints (`POST /api/tickets/:id/attachments`):** Multer middleware restricts uploads to <= 5MB each, allowed formats (`image/jpeg`, `image/png`, `image/webp`, `application/pdf`), and max 5 active files per ticket. Saved under `uploads/lab-02/`.
+    - [x] **Create Ticket UI Component (`CreateTicket.tsx`):**
+      - Dropdown selectors with empty prompts and red asterisk indicators.
+      - Attachment dropzone with file preview, size validation, and item remove CTA before submit.
+      - Submit button busy state with animated spinner preventing duplicate submissions.
+      - Preserves entered form values upon network/server failures (AC-10 / BR-11).
+      - Dirty form confirmation prompt when attempting to leave with unsaved changes.
+      - Confirmation card displaying generated `ticketNumber` upon creation.
+    - [x] **Automated Tests & Scenario Audit:** Verified locally — all 19 server integration tests and 21 client UI component tests pass cleanly. Audited all edge-case scenarios (input trimming, size limits, format restrictions, double submit, and server error preservation).
+
+    ### Verdict
+    **Approved!** Robust implementation of ticket creation, file uploads, idempotency protection, and Zen Green UX. Ready to merge into `lab2-staging`.
+    ```
+- **Partner's response:**
+    ```
+    Thanks for the thorough review and verification!
+
+    I appreciate you checking the entire ticket creation pipeline—from the database idempotency constraint (`@@unique([requesterId, idempotencyKey])`) and concurrency-safe numbering, to the Zen Green form safeguards and attachment restrictions.
+
+    The branch is clean, verified, and ready for you to merge into `lab2-staging`. Once merged, I will sync my local branch and update our project board before proceeding to Issue #5 (My Tickets)!
+    ```
+
+### PR: `feat(ticket): implement my tickets list with search, filter, and pagination (#5)`
+- **Link PR:** https://github.com/R1NNE0/toktickit/pull/23
+- **My comment:** 
+    ```
+    ## Peer Review Checklist & Verification — Issue #5
+
+    I have reviewed the requester-scoped ticket listing interface, search keyword filtering, multi-criteria filtering, deterministic pagination, and responsive layout for **Lab 2 (Issue #5)**.
+
+    ### Verification Results
+    - [x] **Requester Data Isolation (`GET /api/tickets`):** Strictly enforces `x-requester-id` context. Requesters can only access their own tickets (`requesterId == activeRequester.id`).
+    - [x] **Full-Text Search & Multi-Field Filtering:** Supports case-insensitive keyword search across `ticketNumber`, `summary`, and `description`, alongside `categoryId`, `requestedPriority`, and `currentStatus` filters.
+    - [x] **Deterministic Sorting & Pagination:** Defaults to `createdAt DESC` with secondary tie-breaker `{ id: sortOrder }`. Delivers pagination envelope with total count, totalPages metadata, and active attachment count per ticket.
+    - [x] **Responsive Zen Green UI (`MyTickets.tsx`):**
+      - Desktop/Tablet (≥768px): Full 8-column data table with sortable headers and status/priority badges.
+      - Mobile (<768px): Touch-friendly card-based list representation.
+      - Distinct empty state (*"No tickets submitted yet"*) vs no-results state (*"No tickets match your filters"*).
+      - Boundary-safe pagination toolbar.
+    - [x] **Automated Tests:** Verified locally — all 25 server integration tests and 27 client UI component tests pass with 100% green assertions.
+
+    ### Verdict
+    **Approved!** Excellent implementation of ticket listing, searching, filtering, pagination, and responsive mobile/desktop design. Ready to merge into `lab2-staging`.
+
+    ```
+- **Partner's response:**
+    ```
+    Thanks for the thorough review and verification!
+
+    I appreciate you validating the requester data isolation, deterministic secondary sorting (`{ id: sortOrder }`), responsive desktop/mobile layouts, and the distinction between empty states.
+
+    The branch is clean and ready for you to merge into `lab2-staging`. Once merged, I will sync my local branch and update our project records before moving on to Issue #6 (Ticket Detail View)!
+    ```
+
+
 
 
