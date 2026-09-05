@@ -12,9 +12,10 @@
 | :--- | :--- | :--- | :--- |
 | #16  | `feature/lab2-spec-and-tests` | Add Sprint 2 engineering specification, tests plan, UI spec, and API spec in `docs/lab-02/`. | Approved |
 | #17  | `feature/lab2-requester-context` | Expand Prisma schema, seed active/inactive requesters, add `GET /api/requesters`, and build Requester Selector UI. | Approved |
-| #18  | `feature/lab2-ticket-creation` | Build `POST /api/tickets` with ticket number generator `TKT-YYYY-XXXXXX`, Create Ticket form, and field validation. | |
-|      | `feature/lab2-my-tickets` | Implement My Tickets backend query (search, filter, sort, page) and responsive desktop table / mobile cards UI. | |
-|      | `feature/lab2-ticket-detail` | Build read-only Ticket Detail view, attachment upload, active download stream, and soft removal with reason. | |
+| #18  | `feature/lab2-ticket-creation` | Build `POST /api/tickets` with ticket number generator `TKT-YYYY-XXXXXX`, Create Ticket form, and field validation. | Approved |
+| #19  | `feature/lab2-my-tickets` | Implement My Tickets backend query (search, filter, sort, page) and responsive desktop table / mobile cards UI. | Approved |
+| #20  | `feature/lab2-ticket-detail-and-attachments` | Build read-only Ticket Detail view, attachment upload, active download stream, and soft removal with reason. | Approved |
+| #22  | `test/lab2-e2e-and-evidence` | Playwright E2E suite, 13 visual inspection screenshots, and test matrix completion. | Approved |
 
 ---
 
@@ -319,16 +320,40 @@
 
   All 35 server tests (7 test suites), 29 client tests (5 test suites), TypeScript checks (tsc), and Vite production build pass cleanly.
   ```
+- **Reviewer Comment I Received(2):**
+  ```
+  Approved
+  ```
+- **How I responded(2):**
+  ```
+  Merge เลย :D
+  ```
 
 ### PR #6: `test(lab-02): E2E test verification and visual screenshot evidence collection`
-- **PR Link:** https://github.com/Maibokdaimhai/TokTickIT/pull/21
+- **PR Link:** https://github.com/Maibokdaimhai/TokTickIT/pull/22
 - **Reviewer Comment I Received(1):**
   ```
-  Waiting for review.
+  Approved.
+  I have tested and verified the full test suite and documentation deliverables locally:
+  1. **Playwright E2E Suite (`requester-ticket-flow.spec.ts`):**
+    - `E2E-01`: End-to-end requester creation workflow with attachment upload, sequential ticket number verification, and My Tickets listing passed cleanly.
+    - `E2E-02`: Search filtering, pagination under volume, and empty state verification passed.
+    - `E2E-03`: Read-only ticket detail inspection, attachment upload, and soft-removal with reason audit passed.
+    - All 3 E2E test scenarios passed (100% assertions green).
+  2. **Visual Screenshot Evidence (`artifacts/lab-02/screenshots/`):**
+    - All 13 required screenshot artifacts captured and verified across `create-ticket/` (5), `my-tickets/` (4), and `ticket-detail/` (4).
+  3. **Unit, API, and Component Tests:**
+    - Server Vitest: 35/35 passed across 7 test suites.
+    - Client Vitest: 29/29 passed across 6 test suites.
+    - TypeScript checks (`tsc --noEmit`) and Vite production build passed with 0 errors.
+  4. **Documentation:**
+    - `docs/lab-02/tests.md` visual checklist and final results summary are complete and accurate.
+    - Traceability matrix is fully satisfied.
+  Ready to merge
   ```
 - **How I responded(1):**
   ```
-  Waiting for review.
+  Thank you so much! Ready to merge!!! :D
   ```
 
 ---
@@ -486,6 +511,63 @@
     The branch is clean and ready for you to merge into `lab2-staging`. Once merged, I will sync my local branch and update our project records before moving on to Issue #6 (Ticket Detail View)!
     ```
 
+### PR: `feat(ticket): implement ticket detail view, attachments download, and soft removal (#6)`
+- **Link PR:** https://github.com/R1NNE0/toktickit/pull/24
+- **My comment:** 
+    ```
+    ## Peer Review Checklist & Verification — Issue #6
 
+    I have reviewed the Ticket Detail inspection view, binary attachment streaming/download, and attachment soft-removal workflow for **Lab 2 (Issue #6)**.
 
+    ### Verification Results
+    - [x] **Ticket Detail Inspection (`GET /api/tickets/:id`):** Returns full ticket attributes and relations with strict requester ownership enforcement. Attempts to access another requester's ticket return `HTTP 403 Forbidden`.
+    - [x] **Binary Attachment Streaming (`GET /api/attachments/:id/download`):** Streams active files with original filename disposition (`Content-Disposition`). Downloads of unowned or soft-removed attachments return `HTTP 403 Forbidden`.
+    - [x] **Soft-Removal Auditability (`DELETE /api/attachments/:id`):** Sets `isRemoved = true`, logs `removedAt` timestamp, and requires non-empty `removalReason`. Retains physical files on disk for compliance auditing.
+    - [x] **Ticket Detail & Removal Modal UI (`TicketDetail.tsx`):**
+      - Read-only panels for metadata, summary, and description.
+      - Active attachments list with Download and Remove actions.
+      - Soft-removed attachments list displaying `Removed` badge, removal reason callout, and disabled download button.
+      - Confirmation modal requiring non-empty removal reason before executing soft deletion.
+    - [x] **Automated Tests:** Verified locally — all 35 server integration tests and 32 client UI component tests pass with 100% green assertions.
 
+    ### Verdict
+    **Approved!** Excellent implementation of ticket detail inspection, binary attachment streaming, soft-removal auditing, and cross-requester protection. Ready to merge into `lab2-staging`.
+    ```
+- **Partner's response:**
+    ```
+    Thanks for the thorough review and verification!
+
+    I appreciate you validating the requester ownership boundaries, the binary download streaming headers, the physical retention of soft-deleted files, and the removal reason confirmation dialog.
+
+    The branch is clean, verified, and ready for you to merge into `lab2-staging`. Once merged, I will sync my local branch and update our project records before we proceed to Issue #7 (E2E and release integration)!
+    ```
+
+### PR: `feat: complete e2e integration tests, release verification, and lab 2 documentation (#7)`
+- **Link PR:** https://github.com/R1NNE0/toktickit/pull/25
+- **My comment:** 
+    ```
+    ## Peer Review Checklist & Verification — Issue #7
+
+    I have reviewed the End-to-End Testing, Release Verification, and Final Documentation Integration for **Lab 2 (Issue #7)**.
+
+    ### Verification Results
+    - [x] **Automated E2E Integration Suite (`e2e-flow.test.ts`):** 14 test scenarios covering the entire Requester MVP lifecycle (persona discovery, ticket creation with auto-numbering `TKT-YYYY-XXXXXX`, idempotency replay, attachment upload, search/filtering, detail inspection, binary streaming, soft-removal auditing, and cross-requester isolation).
+    - [x] **Defensive API Hardening:** Enforces 32-bit integer overflow checks (`MAX_INT = 2147483647`), returns `HTTP 409 Conflict` on repeated attachment removal, injects `X-Content-Type-Options: nosniff`, and applies RFC 6266 UTF-8 header encoding.
+    - [x] **Production Builds:** Both backend (`tsc`) and frontend (`vite build`) compiled cleanly with 0 errors.
+    - [x] **Finalized Documentation:**
+      - `docs/lab-02/tests.md`: Finalized 81/81 passed tests with 100% green status in Section 6.
+      - `docs/lab-02/reviewer.md`: Synchronized peer review records across all sprint issues.
+      - `docs/lab-02/ai-use.md`: Complete prompt log table and engineering reflection.
+    - [x] **Automated Test Coverage:** Verified locally — 49 server tests (8 suites) and 32 client tests (7 suites) pass with 100% green assertions.
+
+    ### Verdict
+    **Approved!** Exceptional delivery of E2E test coverage, defensive API hardening, clean production builds, and sprint documentation. Ready to merge into `lab2-staging` and cut the release PR to `main`!
+    ```
+- **Partner's response:**
+    ```
+    Thanks for the detailed review and thorough verification!
+
+    I really appreciate you validating the 14 E2E flow scenarios, the defensive API hardening guards (`MAX_INT`, 409 Conflict, `nosniff`, RFC 6266), the 100% green test assertions across all 81 tests, and the complete `docs/lab-02/` documentation suite.
+
+    The branch is fully verified and ready for you to merge into `lab2-staging`. Once merged, we can proceed to cut the final release PR into `main` to wrap up Lab 2!
+    ```
