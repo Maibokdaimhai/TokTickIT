@@ -8,7 +8,7 @@ Status: Draft. All Lab 2 tokens, focus behavior, validation placement, and respo
 - Profile menu contains Change Password and Logout.
 - Requester navigation: My Tickets and Create Ticket.
 - IT Staff navigation: Ticket Queue.
-- Administrator navigation: User Management, with secondary ticket access only when deliberately entering an authorized ticket workflow.
+- Administrator navigation: User Management (default) and Ticket Queue as separate destinations under the proposed authorization matrix.
 - Unauthorized destinations are not rendered, but server authorization remains authoritative.
 
 ## 2. Shared Components
@@ -36,7 +36,7 @@ Status: Draft. All Lab 2 tokens, focus behavior, validation placement, and respo
 ## 4. Mandatory Change Password
 
 - Shows current, new, and confirmation password controls.
-- Visible checklist communicates the 10-72 character complexity policy.
+- Visible checklist communicates at least ten characters, uppercase/lowercase/digit/symbol, and the 72 UTF-8 byte limit. Show a clear validation message if non-ASCII input exceeds the byte limit; never silently truncate it.
 - Continue remains busy/disabled while saving.
 - Normal navigation is absent until success; Logout remains available.
 - Field errors appear immediately below their controls; server failure preserves non-secret input only where safe.
@@ -55,7 +55,7 @@ Status: Draft. All Lab 2 tokens, focus behavior, validation placement, and respo
 
 Table columns: Ticket Number, Updated, Summary, Category, Requested Priority, IT Priority, Status, Owner, and Open action. Avoid additional low-value columns.
 
-Controls: search; category, status, IT Priority, and owner filters; one sort selector; clear filters; pagination.
+Controls: search; category, status, Requested Priority, IT Priority, and owner filters; one sort selector; clear filters; page size (10/20/50); pagination. Debounce search by 300 ms, reset page to 1 when queries change, cancel/discard stale responses, and retain queries when returning from detail. Priority sorting follows URGENT/HIGH/MEDIUM/LOW, not alphabetic order.
 
 ### Tablet and mobile
 
@@ -71,10 +71,13 @@ Controls: search; category, status, IT Priority, and owner filters; one sort sel
 
 - Read-only requester submission is grouped separately from operational controls.
 - Operational card contains owner, IT Priority, status, and guarded Save actions.
-- Claim is prominent for unassigned tickets. Reassign uses only eligible active owners.
+- Claim is prominent for unassigned tickets. Reassign loads its choices from `GET /api/staff/eligible-owners` and presents only eligible active IT Staff and Administrator users; the Administrator user-management list is not used.
 - Destructive/terminal transitions require a confirmation modal.
 - Tabs/sections: Public Comments, Internal Notes, Attachments. Public and private composers remain visually unmistakable.
+- IT Staff and Administrators can view attachment metadata and download active attachments from accessible tickets. Removed attachments remain visible as audited metadata but have no download action.
 - Concurrent `409` feedback explains that the ticket changed and offers Reload.
+- Load owner options independently with loading/empty/retry states; disable reassignment until options load. Keep Unassigned distinct from an empty eligible-owner list. Claim calls the dedicated claim endpoint, not reassignment. Disable repeated mutations while saving and refresh version after success. An owner who became inactive between loading and saving produces safe INVALID_OWNER feedback with refreshed choices.
+- Staff/Admin attachment cards expose metadata and active download only; Requester upload/removal controls do not appear. If a file is missing or was removed since rendering, show a safe error and refresh metadata.
 
 ## 8. Administrator User Management
 
@@ -112,3 +115,30 @@ Controls: search; category, status, IT Priority, and owner filters; one sort sel
 - [ ] Loading, success, empty, no-results, forbidden, conflict, and failure states are readable.
 - [ ] Keyboard focus, dialog focus handling, labels, and touch targets pass inspection.
 - [ ] Desktop, tablet, and mobile have no clipping, overlap, or unintended horizontal scrolling.
+
+## 11. Screen Modes, Navigation, and Failures
+
+| Screen | Primary modes | Processing and feedback |
+|---|---|---|
+| Login | Enter credentials | Required/email errors; signing in; generic invalid credentials; verified inactive-account guidance; throttled retry; safe network/server failure |
+| Change Password | Required first change; optional self change | Rule/confirmation/current-password errors; saving; successful rotated session; logout available; no normal navigation in required mode |
+| Requester My Tickets | List/filter/view | Loading; true empty; no results; retry; page reset; all eight status labels |
+| Create Ticket | Create; success confirmation | Read-only authenticated user; existing validation; upload progress/rollback; preserve draft on failure; warn about retained ticket if compensation fails |
+| Requester Detail | Read; append Public Comment; indicate resolution; attachments | Missing/forbidden safe page; composer validation/saving/retry; resolution confirmation/duplicate conflict; active/removed attachment modes |
+| Staff Queue | List/filter/view | Loading; empty; no results; retry; forbidden; query controls remain usable across breakpoints |
+| Staff Detail | Read; edit operations; append public/private communication | Owner-options loading/empty/failure; save/confirmation; stale-version conflict; not-found/forbidden; retain unsent content on failure |
+| User Management | List; create; edit; set initial password | Loading/empty/no results/retry; field/duplicate validation; safety conflicts; forbidden; saved feedback; cancel abandons unsaved form with confirmation |
+
+Use path-based navigation so direct navigation/reload and browser back can be tested: /login, /change-password, /my-tickets, /tickets/new, /tickets/:id, /staff/tickets, /staff/tickets/:id, /admin/users. Load /auth/me before revealing protected content. Invalid sessions clear cached user/ticket/note data and redirect to Login; restricted sessions route to Change Password; unauthorized roles see a safe forbidden page with a link to their permitted home. Do not reuse data from the previous user. After successful logout, clear authentication/private caches and return to Login. If logout fails, clear visible private state, report failure, and offer retry without claiming the server session was revoked.
+
+Problem Appears Resolved appears only in BR-17 permitted states; an existing indication shows time and disables repetition. Confirmation explicitly distinguishes the indication from formal resolution. Public/Private composers have separate labels and state; changing a tab cannot transfer draft content into the other composer. Status options contain only legal next values. Reopening, resolving, closing, and cancelling each require a named confirmation. No Actions Taken tab, email-reset checkbox, self-registration, or advanced administration features are implemented merely because an illustrative worksheet mockup shows them.
+
+Reuse the exact tokens and typography in [Lab 2 UI specification](../lab-02/ui-spec.md). New badges: OPEN uses pale blue with 'Open'; WAITING_FOR_REQUESTER uses amber with 'Waiting for Requester'; REOPENED uses amber with 'Reopened'; CANCELLED uses muted gray with 'Cancelled'. Role labels always show Requester/IT Staff/Administrator. Error text remains #DC2626; primary #006B3C; secondary #0B7A46; page #F5F7F6; text #1A2E26. Verify contrast and ensure a text/icon label accompanies every color distinction. Tablet can switch to cards early if the table cannot fit; no clipping of operational data.
+
+Dialogs move focus inside, trap Tab, restore the trigger on close, and support Escape except while a submitted operation is pending. Error summaries focus the first invalid field; use aria-invalid and aria-describedby, role=alert for errors, and polite live regions for save status. Keyboard users can access menus, sorting, pagination, composers, and password visibility. Never place passwords in URLs, persistent browser storage, screenshots, or success callouts.
+
+## 12. Screenshot Plan
+
+Under artifacts/lab-03/screenshots/, capture authentication/, requester/, staff-queue/, staff-ticket-detail/, and user-management/. For each major screen capture desktop (1440x900), tablet (820x1180), and mobile (390x844). Use descriptive names such as staff-queue/desktop-populated.png and authentication/mobile-password-validation.png.
+
+Additional state evidence includes invalid/inactive/busy login, mandatory change, logout rejection; queue filtered/no-results/empty/failure; claim/reassign/status confirmation/conflict; public/private note distinction and forbidden API response; active/removed attachments; requester resolution indication; user creation/duplicate/reset/self-deactivation/last-admin safeguards and safe failures. Record browser/viewport, tested commit, scenario and result alongside evidence in tests.md. Do not mark the visual checklist complete until the screenshots and keyboard inspection exist.
