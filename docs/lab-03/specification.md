@@ -192,3 +192,19 @@ The API uses JSON, credentialed cookies, consistent `{ error: { code, message, d
 - Administrator ticket access is explicitly permitted by the matrix to satisfy Administrator ownership and Internal Note requirements.
 - Problem Appears Resolved is a separately audited indication, not a direct status transition.
 - Backend architecture will be incrementally separated into routes, controllers, services, middleware, and validators while Prisma remains the data-access layer.
+
+## 12. Sprint Delivery Issue Map
+
+| Issue | Scope | Planned branch |
+|---|---|---|
+| [#25](https://github.com/Maibokdaimhai/TokTickIT/issues/25) | Sprint 3 engineering contract and test plan | `feature/lab3-spec-and-tests` |
+| [#26](https://github.com/Maibokdaimhai/TokTickIT/issues/26) | Behavior-preserving layered backend refactor | `refactor/lab3-backend-layers` |
+| [#27](https://github.com/Maibokdaimhai/TokTickIT/issues/27) | User migration and secure authentication | `feature/lab3-authentication` |
+| [#28](https://github.com/Maibokdaimhai/TokTickIT/issues/28) | Authenticated Requester ownership and role authorization | `feature/lab3-authorization-requester` |
+| [#29](https://github.com/Maibokdaimhai/TokTickIT/issues/29) | IT Staff Ticket Queue | `feature/lab3-staff-queue` |
+| [#30](https://github.com/Maibokdaimhai/TokTickIT/issues/30) | Staff ticket operations, comments, and Internal Notes | `feature/lab3-staff-ticket-operations` |
+| [#31](https://github.com/Maibokdaimhai/TokTickIT/issues/31) | Minimalist Administrator user management | `feature/lab3-admin-users` |
+| [#32](https://github.com/Maibokdaimhai/TokTickIT/issues/32) | E2E workflows and responsive screenshot evidence | `test/lab3-e2e-and-evidence` |
+| [#33](https://github.com/Maibokdaimhai/TokTickIT/issues/33) | Final evidence and Sprint 3 release integration | `docs/lab3-final-documentation` |
+
+Each feature branch starts from the latest reviewed `lab3-staging`. Its PR targets `lab3-staging`; only the final reviewed integration PR targets `main`.
