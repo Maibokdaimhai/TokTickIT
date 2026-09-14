@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import supertest from "supertest";
+import supertest, { testPasswordHash } from "../authenticated-request.js";
 import app from "../../src/app.js";
 import { getPrisma } from "../../src/prisma.js";
 
@@ -21,7 +21,7 @@ describe("My Tickets API Endpoint GET /api/tickets (Lab 2)", () => {
       },
     });
 
-    await prisma.requesterUser.deleteMany({
+    await prisma.user.deleteMany({
       where: {
         email: {
           in: [
@@ -34,31 +34,31 @@ describe("My Tickets API Endpoint GET /api/tickets (Lab 2)", () => {
     });
 
     // Create 2 active requesters and 1 inactive requester
-    const userA = await prisma.requesterUser.create({
+    const userA = await prisma.user.create({
       data: {
         name: "MyTickets User A",
         email: "mytickets.userA@example.com",
-        department: "Engineering",
+        passwordHash: testPasswordHash, mustChangePassword: false,
         isActive: true,
       },
     });
     requesterAId = userA.id;
 
-    const userB = await prisma.requesterUser.create({
+    const userB = await prisma.user.create({
       data: {
         name: "MyTickets User B",
         email: "mytickets.userB@example.com",
-        department: "Product",
+        passwordHash: testPasswordHash, mustChangePassword: false,
         isActive: true,
       },
     });
     requesterBId = userB.id;
 
-    const inactiveUser = await prisma.requesterUser.create({
+    const inactiveUser = await prisma.user.create({
       data: {
         name: "MyTickets Inactive",
         email: "mytickets.inactive@example.com",
-        department: "Operations",
+        passwordHash: testPasswordHash, mustChangePassword: false,
         isActive: false,
       },
     });
@@ -84,6 +84,7 @@ describe("My Tickets API Endpoint GET /api/tickets (Lab 2)", () => {
           summary: i === 5 ? "[MyTickets Test] Urgent Laptop WiFi issue" : `[MyTickets Test] Ticket ${i} for Requester A`,
           description: `Detailed description for test ticket number ${i}`,
           requestedPriority: i === 5 ? "URGENT" : i % 3 === 0 ? "HIGH" : "MEDIUM",
+          itPriority: "MEDIUM",
           status: i === 7 ? "RESOLVED" : i % 4 === 0 ? "IN_PROGRESS" : "NEW",
           createdAt: new Date(Date.now() - (15 - i) * 60000), // sequential timestamps
         },
@@ -116,6 +117,7 @@ describe("My Tickets API Endpoint GET /api/tickets (Lab 2)", () => {
           summary: `[MyTickets Test] Private Ticket ${j} for Requester B`,
           description: "Private description for Requester B",
           requestedPriority: "LOW",
+          itPriority: "MEDIUM",
           status: "NEW",
         },
       });
@@ -130,7 +132,7 @@ describe("My Tickets API Endpoint GET /api/tickets (Lab 2)", () => {
       },
     });
 
-    await prisma.requesterUser.deleteMany({
+    await prisma.user.deleteMany({
       where: {
         email: {
           in: [

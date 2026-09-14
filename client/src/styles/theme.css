@@ -476,4 +476,14 @@ body {
     display: flex;
   }
 }
-
+/* Cookie-authentication screens share the existing Zen Green tokens. */
+.auth-page { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; background: var(--color-bg, #F3F4F6); }
+.auth-card { width: 100%; max-width: 460px; padding: 28px; border-radius: 12px; background: white; box-shadow: 0 4px 20px #0001; }
+.auth-card h1 { font-size: 1.6rem; margin: 20px 0; }
+.auth-field { display: block; margin: 16px 0; }
+.auth-field input { margin-top: 6px; width: 100%; }
+.auth-card button { margin: 8px 8px 0 0; min-height: 44px; }
+.auth-card .btn-primary { --bs-btn-hover-bg: var(--color-primary-hover); --bs-btn-active-bg: var(--color-primary-hover); --bs-btn-hover-border-color: var(--color-primary-hover); --bs-btn-active-border-color: var(--color-primary-hover); }
+.account-menu { position: relative; }
+.account-actions { position: absolute; right: 0; top: 100%; z-index: 30; min-width: 180px; display: grid; gap: 8px; padding: 12px; background: white; border: 1px solid var(--color-border); border-radius: 8px; box-shadow: 0 4px 12px #0002; }
+.account-actions button { min-height: 44px; }

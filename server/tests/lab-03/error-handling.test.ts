@@ -5,7 +5,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { Readable } from "stream";
-import app from "../../src/app.js";
+import app from "../transport-app.js";
 import * as attachments from "../../src/services/attachment.service.js";
 import { asyncHandler } from "../../src/middleware/async-handler.js";
 import { errorHandler } from "../../src/middleware/error-handler.js";

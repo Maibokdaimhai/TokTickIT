@@ -1,14 +1,20 @@
 import React from "react";
-import { useRequester } from "../context/RequesterContext.js";
+import { useAuth } from "../context/AuthContext.js";
 import { TokTickLogo } from "./TokTickLogo.js";
 
 interface HeaderProps {
   activeTab: "my-tickets" | "create-ticket";
   setActiveTab: (tab: "my-tickets" | "create-ticket") => void;
+  onChangePassword: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
-  const { selectedRequester, openSelector } = useRequester();
+export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onChangePassword }) => {
+  const { session, logout } = useAuth();
+  const selectedRequester = session?.user;
+  const [error, setError] = React.useState("");
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const [signingOut, setSigningOut] = React.useState(false);
+  const accountButton = React.useRef<HTMLButtonElement>(null);
 
   const getInitials = (name: string) => {
     return name
@@ -41,7 +47,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
       </div>
 
       <nav className="app-nav" aria-label="Main Navigation">
-        <button
+        {session?.user.role === "REQUESTER" && <><button
           type="button"
           className={`nav-item ${activeTab === "my-tickets" ? "active" : ""}`}
           onClick={() => setActiveTab("my-tickets")}
@@ -55,14 +61,18 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
           onClick={() => setActiveTab("create-ticket")}
         >
           ➕ Create Ticket
-        </button>
+        </button></>}
 
+        <div className="account-menu" onKeyDown={event => { if (event.key === "Escape") { setMenuOpen(false); accountButton.current?.focus(); } }}>
         <button
+          ref={accountButton}
           type="button"
           className="requester-badge-btn"
-          onClick={openSelector}
-          title="Click to switch Development Requester identity"
-          aria-label="Current Requester Identity"
+          onClick={() => setMenuOpen(value => !value)}
+          title="Account menu"
+          aria-label="Account menu"
+          aria-expanded={menuOpen}
+          aria-controls="account-actions"
         >
           <div className="requester-avatar">
             {selectedRequester ? getInitials(selectedRequester.name) : "👤"}
@@ -72,11 +82,19 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               {selectedRequester ? selectedRequester.name : "Select User"}
             </span>
             {selectedRequester && (
-              <span className="requester-dept">{selectedRequester.department}</span>
+              <span className="requester-dept">{selectedRequester.role}</span>
             )}
           </div>
           <span style={{ fontSize: "10px", opacity: 0.8, marginLeft: "4px" }}>▼</span>
         </button>
+        {menuOpen && <div id="account-actions" className="account-actions">
+          <button className="btn btn-outline-secondary" type="button" onClick={() => { setMenuOpen(false); onChangePassword(); }}>Change password</button>
+          <button className="btn btn-outline-secondary" type="button" disabled={signingOut} onClick={() => {
+            setSigningOut(true); void logout().catch(reason => setError(reason.message)).finally(() => setSigningOut(false));
+          }}>{signingOut ? "Signing out…" : "Sign out"}</button>
+        </div>}
+        </div>
+        {error && <span role="alert">{error}</span>}
       </nav>
     </header>
   );

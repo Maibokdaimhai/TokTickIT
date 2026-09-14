@@ -1,6 +1,37 @@
-import { RequesterUser, Category, RelatedSystem, Priority, Ticket, FetchTicketsParams, TicketsResponse, Attachment, TicketDetail } from "./types.js";
+import { AuthResult, Category, RelatedSystem, Priority, Ticket, FetchTicketsParams, TicketsResponse, Attachment, TicketDetail } from "./types.js";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+
+export class AuthError extends Error {
+  constructor(message: string, public status: number, public code?: string) { super(message); }
+}
+// All browser requests use the HttpOnly session cookie, never localStorage credentials.
+async function apiFetch(url: string, init?: RequestInit) {
+  const response = await fetch(url, { ...init, credentials: "include" });
+  if (!url.includes("/api/auth/") && (response.status === 401 || response.status === 403)) {
+    if (response.status === 401) window.dispatchEvent(new Event("auth:expired"));
+    else {
+      const body = await response.clone().json().catch(() => null);
+      if (body?.error?.code === "PASSWORD_CHANGE_REQUIRED") window.dispatchEvent(new Event("auth:password-required"));
+    }
+  }
+  return response;
+}
+async function authRequest(path: string, body?: object): Promise<AuthResult> {
+  const response = await apiFetch(`${API_URL}/api/auth/${path}`, body ? {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  } : undefined);
+  const data = response.status === 204 ? undefined : await response.json();
+  if (!response.ok) {
+    if (response.status === 401 && path === "change-password") window.dispatchEvent(new Event("auth:expired"));
+    throw new AuthError(data?.error?.details?.join(" ") || data?.error?.message || "Authentication request failed", response.status, data?.error?.code);
+  }
+  return data;
+}
+export const getSession = () => authRequest("me");
+export const login = (email: string, password: string) => authRequest("login", { email, password });
+export const logout = async () => { await authRequest("logout", {}); };
+export const changePassword = (currentPassword: string, newPassword: string, confirmPassword: string) => authRequest("change-password", { currentPassword, newPassword, confirmPassword });
 
 export interface SystemStatus {
   online: boolean;
@@ -8,12 +39,12 @@ export interface SystemStatus {
 }
 
 export async function checkSystem(): Promise<SystemStatus> {
-  const healthRes = await fetch(`${API_URL}/api/health`);
+  const healthRes = await apiFetch(`${API_URL}/api/health`);
   if (!healthRes.ok) {
     throw new Error("Unable to connect to TokTickIT API");
   }
 
-  const catRes = await fetch(`${API_URL}/api/categories`);
+  const catRes = await apiFetch(`${API_URL}/api/categories`);
   if (!catRes.ok) {
     throw new Error("Unable to load request categories");
   }
@@ -22,16 +53,8 @@ export async function checkSystem(): Promise<SystemStatus> {
   return { online: true, categories };
 }
 
-export async function fetchRequesters(): Promise<RequesterUser[]> {
-  const res = await fetch(`${API_URL}/api/requesters`);
-  if (!res.ok) {
-    throw new Error("Failed to fetch active development requesters");
-  }
-  return res.json();
-}
-
 export async function fetchCategories(): Promise<Category[]> {
-  const res = await fetch(`${API_URL}/api/categories`);
+  const res = await apiFetch(`${API_URL}/api/categories`);
   if (!res.ok) {
     throw new Error("Failed to fetch active IT categories");
   }
@@ -39,7 +62,7 @@ export async function fetchCategories(): Promise<Category[]> {
 }
 
 export async function fetchRelatedSystems(): Promise<RelatedSystem[]> {
-  const res = await fetch(`${API_URL}/api/related-systems`);
+  const res = await apiFetch(`${API_URL}/api/related-systems`);
   if (!res.ok) {
     throw new Error("Failed to fetch active related systems");
   }
@@ -56,7 +79,7 @@ export interface CreateTicketPayload {
 }
 
 export async function createTicket(payload: CreateTicketPayload): Promise<Ticket> {
-  const res = await fetch(`${API_URL}/api/tickets`, {
+  const res = await apiFetch(`${API_URL}/api/tickets`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -76,7 +99,7 @@ export async function createTicket(payload: CreateTicketPayload): Promise<Ticket
 }
 
 export async function deleteTicketRollback(ticketId: number, requesterId: number): Promise<void> {
-  const res = await fetch(`${API_URL}/api/tickets/${ticketId}?requesterId=${requesterId}`, {
+  const res = await apiFetch(`${API_URL}/api/tickets/${ticketId}?requesterId=${requesterId}`, {
     method: "DELETE",
   });
   if (!res.ok) {
@@ -89,7 +112,7 @@ export async function uploadAttachment(ticketId: number, file: File, requesterId
   formData.append("file", file);
   formData.append("requesterId", String(requesterId));
 
-  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/attachments`, {
+  const res = await apiFetch(`${API_URL}/api/tickets/${ticketId}/attachments`, {
     method: "POST",
     body: formData,
   });
@@ -128,7 +151,7 @@ export async function fetchMyTickets(params: FetchTicketsParams): Promise<Ticket
     query.append("limit", String(params.limit));
   }
 
-  const res = await fetch(`${API_URL}/api/tickets?${query.toString()}`, { signal: params.signal });
+  const res = await apiFetch(`${API_URL}/api/tickets?${query.toString()}`, { signal: params.signal });
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data?.error?.message || "Failed to fetch tickets");
@@ -138,7 +161,7 @@ export async function fetchMyTickets(params: FetchTicketsParams): Promise<Ticket
 }
 
 export async function fetchTicketDetail(ticketId: number, requesterId: number): Promise<TicketDetail> {
-  const res = await fetch(`${API_URL}/api/tickets/${ticketId}?requesterId=${requesterId}`);
+  const res = await apiFetch(`${API_URL}/api/tickets/${ticketId}?requesterId=${requesterId}`);
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data?.error?.message || "Failed to fetch ticket details");
@@ -152,7 +175,7 @@ export async function removeAttachment(
   requesterId: number,
   removalReason: string
 ): Promise<Attachment> {
-  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/attachments/${attachmentId}/remove`, {
+  const res = await apiFetch(`${API_URL}/api/tickets/${ticketId}/attachments/${attachmentId}/remove`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -169,5 +192,3 @@ export async function removeAttachment(
 export function getAttachmentDownloadUrl(ticketId: number, attachmentId: number, requesterId: number): string {
   return `${API_URL}/api/tickets/${ticketId}/attachments/${attachmentId}?requesterId=${requesterId}`;
 }
-
-

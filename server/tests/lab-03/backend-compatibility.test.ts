@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import request from "supertest";
-import app, { decodeFilename, formatContentDisposition } from "../../src/app.js";
+import { decodeFilename, formatContentDisposition } from "../../src/app.js";
+import app from "../transport-app.js";
 import * as database from "../../src/prisma.js";
 
 afterEach(() => vi.restoreAllMocks());
@@ -9,7 +10,6 @@ describe("Issue #26: existing HTTP contract during backend extraction", () => {
   const failures = [
     ["get", "/api/categories", "Failed to fetch categories"],
     ["get", "/api/related-systems", "Failed to fetch related systems"],
-    ["get", "/api/requesters", "Failed to fetch active requesters"],
     ["post", "/api/tickets", "Failed to create support ticket"],
     ["get", "/api/tickets?requesterId=1", "Failed to query ticket list"],
     ["get", "/api/tickets/1?requesterId=1", "Failed to retrieve ticket details"],
@@ -46,11 +46,11 @@ describe("Issue #26: existing HTTP contract during backend extraction", () => {
     expect(response.type).toBe("text/html");
   });
 
-  it("preserves malformed JSON handling", async () => {
+  it("returns safe JSON for malformed JSON", async () => {
     const response = await request(app).post("/api/tickets")
       .set("Content-Type", "application/json").send('{"summary":');
     expect(response.status).toBe(400);
-    expect(response.type).toBe("text/html");
+    expect(response.type).toBe("application/json");
   });
 });
 

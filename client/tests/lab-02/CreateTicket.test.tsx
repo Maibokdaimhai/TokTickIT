@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { RequesterProvider } from "../../src/context/RequesterContext.js";
+import { RequesterProvider } from "../requester-fixture.js";
 import { CreateTicketForm } from "../../src/components/CreateTicketForm.js";
 import * as api from "../../src/api.js";
 
@@ -11,7 +11,6 @@ vi.mock("../../src/api.js", () => ({
   createTicket: vi.fn(),
   deleteTicketRollback: vi.fn(),
   uploadAttachment: vi.fn(),
-  fetchRequesters: vi.fn(),
 }));
 
 describe("CreateTicketForm Component (Lab 2)", () => {
@@ -32,10 +31,6 @@ describe("CreateTicketForm Component (Lab 2)", () => {
     (api.fetchRelatedSystems as any).mockResolvedValue([
       { id: 10, name: "Campus Wi-Fi" },
       { id: 20, name: "VPN" },
-    ]);
-
-    (api.fetchRequesters as any).mockResolvedValue([
-      { id: 1, name: "Jennifer Anderson", email: "jennifer@example.com", department: "Engineering" },
     ]);
   });
 

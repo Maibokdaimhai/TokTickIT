@@ -1,14 +1,13 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { RequesterProvider, useRequester } from "../../src/context/RequesterContext.js";
+import { RequesterProvider, useRequester } from "../requester-fixture.js";
 import { MyTicketsPage } from "../../src/components/MyTicketsPage.js";
 import * as api from "../../src/api.js";
 
 // Mock API module
 vi.mock("../../src/api.js", () => ({
   fetchCategories: vi.fn(),
-  fetchRequesters: vi.fn(),
   fetchMyTickets: vi.fn(),
 }));
 
@@ -63,7 +62,6 @@ describe("MyTicketsPage Component (Lab 2)", () => {
     );
 
     (api.fetchCategories as any).mockResolvedValue(mockCategories);
-    (api.fetchRequesters as any).mockResolvedValue([mockRequester]);
     (api.fetchMyTickets as any).mockResolvedValue({
       tickets: sampleTickets,
       pagination: {
@@ -272,8 +270,6 @@ describe("MyTicketsPage Component (Lab 2)", () => {
       isActive: true,
     };
 
-    (api.fetchRequesters as any).mockResolvedValue([mockRequester, requesterB]);
-
     const ContextSwitchWrapper: React.FC = () => {
       const { setSelectedRequester } = useRequester();
       return (
@@ -320,8 +316,6 @@ describe("MyTicketsPage Component (Lab 2)", () => {
       department: "Marketing",
       isActive: true,
     };
-
-    (api.fetchRequesters as any).mockResolvedValue([mockRequester, requesterB]);
 
     let resolveRequesterA: any;
     const delayedPromiseA = new Promise((resolve) => {
@@ -412,8 +406,6 @@ describe("MyTicketsPage Component (Lab 2)", () => {
       department: "Marketing",
       isActive: true,
     };
-
-    (api.fetchRequesters as any).mockResolvedValue([mockRequester, requesterB]);
 
     const ticketsPage1 = [sampleTickets[0]];
     const ticketsPage2 = [sampleTickets[1]];

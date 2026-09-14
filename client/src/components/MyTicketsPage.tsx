@@ -211,7 +211,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
           <p style={{ color: "var(--color-text-secondary)", fontSize: "14px" }}>
             Viewing support tickets owned by{" "}
             <strong style={{ color: "var(--color-text-primary)" }}>{selectedRequester ? selectedRequester.name : "No user selected"}</strong>
-            {selectedRequester && ` (${selectedRequester.department})`}.
+            .
           </p>
         </div>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>

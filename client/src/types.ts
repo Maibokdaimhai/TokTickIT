@@ -2,8 +2,12 @@ export interface RequesterUser {
   id: number;
   name: string;
   email: string;
-  department: string;
+  department?: string;
 }
+
+export type UserRole = "REQUESTER" | "IT_STAFF" | "ADMINISTRATOR";
+export interface AuthUser extends RequesterUser { role: UserRole; isActive: boolean }
+export interface AuthResult { user: AuthUser; mustChangePassword: boolean }
 
 export interface Category {
   id: number;
@@ -94,4 +98,3 @@ export interface FetchTicketsParams {
   limit?: number;
   signal?: AbortSignal;
 }
-

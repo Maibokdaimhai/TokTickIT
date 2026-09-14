@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import supertest from "supertest";
+import supertest, { testPasswordHash } from "../authenticated-request.js";
 import fs from "fs";
 import path from "path";
 import app from "../../src/app.js";
@@ -32,7 +32,7 @@ describe("Attachments Lifecycle & Soft Removal API (Lab 2)", () => {
       },
     });
 
-    await prisma.requesterUser.deleteMany({
+    await prisma.user.deleteMany({
       where: {
         email: {
           in: ["att.userA@example.com", "att.userB@example.com"],
@@ -40,21 +40,21 @@ describe("Attachments Lifecycle & Soft Removal API (Lab 2)", () => {
       },
     });
 
-    const userA = await prisma.requesterUser.create({
+    const userA = await prisma.user.create({
       data: {
         name: "Att User A",
         email: "att.userA@example.com",
-        department: "Engineering",
+        passwordHash: testPasswordHash, mustChangePassword: false,
         isActive: true,
       },
     });
     userAId = userA.id;
 
-    const userB = await prisma.requesterUser.create({
+    const userB = await prisma.user.create({
       data: {
         name: "Att User B",
         email: "att.userB@example.com",
-        department: "Product",
+        passwordHash: testPasswordHash, mustChangePassword: false,
         isActive: true,
       },
     });
@@ -72,6 +72,7 @@ describe("Attachments Lifecycle & Soft Removal API (Lab 2)", () => {
         categoryId,
         relatedSystemId,
         requestedPriority: "MEDIUM",
+          itPriority: "MEDIUM",
         status: "NEW",
         summary: "[Att Test] Main Ticket",
         description: "[Att Test] Testing attachment uploads and soft removals.",
@@ -86,6 +87,7 @@ describe("Attachments Lifecycle & Soft Removal API (Lab 2)", () => {
         categoryId,
         relatedSystemId,
         requestedPriority: "LOW",
+          itPriority: "MEDIUM",
         status: "NEW",
         summary: "[Att Test] Other User Ticket",
         description: "[Att Test] Belongs to User B.",
@@ -122,7 +124,7 @@ describe("Attachments Lifecycle & Soft Removal API (Lab 2)", () => {
       },
     });
 
-    await prisma.requesterUser.deleteMany({
+    await prisma.user.deleteMany({
       where: {
         email: {
           in: ["att.userA@example.com", "att.userB@example.com"],
