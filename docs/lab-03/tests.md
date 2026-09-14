@@ -146,6 +146,7 @@ For each implementation PR record: issue, branch/commit, test IDs, command, init
 |---|---|---|---|
 | Sprint-start partial baseline | 1c27a89 | Prior executed output summarized in §7 | Client/build passed; server environment blocked |
 | Issue #26 refactor evidence | c0e983a | Commands/results in §11 | Server 62/62; client 29/29; browser 3/3; type check/build passed |
+| Issue #26 error-handling review fixes | 3e706dd | Commands/results in §12 | Server 68/68; client 29/29; browser 3/3; both builds/type check passed |
 | Later feature-PR implementation evidence | Pending | Pending | Not run |
 | Final lab3-staging validation | Pending | Pending | Not run |
 | Final main validation | Pending | Pending | Not run |
@@ -179,3 +180,27 @@ New test files:
 Server baseline and final integration runs used the newly created disposable `toktickit_lab3_refactor_20260913` database, with existing migrations and Lab 2 seed. They did not target the ordinary development database. Legacy server tests retain their cwd-relative upload handling. Browser tests started dedicated servers with the same disposable database and ran from `/private/tmp/toktickit-refactor-e2e.17eExy`; uploads, screenshots, and browser output stayed in that temporary directory. Existing Lab 2 evidence was not overwritten.
 
 Commands executed from `server/` with `DATABASE_URL` selecting that disposable database: `npx prisma migrate deploy`, `npm run prisma:seed`, and `npm test`. The pre-extraction characterization run used `npm test -- tests/lab-03/backend-compatibility.test.ts`. From the repository root: `npm --prefix client test`, `./server/node_modules/.bin/tsc --noEmit --project server/tsconfig.json`, and `npm --prefix client run build`. Browser verification used the unchanged `e2e/lab-02/requester-ticket-flow.spec.ts` through a temporary Playwright configuration with separate artifact paths and `reuseExistingServer: false`.
+
+## 12. Issue #26 Error-Handling Review Fixes
+
+Executed on 2026-09-14, code commit `3e706dd` on `refactor/lab3-backend-layers`. Peer feedback requested retained diagnostics and correct attachment stream error handling.
+
+- Unexpected errors retain the original value in `ApiError.cause`. Server logging includes method, route pattern, status, safe application code, recognized filesystem/Prisma code, and stack frames. Raw error messages, request bodies, query values, cookies, and attachment filenames are not logged. Clients receive only the existing generic error envelope.
+- Download headers are set only after the read stream emits `open`. Before response bytes are sent, stream failures return JSON and clear attachment disposition/length headers. After bytes are sent, the incomplete response is closed and the failure is logged; a second JSON response cannot replace a partial file. Streams are destroyed on failures and client disconnects.
+
+`server/tests/lab-03/error-handling.test.ts` adds six checks: cause retention/safe diagnostics, expected validation errors, real ENOENT file-open failure, real EISDIR first-read failure after open, successful real-file/Unicode download, and a simulated failure after partial bytes. For the two real filesystem failures, only the preceding service validation result is stubbed; Node's actual `fs.createReadStream` opens/reads the supplied missing path or directory.
+
+Red → green evidence: before the fixes, four of these six tests failed (lost cause, PDF MIME on both early stream failures, and missing diagnostics after partial transfer). After the fixes, all six passed.
+
+| Verification command | Result |
+| --- | --- |
+| `npm test -- tests/lab-03/error-handling.test.ts` from server | 6/6 passed |
+| `npm test` from server with the disposable database URL | 68/68 passed in ten files |
+| `npm --prefix client test` | 29/29 passed in six files |
+| `./server/node_modules/.bin/tsc --noEmit --project server/tsconfig.json` | Passed |
+| `npm --prefix server run build` | Passed; output under ignored server/dist |
+| `npm --prefix client run build` | Passed |
+| Existing Lab 2 Playwright workflow via temporary config | 3/3 passed |
+| `git diff --check` | Passed |
+
+Full database tests used `toktickit_lab3_refactor_20260913`, the disposable database from §11. Browser servers used that same database and fresh `/private/tmp/toktickit-refactor-review.JKyiXz` upload/screenshot/result paths, with `reuseExistingServer: false`. Browser command from that temporary directory: `/Users/meng/dev/MyUniversity/CPE334-SoftwareEngineer/toktickit/node_modules/.bin/playwright test --config /private/tmp/toktickit-refactor-review.JKyiXz/playwright.config.mjs`. These are review-fix results, not final-main release evidence.
