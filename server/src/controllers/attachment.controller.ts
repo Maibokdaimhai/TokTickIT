@@ -9,9 +9,32 @@ export const uploadAttachment = asyncHandler(async (req, res) => {
 
 export const downloadAttachment = asyncHandler(async (req, res, next) => {
   const attachment = await service.downloadAttachment({ ticketId: req.params.id, attachmentId: req.params.attachmentId }, req.query);
-  res.setHeader("Content-Type", attachment.mimeType);
-  res.setHeader("Content-Disposition", formatContentDisposition("inline", attachment.originalName));
-  fs.createReadStream(attachment.filePath).on("error", (error) => next(error)).pipe(res);
+  const disposition = formatContentDisposition("inline", attachment.originalName);
+  const stream = fs.createReadStream(attachment.filePath);
+  let failed = false;
+  const fail = (error: unknown) => {
+    if (failed) return;
+    failed = true;
+    stream.unpipe(res);
+    stream.destroy();
+    next(error);
+  };
+  stream.once("error", fail);
+  stream.once("open", () => {
+    if (failed || res.destroyed) {
+      stream.destroy();
+      return;
+    }
+    try {
+      res.setHeader("Content-Type", attachment.mimeType);
+      res.setHeader("Content-Disposition", disposition);
+      stream.pipe(res);
+    } catch (error) {
+      fail(error);
+    }
+  });
+  // Also release the file descriptor when a client abandons a download.
+  res.once("close", () => stream.destroy());
 }, "Failed to stream attachment");
 
 export const getAttachmentMetadata = asyncHandler(async (req, res) => {

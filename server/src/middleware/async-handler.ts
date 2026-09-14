@@ -10,7 +10,7 @@ export function asyncHandler(controller: AsyncController, failureMessage: string
       error instanceof ApiError ? error : new ApiError(500, {
         code: "INTERNAL_SERVER_ERROR",
         message: failureMessage,
-      }),
+      }, { cause: error }),
     );
     void Promise.resolve().then(() => controller(req, res, forward)).catch(forward);
   };
