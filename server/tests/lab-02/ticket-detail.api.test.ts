@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import supertest, { testPasswordHash } from "../authenticated-request.js";
+import supertest, { testPasswordHash, testUserId } from "../authenticated-request.js";
 import app from "../../src/app.js";
 import { getPrisma } from "../../src/prisma.js";
+import { randomUUID } from "node:crypto";
 
 describe("Ticket Detail API Endpoint GET /api/tickets/:id (Lab 2)", () => {
+  const ticketNumberSuffix = randomUUID();
   let userAId: number;
   let userBId: number;
   let categoryId: number;
@@ -32,21 +34,12 @@ describe("Ticket Detail API Endpoint GET /api/tickets/:id (Lab 2)", () => {
     await prisma.user.deleteMany({
       where: {
         email: {
-          in: ["detail.userA@example.com", "detail.userB@example.com"],
+          in: ["detail.userB@example.com"],
         },
       },
     });
 
-    // Create 2 test users
-    const userA = await prisma.user.create({
-      data: {
-        name: "Detail User A",
-        email: "detail.userA@example.com",
-        passwordHash: testPasswordHash, mustChangePassword: false,
-        isActive: true,
-      },
-    });
-    userAId = userA.id;
+    userAId = testUserId;
 
     const userB = await prisma.user.create({
       data: {
@@ -67,7 +60,7 @@ describe("Ticket Detail API Endpoint GET /api/tickets/:id (Lab 2)", () => {
     // Create Ticket for User A
     const ticketA = await prisma.ticket.create({
       data: {
-        ticketNumber: "TKT-2026-990001",
+        ticketNumber: `TKT-DETAIL-${ticketNumberSuffix}-A`,
         requesterId: userAId,
         categoryId,
         relatedSystemId,
@@ -112,7 +105,7 @@ describe("Ticket Detail API Endpoint GET /api/tickets/:id (Lab 2)", () => {
     // Create Ticket for User B
     const ticketB = await prisma.ticket.create({
       data: {
-        ticketNumber: "TKT-2026-990002",
+        ticketNumber: `TKT-DETAIL-${ticketNumberSuffix}-B`,
         requesterId: userBId,
         categoryId,
         relatedSystemId,
@@ -141,22 +134,20 @@ describe("Ticket Detail API Endpoint GET /api/tickets/:id (Lab 2)", () => {
     await prisma.user.deleteMany({
       where: {
         email: {
-          in: ["detail.userA@example.com", "detail.userB@example.com"],
+          in: ["detail.userB@example.com"],
         },
       },
     });
   });
 
-  it("API-06 / BR-05: returns 403 Forbidden when requesting a ticket owned by another requester", async () => {
-    // User B tries to view User A's ticket
+  it("API-06 / BR-05: returns non-disclosing 404 for another requester's ticket", async () => {
     const res = await supertest(app)
-      .get(`/api/tickets/${ticketAId}`)
+      .get(`/api/tickets/${ticketBId}`)
       .query({ requesterId: userBId });
 
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(404);
     expect(res.body.error).toBeDefined();
-    expect(res.body.error.code).toBe("FORBIDDEN");
-    expect(res.body.error.message).toContain("Access denied");
+    expect(res.body.error.code).toBe("NOT_FOUND");
   });
 
   it("FR-11 / BR-15: returns 200 OK with full details and attachments for ticket owner", async () => {
@@ -167,7 +158,7 @@ describe("Ticket Detail API Endpoint GET /api/tickets/:id (Lab 2)", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(ticketAId);
-    expect(res.body.ticketNumber).toBe("TKT-2026-990001");
+    expect(res.body.ticketNumber).toBe(`TKT-DETAIL-${ticketNumberSuffix}-A`);
     expect(res.body.summary).toBe("[Detail Test] User A Laptop Issue");
     expect(res.body.description).toBe("[Detail Test] My laptop screen is flickering continuously after the latest update.");
     expect(res.body.requestedPriority).toBe("HIGH");
@@ -175,7 +166,7 @@ describe("Ticket Detail API Endpoint GET /api/tickets/:id (Lab 2)", () => {
 
     // Associated models
     expect(res.body.requester.id).toBe(userAId);
-    expect(res.body.requester.name).toBe("Detail User A");
+    expect(res.body.requester.id).toBe(testUserId);
     expect(res.body.category.id).toBe(categoryId);
     expect(res.body.relatedSystem.id).toBe(relatedSystemId);
 
@@ -214,13 +205,13 @@ describe("Ticket Detail API Endpoint GET /api/tickets/:id (Lab 2)", () => {
     expect(res3.body.error.code).toBe("BAD_REQUEST");
   });
 
-  it("Defensive Validation: returns 400 Bad Request for invalid requesterId query parameter", async () => {
+  it("ignores an invalid legacy requesterId query parameter", async () => {
     const res = await supertest(app)
       .get(`/api/tickets/${ticketAId}`)
       .query({ requesterId: "invalid" });
 
-    expect(res.status).toBe(400);
-    expect(res.body.error.code).toBe("BAD_REQUEST");
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe(ticketAId);
   });
 
   it("returns 404 Not Found for non-existent ticket ID", async () => {

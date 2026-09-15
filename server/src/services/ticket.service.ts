@@ -1,25 +1,14 @@
 import { getPrisma } from "../prisma.js";
 import { ApiError } from "../errors/api-error.js";
-import { isValidIntegerId, parseTicketIdentity } from "../validators/id.validator.js";
+import { parseTicketId } from "../validators/id.validator.js";
 import { generateTicketNumber } from "../utils/ticket-number.js";
-import { parseCreateTicket, parseTicketFilters } from "../validators/ticket.validator.js";
+import { parseCreateTicket, parseTicketFilters, validateLegacyRequesterQuery } from "../validators/ticket.validator.js";
 import type { Priority } from "@prisma/client";
 import { removeUploadedFile } from "../storage/attachments.js";
 
-export async function createTicket(body: Record<string, unknown>) {
+export async function createTicket(body: Record<string, unknown>, actorId: number) {
   const prisma = getPrisma();
-  const { parsedCategoryId, parsedRelatedSystemId, parsedRequesterId, trimmedSummary, trimmedDescription, requestedPriority } = parseCreateTicket(body);
-
-  // BR-13 Check if Requester exists and is ACTIVE
-  const requester = await prisma.user.findUnique({
-    where: { id: parsedRequesterId },
-  });
-  if (!requester || !requester.isActive) {
-    throw new ApiError(403, {
-      code: "FORBIDDEN",
-      message: "Requester account is inactive or not found",
-    });
-  }
+  const { parsedCategoryId, parsedRelatedSystemId, trimmedSummary, trimmedDescription, requestedPriority } = parseCreateTicket(body);
   // Check if Category exists & is active
   const category = await prisma.category.findUnique({
     where: { id: parsedCategoryId },
@@ -56,7 +45,7 @@ export async function createTicket(body: Record<string, unknown>) {
         return await tx.ticket.create({
           data: {
             ticketNumber,
-            requesterId: parsedRequesterId,
+            requesterId: actorId,
             categoryId: parsedCategoryId,
             relatedSystemId: parsedRelatedSystemId,
             summary: trimmedSummary,
@@ -89,24 +78,9 @@ export async function createTicket(body: Record<string, unknown>) {
   return ticket;
 }
 
-export async function listTickets(query: Record<string, unknown>) {
+export async function listTickets(query: Record<string, unknown>, actorId: number) {
   const prisma = getPrisma();
-  const requesterIdParam = query.requesterId;
-  if (!requesterIdParam) {
-    throw new ApiError(400, { code: "BAD_REQUEST", message: "requesterId query parameter is required" });
-  }
-  if (!isValidIntegerId(requesterIdParam)) {
-    throw new ApiError(400, { code: "BAD_REQUEST", message: "requesterId query parameter must be a valid positive integer" });
-  }
-  const requesterId = Number(requesterIdParam);
-  // Verify requester existence and active status (BR-04, BR-05)
-  const requester = await prisma.user.findUnique({
-    where: { id: requesterId },
-  });
-  if (!requester || !requester.isActive) {
-    throw new ApiError(403, { code: "FORBIDDEN", message: "Requester is invalid, missing, or inactive" });
-  }
-  const { page, limit, where, orderBy } = parseTicketFilters(query, requesterId);
+  const { page, limit, where, orderBy } = parseTicketFilters(query, actorId);
 
   // Query total count and paginated records
   const [totalItems, tickets] = await Promise.all([
@@ -159,9 +133,10 @@ export async function listTickets(query: Record<string, unknown>) {
   };
 }
 
-export async function getTicket(input: { ticketId: unknown }, query: Record<string, unknown>) {
+export async function getTicket(input: { ticketId: unknown }, actorId: number, query: Record<string, unknown> = {}) {
+  validateLegacyRequesterQuery(query);
+  const ticketId = parseTicketId(input.ticketId);
   const prisma = getPrisma();
-  const { ticketId, requesterId } = parseTicketIdentity(input.ticketId, query.requesterId);
   const ticket = await prisma.ticket.findUnique({
     where: { id: ticketId },
     include: {
@@ -195,11 +170,8 @@ export async function getTicket(input: { ticketId: unknown }, query: Record<stri
     throw new ApiError(404, { code: "NOT_FOUND", message: "Ticket not found" });
   }
   // BR-05 / AC-03 Requester ownership isolation check
-  if (ticket.requesterId !== requesterId) {
-    throw new ApiError(403, {
-      code: "FORBIDDEN",
-      message: "Access denied: ticket is owned by another requester",
-    });
+  if (ticket.requesterId !== actorId) {
+    throw new ApiError(404, { code: "NOT_FOUND", message: "Ticket not found" });
   }
   return {
     id: ticket.id,
@@ -230,34 +202,40 @@ export async function getTicket(input: { ticketId: unknown }, query: Record<stri
   };
 }
 
-export async function rollbackTicket(input: { ticketId: unknown }, query: Record<string, unknown>) {
+export async function rollbackTicket(input: { ticketId: unknown }, actorId: number, query: Record<string, unknown> = {}) {
+  validateLegacyRequesterQuery(query);
+  const ticketId = parseTicketId(input.ticketId);
   const prisma = getPrisma();
-  const { ticketId, requesterId } = parseTicketIdentity(input.ticketId, query.requesterId);
-  const ticket = await prisma.ticket.findUnique({
-    where: { id: ticketId },
-  });
-  if (!ticket) {
-    throw new ApiError(404, { code: "NOT_FOUND", message: "Ticket not found" });
-  }
-  // BR-05 Ownership isolation check
-  if (ticket.requesterId !== requesterId) {
-    throw new ApiError(403, {
-      code: "FORBIDDEN",
-      message: "Access denied: ticket is owned by another requester",
+  const attachments = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT id FROM "Ticket" WHERE id = ${ticketId} FOR UPDATE`;
+    const ticket = await tx.ticket.findUnique({
+      where: { id: ticketId },
+      select: {
+        requesterId: true,
+        status: true,
+        ownerId: true,
+        problemAppearsResolvedAt: true,
+        attachments: { select: { filePath: true } },
+        _count: { select: { publicComments: true, internalNotes: true } },
+      },
     });
-  }
-  // Clean up physical files from disk under server/uploads/
-  const attachments = await prisma.attachment.findMany({
-    where: { ticketId },
-    select: { filePath: true },
+    if (!ticket || ticket.requesterId !== actorId) {
+      throw new ApiError(404, { code: "NOT_FOUND", message: "Ticket not found" });
+    }
+    if (ticket.status !== "NEW" || ticket.ownerId !== null || ticket.problemAppearsResolvedAt !== null ||
+        ticket._count.publicComments > 0 || ticket._count.internalNotes > 0) {
+      throw new ApiError(409, {
+        code: "ROLLBACK_NOT_ALLOWED",
+        message: "Ticket can no longer be rolled back because work has started",
+      });
+    }
+    await tx.ticket.delete({ where: { id: ticketId } });
+    return ticket.attachments;
   });
+  // Preserve the Lab 2 best-effort physical cleanup after the database rollback succeeds.
   for (const att of attachments) {
     removeUploadedFile(att.filePath);
   }
-  // Delete ticket record (cascades to delete attachment records in DB)
-  await prisma.ticket.delete({
-    where: { id: ticketId },
-  });
   return {
     status: "ok",
     message: "Draft ticket rolled back successfully",

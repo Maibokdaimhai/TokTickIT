@@ -35,7 +35,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({ ticketId, on
     setIsLoading(true);
     setError(null);
     try {
-      const data = await fetchTicketDetail(ticketId, selectedRequester.id);
+      const data = await fetchTicketDetail(ticketId);
       setTicket(data);
     } catch (err: any) {
       setError(err?.message || "Failed to load ticket details");
@@ -99,7 +99,6 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({ ticketId, on
       const updatedAtt = await removeAttachment(
         ticketId,
         targetAttachment.id,
-        selectedRequester.id,
         trimmed
       );
 
@@ -147,7 +146,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({ ticketId, on
     setUploadError(null);
 
     try {
-      const newAtt = await uploadAttachment(ticketId, file, selectedRequester.id);
+      const newAtt = await uploadAttachment(ticketId, file);
       setTicket((prev) => {
         if (!prev) return null;
         return {
@@ -746,7 +745,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({ ticketId, on
 
                   // Active Card
                   const downloadUrl = selectedRequester
-                    ? getAttachmentDownloadUrl(ticket.id, att.id, selectedRequester.id)
+                    ? getAttachmentDownloadUrl(ticket.id, att.id)
                     : "#";
 
                   return (

@@ -24,7 +24,7 @@ The backend is organized by responsibility, with reference data, tickets, and at
 
 Services take plain values and return data; they do not send HTTP responses. Prisma remains the data-access layer. Authentication follows the same route/controller/service structure, with password/session utilities and shared session, Origin, and role middleware. Business-rule references in extracted legacy code refer to the Lab 2 specification.
 
-Current increment: Issue #27 replaces the development selector with secure login and prepares the Lab 3 schema/fixtures. **Issue #28 still needs to derive ticket ownership exclusively from the session and enforce the complete endpoint role matrix. This intermediate branch is not the completed authorization cutover and must not be deployed as a secured multi-user service.** Staff queue, ticket operations, and administration screens follow in their own issues.
+Current increment: Issue #28 completes the authentication/authorization cutover for the existing requester workflow. Ticket ownership now comes exclusively from the authenticated session; legacy `requesterId` inputs are ignored, cross-requester lookups return non-disclosing 404 responses, and endpoint role checks are enforced server-side. IT Staff and Administrators may read attachment metadata and download active files for accessible tickets, but cannot use requester-only creation, rollback, upload, or removal routes. Staff queue, ticket operations, and administration screens follow in their own issues.
 
 ## Prerequisites
 - Node.js (v18+)

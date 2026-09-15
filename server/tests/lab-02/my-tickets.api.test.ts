@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import supertest, { testPasswordHash } from "../authenticated-request.js";
+import supertest, { testPasswordHash, testUserId } from "../authenticated-request.js";
 import app from "../../src/app.js";
 import { getPrisma } from "../../src/prisma.js";
 
@@ -25,7 +25,6 @@ describe("My Tickets API Endpoint GET /api/tickets (Lab 2)", () => {
       where: {
         email: {
           in: [
-            "mytickets.userA@example.com",
             "mytickets.userB@example.com",
             "mytickets.inactive@example.com",
           ],
@@ -33,16 +32,8 @@ describe("My Tickets API Endpoint GET /api/tickets (Lab 2)", () => {
       },
     });
 
-    // Create 2 active requesters and 1 inactive requester
-    const userA = await prisma.user.create({
-      data: {
-        name: "MyTickets User A",
-        email: "mytickets.userA@example.com",
-        passwordHash: testPasswordHash, mustChangePassword: false,
-        isActive: true,
-      },
-    });
-    requesterAId = userA.id;
+    // The shared authenticated regression user is Requester A.
+    requesterAId = testUserId;
 
     const userB = await prisma.user.create({
       data: {
@@ -136,7 +127,6 @@ describe("My Tickets API Endpoint GET /api/tickets (Lab 2)", () => {
       where: {
         email: {
           in: [
-            "mytickets.userA@example.com",
             "mytickets.userB@example.com",
             "mytickets.inactive@example.com",
           ],
@@ -230,19 +220,15 @@ describe("My Tickets API Endpoint GET /api/tickets (Lab 2)", () => {
     expect(resCat.body.tickets.every((t: any) => t.category.id === category1Id)).toBe(true);
   });
 
-  it("API-05 / AC-03: enforces requester ownership isolation", async () => {
-    // Requester B requests their tickets
+  it("API-05 / AC-03: ignores a forged requesterId and preserves session ownership isolation", async () => {
     const resUserB = await supertest(app)
       .get("/api/tickets")
-      .query({ requesterId: requesterBId });
+      .query({ requesterId: requesterBId, limit: 50 });
 
     expect(resUserB.status).toBe(200);
-    expect(resUserB.body.pagination.totalItems).toBe(2);
-    // Requester B must NOT see any tickets from Requester A
-    const allRequesterBTickets = resUserB.body.tickets;
-    for (const ticket of allRequesterBTickets) {
-      expect(ticket.summary).toContain("Requester B");
-      expect(ticket.summary).not.toContain("Requester A");
+    expect(resUserB.body.pagination.totalItems).toBe(12);
+    for (const ticket of resUserB.body.tickets) {
+      expect(ticket.summary).not.toContain("Requester B");
     }
   });
 
@@ -276,28 +262,24 @@ describe("My Tickets API Endpoint GET /api/tickets (Lab 2)", () => {
     expect(resTicketAsc.body.tickets[11].ticketNumber).toBe("TKT-TEST-2026-0012");
   });
 
-  it("validates query parameters and rejects invalid or unauthorized requests", async () => {
-    // Missing requesterId -> 400
+  it("ignores legacy requester identity while validating supported filters", async () => {
     const resMissingRequester = await supertest(app).get("/api/tickets");
-    expect(resMissingRequester.status).toBe(400);
+    expect(resMissingRequester.status).toBe(200);
 
-    // Fractional requesterId -> 400
     const resFractional = await supertest(app)
       .get("/api/tickets")
       .query({ requesterId: 1.5 });
-    expect(resFractional.status).toBe(400);
+    expect(resFractional.status).toBe(200);
 
-    // Inactive requester -> 403 Forbidden
     const resInactive = await supertest(app)
       .get("/api/tickets")
       .query({ requesterId: inactiveRequesterId });
-    expect(resInactive.status).toBe(403);
+    expect(resInactive.status).toBe(200);
 
-    // Non-existent requester -> 403 Forbidden
     const resNonExistent = await supertest(app)
       .get("/api/tickets")
       .query({ requesterId: 999999 });
-    expect(resNonExistent.status).toBe(403);
+    expect(resNonExistent.status).toBe(200);
 
     // Invalid sort option -> 400
     const resInvalidSort = await supertest(app)

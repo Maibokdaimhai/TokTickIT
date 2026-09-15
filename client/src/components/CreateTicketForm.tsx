@@ -145,7 +145,6 @@ export const CreateTicketForm: React.FC<CreateTicketFormProps> = ({ onTicketCrea
 
     try {
       const payload = {
-        requesterId: selectedRequester.id,
         categoryId: Number(categoryId),
         relatedSystemId: Number(relatedSystemId),
         summary: summary.trim(),
@@ -160,14 +159,14 @@ export const CreateTicketForm: React.FC<CreateTicketFormProps> = ({ onTicketCrea
       if (selectedFiles.length > 0) {
         try {
           for (const file of selectedFiles) {
-            await uploadAttachment(ticket.id, file, selectedRequester.id);
+            await uploadAttachment(ticket.id, file);
           }
         } catch (uploadErr: any) {
           const uploadDetail = uploadErr?.message || "Failed to upload one or more attachments.";
 
           // Compensation Rollback: delete draft ticket and remove uploaded files
           try {
-            await deleteTicketRollback(ticket.id, selectedRequester.id);
+            await deleteTicketRollback(ticket.id);
             setRetainedDraftTicket(null);
             setApiError(`Attachment upload failed: ${uploadDetail}. The draft ticket was rolled back.`);
           } catch (rollbackErr: any) {

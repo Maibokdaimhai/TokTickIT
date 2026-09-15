@@ -88,7 +88,6 @@ export interface TicketsResponse {
 }
 
 export interface FetchTicketsParams {
-  requesterId: number;
   search?: string;
   category?: number;
   priority?: Priority;
