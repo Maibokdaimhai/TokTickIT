@@ -70,7 +70,6 @@ export async function fetchRelatedSystems(): Promise<RelatedSystem[]> {
 }
 
 export interface CreateTicketPayload {
-  requesterId: number;
   categoryId: number;
   relatedSystemId: number;
   summary: string;
@@ -98,8 +97,8 @@ export async function createTicket(payload: CreateTicketPayload): Promise<Ticket
   return data;
 }
 
-export async function deleteTicketRollback(ticketId: number, requesterId: number): Promise<void> {
-  const res = await apiFetch(`${API_URL}/api/tickets/${ticketId}?requesterId=${requesterId}`, {
+export async function deleteTicketRollback(ticketId: number): Promise<void> {
+  const res = await apiFetch(`${API_URL}/api/tickets/${ticketId}`, {
     method: "DELETE",
   });
   if (!res.ok) {
@@ -107,10 +106,9 @@ export async function deleteTicketRollback(ticketId: number, requesterId: number
   }
 }
 
-export async function uploadAttachment(ticketId: number, file: File, requesterId: number): Promise<any> {
+export async function uploadAttachment(ticketId: number, file: File): Promise<any> {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("requesterId", String(requesterId));
 
   const res = await apiFetch(`${API_URL}/api/tickets/${ticketId}/attachments`, {
     method: "POST",
@@ -127,8 +125,6 @@ export async function uploadAttachment(ticketId: number, file: File, requesterId
 
 export async function fetchMyTickets(params: FetchTicketsParams): Promise<TicketsResponse> {
   const query = new URLSearchParams();
-  query.append("requesterId", String(params.requesterId));
-
   if (params.search && params.search.trim()) {
     query.append("search", params.search.trim());
   }
@@ -160,8 +156,8 @@ export async function fetchMyTickets(params: FetchTicketsParams): Promise<Ticket
   return data;
 }
 
-export async function fetchTicketDetail(ticketId: number, requesterId: number): Promise<TicketDetail> {
-  const res = await apiFetch(`${API_URL}/api/tickets/${ticketId}?requesterId=${requesterId}`);
+export async function fetchTicketDetail(ticketId: number): Promise<TicketDetail> {
+  const res = await apiFetch(`${API_URL}/api/tickets/${ticketId}`);
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data?.error?.message || "Failed to fetch ticket details");
@@ -172,7 +168,6 @@ export async function fetchTicketDetail(ticketId: number, requesterId: number): 
 export async function removeAttachment(
   ticketId: number,
   attachmentId: number,
-  requesterId: number,
   removalReason: string
 ): Promise<Attachment> {
   const res = await apiFetch(`${API_URL}/api/tickets/${ticketId}/attachments/${attachmentId}/remove`, {
@@ -180,7 +175,7 @@ export async function removeAttachment(
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ requesterId, removalReason }),
+    body: JSON.stringify({ removalReason }),
   });
   const data = await res.json();
   if (!res.ok) {
@@ -189,6 +184,6 @@ export async function removeAttachment(
   return data;
 }
 
-export function getAttachmentDownloadUrl(ticketId: number, attachmentId: number, requesterId: number): string {
-  return `${API_URL}/api/tickets/${ticketId}/attachments/${attachmentId}?requesterId=${requesterId}`;
+export function getAttachmentDownloadUrl(ticketId: number, attachmentId: number): string {
+  return `${API_URL}/api/tickets/${ticketId}/attachments/${attachmentId}`;
 }

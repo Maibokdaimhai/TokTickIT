@@ -1,16 +1,31 @@
 import { getPrisma } from "../prisma.js";
 import { ApiError } from "../errors/api-error.js";
-import { parseTicketIdentity, parseAttachmentIdentity } from "../validators/id.validator.js";
+import { parseTicketId, parseAttachmentIds } from "../validators/id.validator.js";
 import fs from "fs";
-import { validateUpload, parseRemovalReason } from "../validators/attachment.validator.js";
+import { validateUpload, parseRemovalReason, validateUploadBody } from "../validators/attachment.validator.js";
 import path from "path";
 import { decodeFilename } from "../utils/filename.js";
 import { removeUploadedFile, type UploadedFile } from "../storage/attachments.js";
+import type { AuthenticatedActor } from "../types/auth.js";
+import { validateLegacyRequesterQuery } from "../validators/ticket.validator.js";
 
-export async function uploadAttachment(input: { ticketId: unknown }, body: Record<string, unknown>, file: UploadedFile | undefined) {
+function assertCanRead(requesterId: number, actor: AuthenticatedActor) {
+  if (actor.role === "REQUESTER" && requesterId !== actor.id) {
+    throw new ApiError(404, { code: "NOT_FOUND", message: "Attachment not found" });
+  }
+}
+
+function assertOwnTicket(requesterId: number, actorId: number) {
+  if (requesterId !== actorId) {
+    throw new ApiError(404, { code: "NOT_FOUND", message: "Attachment not found" });
+  }
+}
+
+export async function uploadAttachment(input: { ticketId: unknown }, body: Record<string, unknown>, actorId: number, file: UploadedFile | undefined) {
   try {
     const prisma = getPrisma();
-    const { ticketId, requesterId } = parseTicketIdentity(input.ticketId, body.requesterId, "body");
+    const ticketId = parseTicketId(input.ticketId);
+    validateUploadBody(body);
     validateUpload(file);
     // Check Ticket Existence
     const ticket = await prisma.ticket.findUnique({
@@ -20,12 +35,7 @@ export async function uploadAttachment(input: { ticketId: unknown }, body: Recor
       throw new ApiError(404, { code: "NOT_FOUND", message: "Ticket not found" });
     }
     // BR-05 Ownership isolation check
-    if (ticket.requesterId !== requesterId) {
-      throw new ApiError(403, {
-        code: "FORBIDDEN",
-        message: "Access denied: ticket is owned by another requester",
-      });
-    }
+    assertOwnTicket(ticket.requesterId, actorId);
     // BR-08 Enforce max 5 active attachments limit
     const activeCount = await prisma.attachment.count({
       where: { ticketId, isRemoved: false },
@@ -54,9 +64,10 @@ export async function uploadAttachment(input: { ticketId: unknown }, body: Recor
   }
 }
 
-export async function downloadAttachment(input: { ticketId: unknown; attachmentId: unknown }, query: Record<string, unknown>) {
+export async function downloadAttachment(input: { ticketId: unknown; attachmentId: unknown }, actor: AuthenticatedActor, query: Record<string, unknown> = {}) {
+  validateLegacyRequesterQuery(query);
+  const { ticketId, attachmentId } = parseAttachmentIds(input.ticketId, input.attachmentId);
   const prisma = getPrisma();
-  const { ticketId, attachmentId, requesterId } = parseAttachmentIdentity(input.ticketId, input.attachmentId, query.requesterId);
   const ticket = await prisma.ticket.findUnique({
     where: { id: ticketId },
   });
@@ -64,12 +75,7 @@ export async function downloadAttachment(input: { ticketId: unknown; attachmentI
     throw new ApiError(404, { code: "NOT_FOUND", message: "Ticket not found" });
   }
   // BR-05 Ownership isolation check
-  if (ticket.requesterId !== requesterId) {
-    throw new ApiError(403, {
-      code: "FORBIDDEN",
-      message: "Access denied: ticket is owned by another requester",
-    });
-  }
+  assertCanRead(ticket.requesterId, actor);
   const attachment = await prisma.attachment.findFirst({
     where: { id: attachmentId, ticketId },
   });
@@ -89,21 +95,17 @@ export async function downloadAttachment(input: { ticketId: unknown; attachmentI
   return { mimeType: attachment.mimeType, originalName: attachment.originalName, filePath: attachment.filePath };
 }
 
-export async function getAttachmentMetadata(input: { ticketId: unknown; attachmentId: unknown }, query: Record<string, unknown>) {
+export async function getAttachmentMetadata(input: { ticketId: unknown; attachmentId: unknown }, actor: AuthenticatedActor, query: Record<string, unknown> = {}) {
+  validateLegacyRequesterQuery(query);
+  const { ticketId, attachmentId } = parseAttachmentIds(input.ticketId, input.attachmentId);
   const prisma = getPrisma();
-  const { ticketId, attachmentId, requesterId } = parseAttachmentIdentity(input.ticketId, input.attachmentId, query.requesterId);
   const ticket = await prisma.ticket.findUnique({
     where: { id: ticketId },
   });
   if (!ticket) {
     throw new ApiError(404, { code: "NOT_FOUND", message: "Ticket not found" });
   }
-  if (ticket.requesterId !== requesterId) {
-    throw new ApiError(403, {
-      code: "FORBIDDEN",
-      message: "Access denied: ticket is owned by another requester",
-    });
-  }
+  assertCanRead(ticket.requesterId, actor);
   const attachment = await prisma.attachment.findFirst({
     where: { id: attachmentId, ticketId },
   });
@@ -123,10 +125,10 @@ export async function getAttachmentMetadata(input: { ticketId: unknown; attachme
   };
 }
 
-export async function removeAttachment(input: { ticketId: unknown; attachmentId: unknown }, body: Record<string, unknown>) {
+export async function removeAttachment(input: { ticketId: unknown; attachmentId: unknown }, body: Record<string, unknown>, actorId: number) {
   const prisma = getPrisma();
-  const { ticketId, attachmentId, requesterId } = parseAttachmentIdentity(input.ticketId, input.attachmentId, body.requesterId, "body");
-  const trimmedReason = parseRemovalReason(body.removalReason);
+  const { ticketId, attachmentId } = parseAttachmentIds(input.ticketId, input.attachmentId);
+  const trimmedReason = parseRemovalReason(body);
   const ticket = await prisma.ticket.findUnique({
     where: { id: ticketId },
   });
@@ -134,12 +136,7 @@ export async function removeAttachment(input: { ticketId: unknown; attachmentId:
     throw new ApiError(404, { code: "NOT_FOUND", message: "Ticket not found" });
   }
   // BR-05 Ownership isolation
-  if (ticket.requesterId !== requesterId) {
-    throw new ApiError(403, {
-      code: "FORBIDDEN",
-      message: "Access denied: ticket is owned by another requester",
-    });
-  }
+  assertOwnTicket(ticket.requesterId, actorId);
   const attachment = await prisma.attachment.findFirst({
     where: { id: attachmentId, ticketId },
   });

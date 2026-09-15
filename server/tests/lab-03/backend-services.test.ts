@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "../../src/errors/api-error.js";
 import { parseCreateTicket, parseTicketFilters } from "../../src/validators/ticket.validator.js";
-import { parseAttachmentIdentity } from "../../src/validators/id.validator.js";
+import { parseAttachmentIds } from "../../src/validators/id.validator.js";
 import { listTickets } from "../../src/services/ticket.service.js";
 import { uploadAttachment } from "../../src/services/attachment.service.js";
 import * as database from "../../src/prisma.js";
@@ -15,12 +15,12 @@ describe("Issue #26: validators independent of HTTP and database", () => {
       requesterId: "1", categoryId: 2, relatedSystemId: "3",
       summary: "  Printer failure  ", description: "  Printer fails to print documents.  ", requestedPriority: "HIGH",
     })).toEqual({
-      parsedRequesterId: 1, parsedCategoryId: 2, parsedRelatedSystemId: 3,
+      parsedCategoryId: 2, parsedRelatedSystemId: 3,
       trimmedSummary: "Printer failure", trimmedDescription: "Printer fails to print documents.", requestedPriority: "HIGH",
     });
   });
 
-  it("preserves all six creation errors and their order", () => {
+  it("preserves all five creation errors and their order", () => {
     try {
       parseCreateTicket({});
       expect.fail("Invalid input must throw");
@@ -32,7 +32,6 @@ describe("Issue #26: validators independent of HTTP and database", () => {
         "Requested Priority must be one of LOW, MEDIUM, HIGH, or URGENT.",
         "Category ID must be a valid positive integer.",
         "Related System ID must be a valid positive integer.",
-        "Requester ID must be a valid positive integer.",
       ]);
     }
   });
@@ -50,18 +49,18 @@ describe("Issue #26: validators independent of HTTP and database", () => {
     });
   });
 
-  it.each(["1.5", "-1", ["1", "2"]])("rejects invalid attachment ID %s before requester validation", (value) => {
-    expect(() => parseAttachmentIdentity("1", value, undefined)).toThrow("Attachment ID parameter must be a valid positive integer");
+  it.each(["1.5", "-1", "2147483648", ["1", "2"]])("rejects invalid attachment ID %s before requester validation", (value) => {
+      expect(() => parseAttachmentIds("1", value)).toThrow("Attachment ID parameter must be a valid positive integer");
   });
 });
 
 describe("Issue #26: service boundaries", () => {
-  it("preserves inactive requester error precedence over invalid list filters", async () => {
-    const prisma = { user: { findUnique: vi.fn().mockResolvedValue({ id: 1, isActive: false }) } };
-    vi.spyOn(database, "getPrisma").mockReturnValue(prisma as unknown as ReturnType<typeof database.getPrisma>);
-    await expect(listTickets({ requesterId: "1", sort: "invalid" })).rejects.toMatchObject({
-      status: 403, error: { code: "FORBIDDEN", message: "Requester is invalid, missing, or inactive" },
-    });
+  it("derives requester scope from the authenticated actor while ignoring a forged legacy ID", async () => {
+    const count = vi.fn().mockResolvedValue(0);
+    const findMany = vi.fn().mockResolvedValue([]);
+    vi.spyOn(database, "getPrisma").mockReturnValue({ ticket: { count, findMany } } as unknown as ReturnType<typeof database.getPrisma>);
+    await listTickets({ requesterId: "999" }, 7);
+    expect(count).toHaveBeenCalledWith({ where: { requesterId: 7 } });
   });
 
   it("removes an uploaded file when database persistence fails", async () => {
@@ -73,7 +72,7 @@ describe("Issue #26: service boundaries", () => {
     vi.spyOn(database, "getPrisma").mockReturnValue(prisma as unknown as ReturnType<typeof database.getPrisma>);
     const cleanup = vi.spyOn(storage, "removeUploadedFile").mockImplementation(() => { });
     const file = { path: "/test-only/upload.pdf", filename: "upload.pdf", originalname: "report.pdf", mimetype: "application/pdf", size: 20 };
-    await expect(uploadAttachment({ ticketId: "1" }, { requesterId: "1" }, file)).rejects.toBe(failure);
+    await expect(uploadAttachment({ ticketId: "1" }, {}, 1, file)).rejects.toBe(failure);
     expect(cleanup).toHaveBeenCalledTimes(1);
     expect(cleanup).toHaveBeenCalledWith(file.path);
   });
@@ -83,7 +82,7 @@ describe("Issue #26: service boundaries", () => {
     vi.spyOn(database, "getPrisma").mockReturnValue({ ticket: { findUnique } } as unknown as ReturnType<typeof database.getPrisma>);
     const cleanup = vi.spyOn(storage, "removeUploadedFile").mockImplementation(() => { });
     const file = { path: "/test-only/upload.exe", filename: "upload.exe", originalname: "program.exe", mimetype: "application/octet-stream", size: 20 };
-    await expect(uploadAttachment({ ticketId: "1" }, { requesterId: "1" }, file)).rejects.toMatchObject({ status: 400 });
+    await expect(uploadAttachment({ ticketId: "1" }, {}, 1, file)).rejects.toMatchObject({ status: 400 });
     expect(findUnique).not.toHaveBeenCalled();
     expect(cleanup).toHaveBeenCalledTimes(1);
     expect(cleanup).toHaveBeenCalledWith(file.path);

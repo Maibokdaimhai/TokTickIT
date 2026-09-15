@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import supertest, { testPasswordHash } from "../authenticated-request.js";
+import supertest, { testPasswordHash, testUserId } from "../authenticated-request.js";
 import app from "../../src/app.js";
 import { getPrisma } from "../../src/prisma.js";
 import { generateTicketNumber } from "../../src/utils/ticket-number.js";
@@ -20,22 +20,8 @@ describe("Create Ticket API & Reference Endpoints (Lab 2)", () => {
       },
     });
 
-    await prisma.user.deleteMany({
-      where: {
-        email: { in: ["active.ticket.test@example.com", "inactive.ticket.test@example.com"] },
-      },
-    });
-
-    // Create Active Test Requester
-    const activeRequester = await prisma.user.create({
-      data: {
-        name: "Active Ticket Tester",
-        email: "active.ticket.test@example.com",
-        passwordHash: testPasswordHash, mustChangePassword: false,
-        isActive: true,
-      },
-    });
-    activeRequesterId = activeRequester.id;
+    await prisma.user.deleteMany({ where: { email: "inactive.ticket.test@example.com" } });
+    activeRequesterId = testUserId;
 
     // Create Inactive Test Requester
     const inactiveRequester = await prisma.user.create({
@@ -65,7 +51,7 @@ describe("Create Ticket API & Reference Endpoints (Lab 2)", () => {
     });
     await prisma.user.deleteMany({
       where: {
-        email: { in: ["active.ticket.test@example.com", "inactive.ticket.test@example.com"] },
+        email: "inactive.ticket.test@example.com",
       },
     });
     await prisma.$disconnect();
@@ -132,7 +118,7 @@ describe("Create Ticket API & Reference Endpoints (Lab 2)", () => {
       expect(res.body.error.details.length).toBeGreaterThan(0);
     });
 
-    it("returns 403 Forbidden when requester account is inactive (BR-13)", async () => {
+    it("ignores a legacy requesterId and derives the requester from the session", async () => {
       const payload = {
         requesterId: inactiveRequesterId,
         categoryId,
@@ -144,8 +130,8 @@ describe("Create Ticket API & Reference Endpoints (Lab 2)", () => {
 
       const res = await supertest(app).post("/api/tickets").send(payload);
 
-      expect(res.status).toBe(403);
-      expect(res.body.error.code).toBe("FORBIDDEN");
+      expect(res.status).toBe(201);
+      expect(res.body.requester.id).toBe(activeRequesterId);
     });
 
     it("rejects fractional numeric IDs (e.g. categoryId: 1.5) with 400 Bad Request instead of 500", async () => {
@@ -164,7 +150,7 @@ describe("Create Ticket API & Reference Endpoints (Lab 2)", () => {
       expect(res.body.error.code).toBe("BAD_REQUEST");
       expect(res.body.error.details).toContain("Category ID must be a valid positive integer.");
       expect(res.body.error.details).toContain("Related System ID must be a valid positive integer.");
-      expect(res.body.error.details).toContain("Requester ID must be a valid positive integer.");
+      expect(res.body.error.details).not.toContain("Requester ID must be a valid positive integer.");
     });
 
     it("safely handles parallel ticket creation requests without duplicate ticketNumber collisions", async () => {
@@ -268,7 +254,7 @@ describe("Create Ticket API & Reference Endpoints (Lab 2)", () => {
       expect(attachmentAfterDelete).toBeNull();
     });
 
-    it("returns 403 Forbidden if attempting rollback on ticket owned by another requester", async () => {
+    it("ignores a forged legacy requesterId during rollback", async () => {
       const createRes = await supertest(app).post("/api/tickets").send({
         requesterId: activeRequesterId,
         categoryId,
@@ -283,7 +269,8 @@ describe("Create Ticket API & Reference Endpoints (Lab 2)", () => {
       const deleteRes = await supertest(app)
         .delete(`/api/tickets/${ticketId}?requesterId=999999`);
 
-      expect(deleteRes.status).toBe(403);
+      expect(deleteRes.status).toBe(200);
+      expect(await getPrisma().ticket.findUnique({ where: { id: ticketId } })).toBeNull();
     });
   });
 });

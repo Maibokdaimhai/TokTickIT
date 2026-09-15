@@ -7,6 +7,7 @@ import { health } from "../src/controllers/reference.controller.js";
 // Isolate controller/stream error contracts from session/database availability.
 const app = express();
 app.use(express.json({ limit: "64kb" }));
+app.use((_req, res, next) => { res.locals.user = { id: 1, role: "REQUESTER" }; next(); });
 app.get("/api/health", health);
 app.use("/api", referenceRouter, ticketRouter, attachmentRouter);
 app.use(errorHandler);

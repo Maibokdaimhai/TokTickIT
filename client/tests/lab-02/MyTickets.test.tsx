@@ -137,7 +137,6 @@ describe("MyTicketsPage Component (Lab 2)", () => {
     await waitFor(() => {
       expect(api.fetchMyTickets).toHaveBeenCalledWith(
         expect.objectContaining({
-          requesterId: 1,
           search: "keyboard",
           category: 1,
           priority: "HIGH",
@@ -261,7 +260,7 @@ describe("MyTicketsPage Component (Lab 2)", () => {
     });
   });
 
-  it("UI-05 / AC-11: resets and refetches tickets when context requester changes", async () => {
+  it("refetches session-owned tickets when authenticated requester context changes", async () => {
     const requesterB = {
       id: 2,
       name: "Marcus Vance",
@@ -293,18 +292,16 @@ describe("MyTicketsPage Component (Lab 2)", () => {
 
     await waitFor(() => {
       expect(screen.getAllByText("TKT-2026-000101")[0]).toBeInTheDocument();
-      expect(api.fetchMyTickets).toHaveBeenCalledWith(
-        expect.objectContaining({ requesterId: 1 })
-      );
+      expect(api.fetchMyTickets).toHaveBeenCalled();
     });
+    const callsBeforeSwitch = vi.mocked(api.fetchMyTickets).mock.calls.length;
 
     // Click switch button
     fireEvent.click(screen.getByTestId("switch-user-btn"));
 
     await waitFor(() => {
-      expect(api.fetchMyTickets).toHaveBeenCalledWith(
-        expect.objectContaining({ requesterId: 2 })
-      );
+      expect(vi.mocked(api.fetchMyTickets).mock.calls.length).toBeGreaterThan(callsBeforeSwitch);
+      expect(vi.mocked(api.fetchMyTickets).mock.lastCall?.[0]).not.toHaveProperty("requesterId");
     });
   });
 
@@ -337,8 +334,10 @@ describe("MyTicketsPage Component (Lab 2)", () => {
       },
     ];
 
-    (api.fetchMyTickets as any).mockImplementation((params: any) => {
-      if (params.requesterId === 1) {
+    let fetchCount = 0;
+    (api.fetchMyTickets as any).mockImplementation(() => {
+      fetchCount += 1;
+      if (fetchCount === 1) {
         return delayedPromiseA;
       }
       return Promise.resolve({
@@ -370,9 +369,7 @@ describe("MyTicketsPage Component (Lab 2)", () => {
 
     // Initial render triggered fetch for Requester 1 (which is currently pending)
     await waitFor(() => {
-      expect(api.fetchMyTickets).toHaveBeenCalledWith(
-        expect.objectContaining({ requesterId: 1 })
-      );
+      expect(api.fetchMyTickets).toHaveBeenCalledTimes(1);
     });
 
     // Switch to Requester 2 while Requester 1 is still pending
@@ -424,30 +421,24 @@ describe("MyTicketsPage Component (Lab 2)", () => {
       },
     ];
 
+    let pageFetchCount = 0;
     (api.fetchMyTickets as any).mockImplementation((params: any) => {
-      if (params.requesterId === 1) {
-        if (params.page === 1) {
+      pageFetchCount += 1;
+      if (pageFetchCount === 1) {
           return Promise.resolve({
             tickets: ticketsPage1,
             pagination: { page: 1, limit: 1, totalItems: 2, totalPages: 2 },
           });
-        }
+      }
+      if (params.page === 2) {
         return Promise.resolve({
           tickets: ticketsPage2,
           pagination: { page: 2, limit: 1, totalItems: 2, totalPages: 2 },
         });
       }
-      // Requester 2 only has 1 page
-      if (params.page === 1) {
-        return Promise.resolve({
-          tickets: ticketsB,
-          pagination: { page: 1, limit: 1, totalItems: 1, totalPages: 1 },
-        });
-      }
-      // Page 2 for Requester 2 would be empty!
       return Promise.resolve({
-        tickets: [],
-        pagination: { page: 2, limit: 1, totalItems: 1, totalPages: 1 },
+        tickets: ticketsB,
+        pagination: { page: 1, limit: 1, totalItems: 1, totalPages: 1 },
       });
     });
 
@@ -487,14 +478,12 @@ describe("MyTicketsPage Component (Lab 2)", () => {
     // Verify Requester 2 requests page 1 (NOT page 2) and renders Marcus's ticket
     await waitFor(() => {
       expect(api.fetchMyTickets).toHaveBeenCalledWith(
-        expect.objectContaining({ requesterId: 2, page: 1 })
+        expect.objectContaining({ page: 1 })
       );
+      expect(vi.mocked(api.fetchMyTickets).mock.lastCall?.[0]).not.toHaveProperty("requesterId");
       expect(screen.getAllByText("TKT-2026-B00001")[0]).toBeInTheDocument();
     });
 
-    // Verify page 2 was NOT requested for Requester 2
-    expect(api.fetchMyTickets).not.toHaveBeenCalledWith(
-      expect.objectContaining({ requesterId: 2, page: 2 })
-    );
+    expect(vi.mocked(api.fetchMyTickets).mock.lastCall?.[0]).toEqual(expect.objectContaining({ page: 1 }));
   });
 });

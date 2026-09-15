@@ -170,7 +170,7 @@ describe("CreateTicketForm Component (Lab 2)", () => {
 
     await waitFor(() => {
       expect(api.createTicket).toHaveBeenCalledTimes(1);
-      expect(api.uploadAttachment).toHaveBeenCalledWith(202, testFile, 1);
+      expect(api.uploadAttachment).toHaveBeenCalledWith(202, testFile);
       expect(screen.getByText(/Ticket Created Successfully!/i)).toBeInTheDocument();
       expect(screen.getByText(/TKT-2026-000202/i)).toBeInTheDocument();
     });
@@ -209,9 +209,9 @@ describe("CreateTicketForm Component (Lab 2)", () => {
 
     await waitFor(() => {
       expect(api.createTicket).toHaveBeenCalledTimes(1);
-      expect(api.uploadAttachment).toHaveBeenCalledWith(303, testFile, 1);
+      expect(api.uploadAttachment).toHaveBeenCalledWith(303, testFile);
       // Compensation rollback must be called
-      expect(api.deleteTicketRollback).toHaveBeenCalledWith(303, 1);
+      expect(api.deleteTicketRollback).toHaveBeenCalledWith(303);
       // Error banner rendered
       expect(screen.getByText(/Attachment upload failed: File storage write failure/i)).toBeInTheDocument();
       // Form fields must be preserved
@@ -255,8 +255,8 @@ describe("CreateTicketForm Component (Lab 2)", () => {
 
     await waitFor(() => {
       expect(api.createTicket).toHaveBeenCalledTimes(1);
-      expect(api.uploadAttachment).toHaveBeenCalledWith(404, testFile, 1);
-      expect(api.deleteTicketRollback).toHaveBeenCalledWith(404, 1);
+      expect(api.uploadAttachment).toHaveBeenCalledWith(404, testFile);
+      expect(api.deleteTicketRollback).toHaveBeenCalledWith(404);
 
       // Must NOT falsely state that ticket was rolled back
       expect(screen.queryByText(/The draft ticket was rolled back\./i)).toBeNull();

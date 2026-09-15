@@ -3,8 +3,18 @@ import { Priority, TicketStatus } from "@prisma/client";
 import { ApiError } from "../errors/api-error.js";
 import { isValidIntegerId } from "./id.validator.js";
 
+export function validateLegacyRequesterQuery(query: Record<string, unknown>) {
+  if (Object.keys(query).some((key) => key !== "requesterId")) {
+    throw new ApiError(400, { code: "BAD_REQUEST", message: "Invalid query parameters" });
+  }
+}
+
 export function parseCreateTicket(body: Record<string, unknown>) {
-  const { requesterId, categoryId, relatedSystemId, summary, description, requestedPriority } = body;
+  const permitted = new Set(["requesterId", "categoryId", "relatedSystemId", "summary", "description", "requestedPriority"]);
+  if (Object.keys(body).some((key) => !permitted.has(key))) {
+    throw new ApiError(400, { code: "BAD_REQUEST", message: "Invalid request fields" });
+  }
+  const { categoryId, relatedSystemId, summary, description, requestedPriority } = body;
   const validationDetails: string[] = [];
   // BR-11 Field Validation Constraints
   const trimmedSummary = typeof summary === "string" ? summary.trim() : "";
@@ -25,9 +35,6 @@ export function parseCreateTicket(body: Record<string, unknown>) {
   if (!isValidIntegerId(relatedSystemId)) {
     validationDetails.push("Related System ID must be a valid positive integer.");
   }
-  if (!isValidIntegerId(requesterId)) {
-    validationDetails.push("Requester ID must be a valid positive integer.");
-  }
   if (validationDetails.length > 0) {
     throw new ApiError(400, {
       code: "BAD_REQUEST",
@@ -37,11 +44,15 @@ export function parseCreateTicket(body: Record<string, unknown>) {
   }
   const parsedCategoryId = Number(categoryId);
   const parsedRelatedSystemId = Number(relatedSystemId);
-  const parsedRequesterId = Number(requesterId);
-  return { parsedCategoryId, parsedRelatedSystemId, parsedRequesterId, trimmedSummary, trimmedDescription, requestedPriority: requestedPriority as Priority };
+  return { parsedCategoryId, parsedRelatedSystemId, trimmedSummary, trimmedDescription, requestedPriority: requestedPriority as Priority };
 }
 
 export function parseTicketFilters(query: Record<string, unknown>, requesterId: number) {
+  const permitted = new Set(["requesterId", "search", "category", "priority", "status", "sort", "page", "limit"]);
+  if (Object.keys(query).some(key => !permitted.has(key)) ||
+      Object.entries(query).some(([key, value]) => key !== "requesterId" && Array.isArray(value))) {
+    throw new ApiError(400, { code: "BAD_REQUEST", message: "Invalid query parameters" });
+  }
   const { search, category: categoryParam, priority, status, sort = "createdAt_desc", page: pageParam = "1", limit: limitParam = "10" } = query;
   // Validate page and limit
   if (!isValidIntegerId(pageParam)) {
