@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import supertest from "supertest";
+import supertest, { testPasswordHash } from "../authenticated-request.js";
 import app from "../../src/app.js";
 import { getPrisma } from "../../src/prisma.js";
 
@@ -29,7 +29,7 @@ describe("Ticket Detail API Endpoint GET /api/tickets/:id (Lab 2)", () => {
       },
     });
 
-    await prisma.requesterUser.deleteMany({
+    await prisma.user.deleteMany({
       where: {
         email: {
           in: ["detail.userA@example.com", "detail.userB@example.com"],
@@ -38,21 +38,21 @@ describe("Ticket Detail API Endpoint GET /api/tickets/:id (Lab 2)", () => {
     });
 
     // Create 2 test users
-    const userA = await prisma.requesterUser.create({
+    const userA = await prisma.user.create({
       data: {
         name: "Detail User A",
         email: "detail.userA@example.com",
-        department: "Engineering",
+        passwordHash: testPasswordHash, mustChangePassword: false,
         isActive: true,
       },
     });
     userAId = userA.id;
 
-    const userB = await prisma.requesterUser.create({
+    const userB = await prisma.user.create({
       data: {
         name: "Detail User B",
         email: "detail.userB@example.com",
-        department: "Product",
+        passwordHash: testPasswordHash, mustChangePassword: false,
         isActive: true,
       },
     });
@@ -72,6 +72,7 @@ describe("Ticket Detail API Endpoint GET /api/tickets/:id (Lab 2)", () => {
         categoryId,
         relatedSystemId,
         requestedPriority: "HIGH",
+          itPriority: "MEDIUM",
         status: "NEW",
         summary: "[Detail Test] User A Laptop Issue",
         description: "[Detail Test] My laptop screen is flickering continuously after the latest update.",
@@ -116,6 +117,7 @@ describe("Ticket Detail API Endpoint GET /api/tickets/:id (Lab 2)", () => {
         categoryId,
         relatedSystemId,
         requestedPriority: "LOW",
+          itPriority: "MEDIUM",
         status: "NEW",
         summary: "[Detail Test] User B Wi-Fi Issue",
         description: "[Detail Test] Wi-Fi disconnects intermittently in the cafeteria.",
@@ -136,7 +138,7 @@ describe("Ticket Detail API Endpoint GET /api/tickets/:id (Lab 2)", () => {
         summary: { startsWith: "[Detail Test]" },
       },
     });
-    await prisma.requesterUser.deleteMany({
+    await prisma.user.deleteMany({
       where: {
         email: {
           in: ["detail.userA@example.com", "detail.userB@example.com"],

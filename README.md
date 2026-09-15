@@ -22,7 +22,9 @@ The backend is organized by responsibility, with reference data, tickets, and at
 | `utils/` | Handle ticket numbering and Unicode filenames |
 | `prisma.ts` | Provide the lazy Prisma client used by services |
 
-Services take plain values and return data; they do not import Express or send responses. Prisma remains the data-access layer. Issue #26 preserves the Lab 2 API, requester selector, attachment rules, response formats, and schema. Lab 3 authentication and authorization follow in Issues #27 and #28. Business-rule references in extracted legacy code refer to the Lab 2 specification.
+Services take plain values and return data; they do not send HTTP responses. Prisma remains the data-access layer. Authentication follows the same route/controller/service structure, with password/session utilities and shared session, Origin, and role middleware. Business-rule references in extracted legacy code refer to the Lab 2 specification.
+
+Current increment: Issue #27 replaces the development selector with secure login and prepares the Lab 3 schema/fixtures. **Issue #28 still needs to derive ticket ownership exclusively from the session and enforce the complete endpoint role matrix. This intermediate branch is not the completed authorization cutover and must not be deployed as a secured multi-user service.** Staff queue, ticket operations, and administration screens follow in their own issues.
 
 ## Prerequisites
 - Node.js (v18+)
@@ -56,12 +58,28 @@ Services take plain values and return data; they do not import Express or send r
    cp .env.example .env
    ```
 
-4. **Sync Database Schema & Seed Data:**
+4. **Apply migrations, bootstrap passwords, and seed:**
+   Stop the server first. For an existing database, back up PostgreSQL **and its matching uploads directory** before applying the forward migration. Rehearse on a disposable restored copy first; do not use `db push`, `migrate reset`, or recreate the database to upgrade Lab 2.
+
    ```bash
    cd server
-   npx prisma db push
+   npx prisma migrate deploy
+   npx prisma generate
+   # Enter your own local initial password without echoing it:
+   read -s LAB3_INITIAL_PASSWORD
+   export LAB3_INITIAL_PASSWORD
+   npm run prisma:bootstrap
    npm run prisma:seed
+   unset LAB3_INITIAL_PASSWORD
    ```
+
+   The initial password requires at least 10 Unicode characters, uppercase/lowercase/digit/symbol, at most 72 UTF-8 bytes, and no NUL. There is no default credential. Do not commit credentials or paste them into review evidence. Bootstrap fills only migrated users with a missing hash, preserves their IDs/timestamps, and enforces the final NOT NULL constraint; startup refuses an unfinished bootstrap. Rerunning bootstrap/seed never resets established passwords or edited fixture data.
+
+   The seed supplies four active and one inactive Requester, three active and one inactive IT Staff user, one Administrator, 24 representative tickets, eight public comments, and four internal notes. Existing Lab 2 personas retain their IDs. Sample active logins include `jennifer.anderson@example.com`, `alex.thompson@example.com`, and `morgan.davis@example.com`; use the local password you supplied and change it on first login. Used databases can retain modified fixtures rather than reproducing pristine counts.
+
+   Local settings load from `server/.env`; explicit environment variables take precedence. `CLIENT_ORIGIN` defaults to `http://localhost:5173` and must match the frontend exactly. Both development URLs must use `localhost` (not a mix of localhost and 127.0.0.1). Unsafe API clients must send that exact `Origin`. Cookies are HttpOnly/SameSite=Lax with an eight-hour absolute lifetime; production additionally requires HTTPS for Secure cookies.
+
+   Recovery: stop the new server, restore the paired pre-migration database/uploads backup and the prior application version. Do not run the old application against the migrated schema. The archived RequesterUser table is retained but has no public API.
 
 ## Running the Application
 
@@ -89,7 +107,7 @@ Services take plain values and return data; they do not import Express or send r
   ```bash
   cd server && npm test
   ```
-  These integration tests modify fixtures. Set `DATABASE_URL` to a separate disposable PostgreSQL database, apply the existing migrations with `npx prisma migrate deploy`, and run `npm run prisma:seed` there before testing. The refactor compatibility and service tests are in `server/tests/lab-03/`; detailed Issue #26 results are in [the Lab 3 test record](docs/lab-03/tests.md#11-issue-26-backend-refactor-verification).
+  These integration tests modify fixtures. Explicitly set `DATABASE_URL` to a separate disposable PostgreSQL database, then migrate, bootstrap, and seed it as above. The migration suite additionally creates/drops only its own random schema and requires schema-creation permission. Authentication, migration/seed, and existing regression results are recorded in [the Lab 3 test record](docs/lab-03/tests.md). Never run integration tests against ordinary user data.
 
   To check backend types without emitting JavaScript, run from the repository root:
   ```bash
@@ -97,8 +115,10 @@ Services take plain values and return data; they do not import Express or send r
   ```
 - **End-to-End Tests (Playwright):**
   ```bash
+  # Export DATABASE_URL for the already prepared disposable database first.
+  export E2E_ALLOW_DB_WRITE=1
   npm run test:e2e
-  # or
-  npx playwright test
+  npm run test:e2e:auth
+  npm run test:e2e:requester
   ```
- 
+  The current six Lab 3 browser checks create uniquely named accounts and clean their own ticket/file fixtures. They cover authentication plus a cookie-authenticated copy of the three Lab 2 journeys; historical Lab 2 tests/evidence remain unchanged. Use a temporary Playwright configuration/output directory for evidence collection when preserving repository screenshots. For isolated ports, align the test server `CLIENT_ORIGIN`, client `VITE_API_URL`, Playwright baseURL, `E2E_CLIENT_ORIGIN`, and `E2E_API_ORIGIN`. Do not point browser tests at an unrelated running development server.

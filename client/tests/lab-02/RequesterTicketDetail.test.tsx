@@ -1,13 +1,12 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { RequesterProvider } from "../../src/context/RequesterContext.js";
+import { RequesterProvider } from "../requester-fixture.js";
 import { TicketDetailPage } from "../../src/components/TicketDetailPage.js";
 import * as api from "../../src/api.js";
 import { TicketDetail } from "../../src/types.js";
 
 vi.mock("../../src/api.js", () => ({
-  fetchRequesters: vi.fn(),
   fetchTicketDetail: vi.fn(),
   removeAttachment: vi.fn(),
   uploadAttachment: vi.fn(),
@@ -48,7 +47,6 @@ describe("RequesterTicketDetail Component (Lab 2)", () => {
     localStorage.clear();
 
     localStorage.setItem("toktickit_selected_requester_id", JSON.stringify(mockRequester));
-    (api.fetchRequesters as any).mockResolvedValue([mockRequester]);
     (api.fetchTicketDetail as any).mockResolvedValue(sampleTicketDetail);
   });
 

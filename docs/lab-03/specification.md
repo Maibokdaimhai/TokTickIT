@@ -260,6 +260,8 @@ Each feature branch starts from the latest reviewed `lab3-staging`. Its PR targe
 
 Dependencies: #25 → #26 → #27 → #28 → #29 → #30; #31 follows #28; #32 follows #30 and #31; #33 follows #32. The schema and representative seed needed by the queue land in #27 (including owner, version, statuses, priorities, and communication tables); #30 implements operations against that schema. The #27/#28 changes are integrated as a coordinated authentication cutover: interim branches must not claim that all legacy APIs are secured until #28 completes.
 
+Issue #27 implementation boundary: email/password login, forced change, logout, current-user retrieval, cookie/session/Origin controls, migration/bootstrap, seed, and the authenticated shell are implemented on `feature/lab3-authentication`. Existing ticket inputs still carry requesterId until #28; full ownership/role enforcement is not yet claimed. Staff/Admin currently see a role-specific placeholder rather than future queue/admin functionality. The server must remain stopped between migration and explicit local-password bootstrap. Operational setup and recovery instructions are in the root README; per-PR verification is in tests.md §13.
+
 Use the existing Kanban statuses; do not invent a new board workflow. Put the issue in progress during work, in the existing review status for peer review, and Done after its criteria and reviewed staging merge. Record red → green tests during implementation, review comments/responses/approval, and final main verification. User performs GitHub browser actions; agent prepares code, commits when authorized, and copy-ready PR descriptions. Draft contract changes do not count as peer approval.
 
 ## 13. Worksheet Coverage and Submission Evidence

@@ -11,7 +11,8 @@
 | PR # | Feature Branch | Summary | Reviewer Verdict |
 | :--- | :--- | :--- | :--- |
 | #34 | `feature/lab3-spec-and-tests` | Add Sprint 3 engineering specification, test plan, UI spec, and API spec (Issue #25). | Merged into lab3-staging; final review comment pending recording |
-| Pending | `refactor/lab3-backend-layers` | Separate backend layers while preserving Lab 2 behavior (Issue #26). | Changes requested; fixes prepared in 3e706dd; re-review pending |
+| #35 | `refactor/lab3-backend-layers` | Separate backend layers while preserving Lab 2 behavior (Issue #26). | Merged into lab3-staging as 352663d; final review comment pending recording |
+| Pending | `feature/lab3-authentication` | User migration, safe authentication, authenticated shell and representative seed (Issue #27). | Implementation prepared; user-created PR and peer review pending |
 
 ---
 
@@ -49,9 +50,9 @@
 
 ---
 
-### PR (number pending): `refactor(server): establish layered backend architecture for Lab 3`
+### PR #35: `refactor(server): establish layered backend architecture for Lab 3`
 
-- **PR Link:** Pending user-created PR from `refactor/lab3-backend-layers` to `lab3-staging` (Issue #26).
+- **PR Link:** https://github.com/Maibokdaimhai/TokTickIT/pull/35
 - **Reviewer Comment I Received(1):**
   ```text
   The backend layer separation is clear and the existing routes, validation, ownership checks, ticket numbering, and attachment cleanup are generally preserved.
@@ -60,6 +61,20 @@
   1. asyncHandler currently replaces unexpected errors without retaining the original cause or logging diagnostic context. Please preserve safe server-side diagnostics while keeping the client response generic.
   2. The attachment download controller sets file headers before the read stream opens. A stream failure can therefore return an error with the attachment MIME type or terminate an already-started response. Please handle the stream open/error lifecycle before committing the download headers and add a regression test that simulates an actual read-stream failure.
      Client tests and both production builds passed. Full database and E2E verification should be rerun after the update.
+  ```
+- **How I responded(1):**
+  ```text
+  Pending actual response posted by the author.
+  ```
+
+---
+
+### PR (number pending): `feat(auth): migrate users and implement secure authentication`
+
+- **PR Link:** Pending user-created PR from `feature/lab3-authentication` to `lab3-staging` (Issue #27).
+- **Reviewer Comment I Received(1):**
+  ```text
+  Pending actual peer review.
   ```
 - **How I responded(1):**
   ```text

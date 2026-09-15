@@ -57,7 +57,7 @@ describe("Issue #26: validators independent of HTTP and database", () => {
 
 describe("Issue #26: service boundaries", () => {
   it("preserves inactive requester error precedence over invalid list filters", async () => {
-    const prisma = { requesterUser: { findUnique: vi.fn().mockResolvedValue({ id: 1, isActive: false }) } };
+    const prisma = { user: { findUnique: vi.fn().mockResolvedValue({ id: 1, isActive: false }) } };
     vi.spyOn(database, "getPrisma").mockReturnValue(prisma as unknown as ReturnType<typeof database.getPrisma>);
     await expect(listTickets({ requesterId: "1", sort: "invalid" })).rejects.toMatchObject({
       status: 403, error: { code: "FORBIDDEN", message: "Requester is invalid, missing, or inactive" },

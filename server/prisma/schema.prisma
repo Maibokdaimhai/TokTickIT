@@ -1,4 +1,4 @@
-// Prisma schema for TokTickIT — Lab 2 Requester Ticketing MVP
+// TokTickIT — Lab 3 authentication and ticket workflow foundation
 
 generator client {
   provider = "prisma-client-js"
@@ -18,9 +18,19 @@ enum Priority {
 
 enum TicketStatus {
   NEW
+  OPEN
   IN_PROGRESS
+  WAITING_FOR_REQUESTER
   RESOLVED
   CLOSED
+  REOPENED
+  CANCELLED
+}
+
+enum UserRole {
+  REQUESTER
+  IT_STAFF
+  ADMINISTRATOR
 }
 
 model RequesterUser {
@@ -31,7 +41,50 @@ model RequesterUser {
   isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  tickets    Ticket[]
+
+  // Archived Lab 2 data, retained for recovery only.
+  @@ignore
+}
+
+model User {
+  id                 Int             @id @default(autoincrement())
+  name               String          @db.VarChar(100)
+  email              String          @unique @db.VarChar(254)
+  passwordHash       String          @db.VarChar(60)
+  role               UserRole        @default(REQUESTER)
+  isActive           Boolean         @default(true)
+  mustChangePassword Boolean         @default(true)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  seedKey            String?         @unique
+  sessions           Session[]
+  submittedTickets   Ticket[]        @relation("Requester")
+  ownedTickets       Ticket[]        @relation("Owner")
+  resolutionTickets  Ticket[]        @relation("ResolutionRequester")
+  publicComments     PublicComment[]
+  internalNotes      InternalNote[]
+}
+
+model Session {
+  id          Int      @id @default(autoincrement())
+  tokenDigest String   @unique @db.Char(64)
+  userId      Int
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model LoginAttempt {
+  emailDigest     String    @id @db.Char(64)
+  failureCount    Int       @default(0)
+  windowStartedAt DateTime
+  lockedUntil     DateTime?
+
+  @@index([windowStartedAt])
+  @@index([lockedUntil])
 }
 
 model Category {
@@ -51,27 +104,66 @@ model RelatedSystem {
 }
 
 model Ticket {
-  id                Int           @id @default(autoincrement())
-  ticketNumber      String        @unique
+  id                Int          @id @default(autoincrement())
+  ticketNumber      String       @unique
   requesterId       Int
   categoryId        Int
   relatedSystemId   Int
   summary           String
-  description       String        @db.Text
+  description       String       @db.Text
   requestedPriority Priority
-  itPriority        Priority?
-  status            TicketStatus  @default(NEW)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  itPriority        Priority
+  status            TicketStatus @default(NEW)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
 
-  requester     RequesterUser @relation(fields: [requesterId], references: [id])
-  category      Category      @relation(fields: [categoryId], references: [id])
-  relatedSystem RelatedSystem @relation(fields: [relatedSystemId], references: [id])
-  attachments   Attachment[]
+  ownerId                    Int?
+  version                    Int       @default(0)
+  problemAppearsResolvedAt   DateTime?
+  problemAppearsResolvedById Int?
+  seedKey                    String?   @unique
+
+  requester           User            @relation("Requester", fields: [requesterId], references: [id])
+  owner               User?           @relation("Owner", fields: [ownerId], references: [id])
+  resolutionRequester User?           @relation("ResolutionRequester", fields: [problemAppearsResolvedById], references: [id])
+  category            Category        @relation(fields: [categoryId], references: [id])
+  relatedSystem       RelatedSystem   @relation(fields: [relatedSystemId], references: [id])
+  attachments         Attachment[]
+  publicComments      PublicComment[]
+  internalNotes       InternalNote[]
 
   @@index([requesterId])
   @@index([status])
   @@index([createdAt])
+  @@index([ownerId])
+  @@index([itPriority])
+  @@index([updatedAt])
+}
+
+model PublicComment {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  authorId  Int
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  seedKey   String?  @unique
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id])
+
+  @@index([ticketId, createdAt, id])
+}
+
+model InternalNote {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  authorId  Int
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  seedKey   String?  @unique
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id])
+
+  @@index([ticketId, createdAt, id])
 }
 
 model Attachment {

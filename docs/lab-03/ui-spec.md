@@ -2,6 +2,8 @@
 
 Status: Draft. All Lab 2 tokens, focus behavior, validation placement, and responsive expectations remain in force.
 
+Issue #27 status: login, password visibility, mandatory/self password change with a live checklist and field feedback, session restoration/expiry, and the account menu are implemented. Requester pages receive identity from the authenticated shell, not browser storage. Staff/Admin workspaces display a role-specific placeholder until #29/#31. Remaining operational screens below are still planned. Authentication component checks are consolidated in `client/tests/lab-03/Authentication.test.tsx`.
+
 ## 1. Application Shell
 
 - Header retains the TokTickIT brand and displays authenticated name plus a role badge.

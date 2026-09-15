@@ -412,7 +412,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({ ticketId, on
               fontWeight: 600,
             }}
           >
-            👤 {ticket.requester.name} ({ticket.requester.department})
+            👤 {ticket.requester.name}
           </div>
         </div>
 

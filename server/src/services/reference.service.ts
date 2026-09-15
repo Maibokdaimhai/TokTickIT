@@ -17,17 +17,3 @@ export async function listRelatedSystems() {
   });
   return systems;
 }
-
-export async function listRequesters() {
-  const requesters = await getPrisma().requesterUser.findMany({
-    where: { isActive: true },
-    orderBy: { id: "asc" },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      department: true,
-    },
-  });
-  return requesters;
-}

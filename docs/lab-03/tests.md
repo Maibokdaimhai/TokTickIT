@@ -1,6 +1,6 @@
 # Lab 3 Test Plan and Traceability - TokTickIT
 
-Status: Planned before implementation. Record per-PR execution separately; final release results must come from the final main branch. All file paths below are planned until implemented.
+Status: Plan with per-PR implementation evidence. Issue #27 results are recorded in §13; remaining features and final release validation are still pending. Final release results must come from the final main branch.
 
 ## 1. Strategy
 
@@ -15,10 +15,10 @@ Status: Planned before implementation. Record per-PR execution separately; final
 
 | ID | Type | AC | Scenario and expected result | Planned file | Status |
 |---|---|---|---|---|---|
-| API-01 | API | AC-01, AC-02 | Valid login succeeds; wrong password and unknown email share a safe response | `server/tests/lab-03/auth.api.test.ts` | Planned |
-| API-02 | API | AC-03 | Inactive account cannot authenticate | `server/tests/lab-03/auth.api.test.ts` | Planned |
-| API-03 | API | AC-04 | Initial-password session is restricted until valid password change | `server/tests/lab-03/auth.api.test.ts` | Planned |
-| API-04 | API | AC-05 | Logout revokes cookie access; expired/revoked session is unauthorized | `server/tests/lab-03/auth.api.test.ts` | Planned |
+| API-01 | API | AC-01, AC-02 | Valid login succeeds; wrong password and unknown email share a safe response | `server/tests/lab-03/auth.api.test.ts` | Passed for #27; see §13 |
+| API-02 | API | AC-03 | Inactive account cannot authenticate | `server/tests/lab-03/auth.api.test.ts` | Passed for #27; see §13 |
+| API-03 | API | AC-04 | Initial-password session is restricted until valid password change | `server/tests/lab-03/auth.api.test.ts` | Passed for #27; see §13 |
+| API-04 | API | AC-05 | Logout revokes cookie access; expired/revoked session is unauthorized | `server/tests/lab-03/auth.api.test.ts` | Passed for #27; see §13 |
 | API-05 | API | AC-22 | Role middleware rejects direct cross-role API access | `server/tests/lab-03/authorization.api.test.ts` | Planned |
 | API-06 | API | AC-07 | Requester identity comes from session; supplied foreign requester ID cannot cross ownership | `server/tests/lab-03/authorization.api.test.ts` | Planned |
 | API-07 | API | AC-09 | Staff queue search/filter/sort/pagination and invalid query behavior | `server/tests/lab-03/staff-queue.api.test.ts` | Planned |
@@ -33,35 +33,35 @@ Status: Planned before implementation. Record per-PR execution separately; final
 | API-16 | API | AC-19 | Self-deactivation and final-active-administrator removal are blocked transactionally | `server/tests/lab-03/users-admin.api.test.ts` | Planned |
 | API-17 | API | AC-10 | Eligible-owner endpoint returns only active IT Staff/Administrators and rejects Requesters | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
 | API-18 | API | AC-24 | Staff/Admin can read metadata and download active attachments; Requester ownership and removed-download rules remain enforced | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
-| UNIT-01 | Unit | AC-04, AC-25 | Password code-point/UTF-8 byte boundaries, exact confirmation, NUL/reuse rejection, fresh salted hashes | `server/tests/lab-03/password.test.ts` | Planned |
-| UNIT-02 | Unit | AC-05, AC-25 | Token generation/digest, absolute expiry, clock boundaries, rotation/revocation | `server/tests/lab-03/session.test.ts` | Planned |
+| UNIT-01 | Unit | AC-04, AC-25 | Password code-point/UTF-8 byte boundaries, exact confirmation, NUL/reuse rejection, fresh salted hashes | `server/tests/lab-03/password.test.ts` | Passed for #27; see §13 |
+| UNIT-02 | Unit | AC-05, AC-25 | Token generation/digest, absolute expiry, clock boundaries, rotation/revocation | `server/tests/lab-03/session.test.ts` | Passed for #27; see §13 |
 | UNIT-03 | Unit | AC-12, AC-22 | Table-driven tests of all status pairs, owner prerequisites, confirmation and role decisions | `server/tests/lab-03/ticket-policy.test.ts` | Planned |
 | UNIT-04 | Unit | AC-17, AC-22 | Safe integer/range, enum, trimmed text, email, boolean, unknown-field validation | `server/tests/lab-03/validation.test.ts` | Planned |
-| API-19 | API | AC-25 | Cookie flags/digest storage/expiry; missing or invalid Origin; allowed preflight; current-user gating; identical unknown/known throttling | `server/tests/lab-03/auth.api.test.ts` | Planned |
+| API-19 | API | AC-25 | Cookie flags/digest storage/expiry; missing or invalid Origin; allowed preflight; current-user gating; identical unknown/known throttling | `server/tests/lab-03/auth.api.test.ts` | Passed for #27; see §13 |
 | API-20 | API | AC-19, AC-26 | Role/deactivation revokes sessions and unassigns owners; preserves authors/submissions; concurrent last-admin and assignment changes remain valid | `server/tests/lab-03/users-admin.api.test.ts` | Planned |
 | API-21 | API | AC-12, AC-15 | Concurrent claim has one winner; stale version/status rejected; indication repeated/terminal rejected and reopening clears it | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
 | API-22 | API | AC-13, AC-14 | Empty/2000/2001 code-point communication; forged author/time; missing/inaccessible ticket; append-only/no-edit/delete; safe HTML payloads; concurrent appends retain both entries and increment version | `server/tests/lab-03/comments-notes.api.test.ts` | Planned |
 | API-23 | API | AC-08, AC-24 | Shared attachment reads reject mismatched IDs, removed file download and missing storage; preserve Unicode filename; deny staff upload/remove/rollback | `server/tests/lab-03/attachments.api.test.ts` | Planned |
 | API-24 | API | AC-08 | Compensation cannot delete ticket with staff work; simultaneous upload limit holds; filesystem failures report retained ticket | `server/tests/lab-03/attachments.api.test.ts` | Planned |
-| UI-01 | Component | AC-01, AC-02, AC-03 | Login validation, busy state, safe errors, success routing | `client/tests/lab-03/Login.test.tsx` | Planned |
-| UI-02 | Component | AC-04 | Mandatory Change Password validation, checklist, busy/error/success | `client/tests/lab-03/ChangePassword.test.tsx` | Planned |
-| UI-03 | Component | AC-05, AC-06 | Role navigation and logout remove protected access | `client/tests/lab-03/AppShell.test.tsx` | Planned |
+| UI-01 | Component | AC-01, AC-02, AC-03 | Login validation, busy state, safe errors, success routing | `client/tests/lab-03/Authentication.test.tsx` | Passed for #27; see §13 |
+| UI-02 | Component | AC-04 | Mandatory Change Password validation, checklist, busy/error/success | `client/tests/lab-03/Authentication.test.tsx` | Passed for #27; see §13 |
+| UI-03 | Component | AC-05, AC-06 | Role navigation and logout remove protected access | `client/tests/lab-03/Authentication.test.tsx` | #27 subset passed; later scope pending (§13) |
 | UI-04 | Component | AC-09, AC-20 | Queue results, queries, pagination, empty/no-results/failure, mobile cards | `client/tests/lab-03/StaffTicketQueue.test.tsx` | Planned |
 | UI-05 | Component | AC-10, AC-11, AC-12 | Claim/reassign, priority/status controls, confirmation and conflict feedback | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Planned |
 | UI-06 | Component | AC-13, AC-14 | Public/private visual distinction, validation, and role restrictions | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Planned |
 | UI-07 | Component | AC-16-AC-19 | User list/search/filter/create/edit/reset and safety feedback | `client/tests/lab-03/UserManagement.test.tsx` | Planned |
 | UI-08 | Component | AC-07, AC-15 | Authenticated requester detail comments and resolution indication | `client/tests/lab-03/RequesterTicketDetail.test.tsx` | Planned |
 | UI-09 | Component | AC-10, AC-24 | Eligible-owner loading/empty/failure/retry; stale option; staff attachment actions and removed/missing download feedback | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Planned |
-| UI-10 | Component | AC-05, AC-06, AC-25 | Session bootstrap/reload, direct-path guards, role change, cache clearing, logout failure/retry | `client/tests/lab-03/AppShell.test.tsx` | Planned |
+| UI-10 | Component | AC-05, AC-06, AC-25 | Session bootstrap/reload, direct-path guards, role change, cache clearing, logout failure/retry | `client/tests/lab-03/Authentication.test.tsx` | #27 subset passed; later scope pending (§13) |
 | STYLE-01 | Style | AC-20 | Shared tokens, all status/role labels, public/private distinction, editable/read-only and inline validation styling | `client/tests/lab-03/Theme.test.tsx` | Planned |
 | VIS-01 | Browser/manual | AC-20 | All major screens at three viewports; overflow/overlap/clipping, text contrast, keyboard/dialog focus, labels and 44px touch targets | `e2e/lab-03/responsive-accessibility.spec.ts` plus UI visual checklist | Planned |
-| MIG-01 | Integration | AC-21 | Migration preserves ticket/attachment counts and requester ownership | `server/tests/lab-03/migration-regression.test.ts` | Planned |
-| SEED-01 | Integration | AC-23 | Repeated seed runs satisfy account counts and representative ticket/comment/note coverage without duplicates or plaintext passwords | `server/tests/lab-03/seed-regression.test.ts` | Planned |
-| REG-01 | Regression | AC-08 | Complete Lab 1/Lab 2 server and client suites remain green | Existing `server/tests/lab-01..02` and `client/tests/lab-01..02` | Planned |
-| E2E-01 | E2E | AC-01-AC-06 | Login, initial-password change, role shell, logout, blocked direct access | `e2e/lab-03/authentication.spec.ts` | Planned |
+| MIG-01 | Integration | AC-21 | Migration preserves ticket/attachment counts and requester ownership | `server/tests/lab-03/migration-seed.test.ts` | Passed for #27; see §13 |
+| SEED-01 | Integration | AC-23 | Repeated seed runs satisfy account counts and representative ticket/comment/note coverage without duplicates or plaintext passwords | `server/tests/lab-03/migration-seed.test.ts` | Passed for #27; see §13 |
+| REG-01 | Regression | AC-08 | Complete Lab 1/Lab 2 server and client suites remain green | Existing `server/tests/lab-01..02` and `client/tests/lab-01..02` | Passed for #27; see §13 |
+| E2E-01 | E2E | AC-01-AC-06 | Login, initial-password change, role shell, logout, blocked direct access | `e2e/lab-03/authentication.spec.ts` | #27 subset passed; later scope pending (§13) |
 | E2E-02 | E2E | AC-09-AC-15 | Staff queue/detail, assignment, priority/status, comments/notes, requester indication | `e2e/lab-03/staff-ticket-flow.spec.ts` | Planned |
 | E2E-03 | E2E | AC-16-AC-19 | Administrator creates/edits/deactivates/resets and safety rules hold | `e2e/lab-03/user-administration.spec.ts` | Planned |
-| E2E-04 | E2E | AC-07, AC-08 | Authenticated requester completes Lab 2 creation/list/detail/attachment journey | `e2e/lab-03/requester-regression.spec.ts` | Planned |
+| E2E-04 | E2E | AC-07, AC-08 | Authenticated requester completes Lab 2 creation/list/detail/attachment journey | `e2e/lab-03/requester-regression.spec.ts` | #27 subset passed; later scope pending (§13) |
 | DOC-01 | Manual | AC-27 | Nine PDF headings, 60-point evidence mapping, live repository/PR/test links, actual review and reflection, final main SHA/results | `docs/lab-03/reviewer.md`, `ai-use.md`, final submission PDF | Planned |
 
 ## 3. Security Boundaries
@@ -136,9 +136,9 @@ Every AC in `specification.md` is mapped above. A PR cannot mark an AC complete 
 
 ## 10. Execution, TDD, and Release Evidence
 
-Unit tests run without external services. Integration/migration/seed/E2E tests use a dedicated disposable PostgreSQL database (separate TEST_DATABASE_URL) and test upload directory, never production or ordinary user data. Each suite creates uniquely identified fixtures and cleans only its own records/files; schema migration suites get a separate database. Align app/test configuration before test execution. E2E uses seeded users with known password-change states and restores only disposable fixtures.
+Unit tests run without external services. Integration/migration/seed/E2E tests use a dedicated disposable PostgreSQL database selected explicitly by DATABASE_URL and a test upload directory, never production or ordinary user data. Each suite creates identified fixtures and cleans only its own records/files; migration tests additionally create/drop unique schemas inside that disposable database. Align app/test configuration before execution. E2E uses uniquely created users with known password-change states and cleans only its own disposable fixtures.
 
-During #26, retain unchanged Lab 2 behavior and tests. During #27/#28, replace tests for the intentionally removed selector with authenticated-user regression tests; adapt legacy API fixtures to sessions and Origin without dropping their ownership/validation/attachment assertions. Do not keep a test-only authentication bypass. The root test:e2e script currently targets Lab 2 only; #32 must add an explicit Lab 3/all-suites command and update README. Browser tests verify computed layout/focus; jsdom alone does not prove responsiveness.
+During #26, retain unchanged Lab 2 behavior and tests. During #27/#28, replace tests for the intentionally removed selector with authenticated-user regression tests; adapt legacy API fixtures to sessions and Origin without dropping their ownership/validation/attachment assertions. Do not keep a production authentication bypass. Controller-only transport tests may mount routers in a test-local app to isolate stream errors; full API regression tests must use persisted sessions. Issue #27 updates test:e2e to the Lab 3 directory and adds auth/requester commands; #32 extends those suites for remaining staff/admin work. Browser tests verify computed layout/focus; jsdom alone does not prove responsiveness.
 
 For each implementation PR record: issue, branch/commit, test IDs, command, initial failing result (red), minimal implementation, passing result (green), refactor checks, and remaining failures. Add unforeseen regression cases with rationale while preserving the original plan. Re-run affected suites after review changes.
 
@@ -147,6 +147,7 @@ For each implementation PR record: issue, branch/commit, test IDs, command, init
 | Sprint-start partial baseline | 1c27a89 | Prior executed output summarized in §7 | Client/build passed; server environment blocked |
 | Issue #26 refactor evidence | c0e983a | Commands/results in §11 | Server 62/62; client 29/29; browser 3/3; type check/build passed |
 | Issue #26 error-handling review fixes | 3e706dd | Commands/results in §12 | Server 68/68; client 29/29; browser 3/3; both builds/type check passed |
+| Issue #27 authentication and migration | 397aa9b | Commands/results in §13 | Server 96/96; client 36/36; browser 6/6; builds passed |
 | Later feature-PR implementation evidence | Pending | Pending | Not run |
 | Final lab3-staging validation | Pending | Pending | Not run |
 | Final main validation | Pending | Pending | Not run |
@@ -204,3 +205,57 @@ Red → green evidence: before the fixes, four of these six tests failed (lost c
 | `git diff --check` | Passed |
 
 Full database tests used `toktickit_lab3_refactor_20260913`, the disposable database from §11. Browser servers used that same database and fresh `/private/tmp/toktickit-refactor-review.JKyiXz` upload/screenshot/result paths, with `reuseExistingServer: false`. Browser command from that temporary directory: `/Users/meng/dev/MyUniversity/CPE334-SoftwareEngineer/toktickit/node_modules/.bin/playwright test --config /private/tmp/toktickit-refactor-review.JKyiXz/playwright.config.mjs`. These are review-fix results, not final-main release evidence.
+
+## 13. Issue #27 Authentication, Migration, and Seed Verification
+
+Executed on 2026-09-14 on `feature/lab3-authentication`, based on merged PR #35 / `352663d`. Code commit: `397aa9b`. This is an intermediate feature-PR result, not final-main release evidence or completion of the #28 authorization cutover.
+
+Implemented: User migration with retained legacy archive/IDs/timestamps, session and throttle persistence, cost-12 bcrypt, explicit initial-password bootstrap, forced/self-service password change, login/logout/me, strict Origin and credentialed CORS, safe error responses, account menu and cookie-backed requester context, plus the schema/fixtures needed by later issues. Staff/Admin workspaces are placeholders. Ticket/attachment inputs still use the legacy requesterId contract until #28; full role/ownership enforcement remains pending.
+
+| Verification | Result |
+| --- | --- |
+| Complete backend suite | 96/96 passed in 13 files |
+| Complete client suite | 36/36 passed in seven files |
+| Server no-emit type check and production build | Passed |
+| Client production build | Passed |
+| Compiled server smoke check on isolated port | Public health 200; anonymous protected request 401 |
+| Authentication browser journeys | 3/3 passed |
+| Authenticated Lab 2 requester regression journeys | 3/3 passed |
+| `git diff --check` | Passed |
+
+New automated coverage:
+
+- `auth.api.test.ts`: 13 tests cover safe login identity, normalized email, cookie flags/digest-only storage, login rotation, generic failures, inactive credentials, fixed-window throttling for known/unknown identifiers, forced change, validation/reuse, all-session revocation, current role/activation checks, absolute expiry, logout, retired enumeration, exact Origin/preflight, malformed/oversized input, and concurrent password changes.
+- `password.test.ts` / `session.test.ts`: 14 tests cover Unicode/byte boundaries, missing character classes, NUL, preserved whitespace, salt/cost, token entropy/digests, malformed and duplicate cookies.
+- `migration-seed.test.ts`: four real-SQL tests use unique disposable schemas. They cover empty-database replay, collision rollback, retained records/file bytes, explicit bootstrap/readiness, migrated active/inactive login, bootstrap rerun, sequence advancement, seed collision rollback, role/status/priority/owner/author coverage, and preservation of edited password/email/role/activation/tickets/comments/notes on rerun.
+- Client `Authentication.test.tsx` / `auth-api.test.ts`: 12 checks cover removal of stored development identity, loading/busy/errors, password visibility/checklist/field feedback, successful login/change/logout, current role shell, session expiry/restriction, logout failure, account menu, and credentialed fetch behavior.
+- `e2e/lab-03/authentication.spec.ts`: real-cookie login, mandatory password change, reload/logout, invalid/inactive login, Staff/Admin placeholder shells, and account-menu Escape/focus restoration. Login screenshots at 1280/768/375px and mandatory-change mobile screenshots supplement no-horizontal-overflow assertions.
+- `e2e/lab-03/requester-regression.spec.ts`: authenticated copy of the three historical Lab 2 workflows; creation validation/failure/busy/success/upload, list/search/filter/pagination/mobile/empty state, detail/upload/download bytes/soft removal. Historical Lab 2 browser files and evidence were not overwritten.
+
+Existing selector-specific tests were deliberately replaced, not silently disabled. Existing API regressions use real persisted sessions and Origin through `tests/authenticated-request.ts`; their legacy validation/ownership/attachment assertions are preserved for this increment. The separate controller/stream test app isolates transport failures without weakening production authentication. Client presentation fixtures live only under tests and preserve the older race/filter/page-reset checks. Malformed JSON now intentionally returns safe JSON instead of Express HTML.
+
+### Migration and recovery rehearsal
+
+The first rehearsal used `toktickit_lab3_auth_20260914`, cloned from the existing disposable Lab 2 regression database, and proved startup is blocked before password bootstrap. The final SQL was applied to `toktickit_lab3_auth_final_20260914`, cloned from a verified restore of that Lab 2 snapshot. The ordinary development database was never migrated or reset.
+
+The backup was created with `pg_dump -Fc` and restored with `pg_restore --exit-on-error` to the new disposable `toktickit_lab2_restore_20260914`. Restored counts and row-JSON MD5 checksums matched the pre-migration snapshot exactly:
+
+| Legacy table | Rows | Matching checksum |
+| --- | --- | --- |
+| RequesterUser | 5 | `325995c9005c182eebc4f31ae7aaea2f` |
+| Ticket | 13 | `15b06254919eab5728e3414e27171cd0` |
+| Attachment | 4 | `a0973832ef8ffa3b43b4addc1dfd5b7f` |
+
+After final migration, bootstrap, and seed, a separate record-by-record comparison verified all five original identities, all 13 original tickets, all four attachment records, original timestamps and ownership mappings. Only null IT Priority values were initialized. The seed produced ten personas, 24 additional fixture tickets, eight public comments, and four internal notes. The SQL fixture rehearsal separately verifies actual attachment bytes with SHA-256; database-restore checksums alone are not claimed as a physical uploads restore. Operators still need a paired database/uploads backup before upgrading their own database.
+
+An empty migration replay applies passwordHash NOT NULL immediately because no legacy hashes are missing. A populated upgrade remains stopped until bootstrap fills missing hashes and applies the same constraint. This keeps the final schema identical for fresh installs and upgraded databases, including later Prisma shadow replays. Adoption of a legacy fixture key uses an update that preserves the original audit timestamp.
+
+### Commands and evidence locations
+
+Final database URL selected `toktickit_lab3_auth_final_20260914` through DATABASE_URL. From server: `npx prisma migrate deploy`, `npm run prisma:bootstrap`, `npm run prisma:seed`; from root: `npm --prefix server test`, `npm --prefix client test`, `./server/node_modules/.bin/tsc --noEmit --project server/tsconfig.json`, `npm --prefix server run build`, and `npm --prefix client run build`. Bootstrap/seed used explicit test-only initial credentials; no operational password is recorded here.
+
+Browser verification ran from `/private/tmp/toktickit-auth-e2e.6tRyy0` with its temporary Playwright configuration, `reuseExistingServer: false`, frontend 5174 and backend 3103 because the normal frontend port was occupied. DATABASE_URL selected the final disposable copy; E2E_ALLOW_DB_WRITE=1 and the E2E origin variables matched those ports. Screenshots/uploads/results stayed in that temporary directory. These artifacts are local per-PR evidence; #32/#33 still need durable final-commit evidence.
+
+During implementation, old User-schema fixtures and synchronous pre-auth App tests initially failed and were adapted to the intentional authentication change. Type checking caught unsupported test options; the test glob was expanded to include the new `.test.ts` API-client checks. A development-port collision was resolved by using isolated test ports. The former production start path was corrected to `dist/src/index.js` and smoke-tested. This was iterative implementation/regression verification; no unobserved test-first/red result is claimed. Dependency installation reported eight existing server audit advisories; no unrelated dependency upgrade or audit fix was performed.
+
+Remaining: complete #28 server-derived ownership/endpoint roles, later staff/admin workflows, complete responsive/final evidence, user-created PR/peer approval, and final staging/main reruns. The author's selected AI prompts/reflection remain untouched.

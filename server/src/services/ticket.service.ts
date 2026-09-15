@@ -11,7 +11,7 @@ export async function createTicket(body: Record<string, unknown>) {
   const { parsedCategoryId, parsedRelatedSystemId, parsedRequesterId, trimmedSummary, trimmedDescription, requestedPriority } = parseCreateTicket(body);
 
   // BR-13 Check if Requester exists and is ACTIVE
-  const requester = await prisma.requesterUser.findUnique({
+  const requester = await prisma.user.findUnique({
     where: { id: parsedRequesterId },
   });
   if (!requester || !requester.isActive) {
@@ -62,10 +62,11 @@ export async function createTicket(body: Record<string, unknown>) {
             summary: trimmedSummary,
             description: trimmedDescription,
             requestedPriority: requestedPriority as Priority,
+            itPriority: requestedPriority as Priority,
             status: "NEW",
           },
           include: {
-            requester: { select: { id: true, name: true, email: true, department: true } },
+            requester: { select: { id: true, name: true, email: true, role: true, isActive: true } },
             category: { select: { id: true, name: true } },
             relatedSystem: { select: { id: true, name: true } },
           },
@@ -99,7 +100,7 @@ export async function listTickets(query: Record<string, unknown>) {
   }
   const requesterId = Number(requesterIdParam);
   // Verify requester existence and active status (BR-04, BR-05)
-  const requester = await prisma.requesterUser.findUnique({
+  const requester = await prisma.user.findUnique({
     where: { id: requesterId },
   });
   if (!requester || !requester.isActive) {
@@ -165,7 +166,7 @@ export async function getTicket(input: { ticketId: unknown }, query: Record<stri
     where: { id: ticketId },
     include: {
       requester: {
-        select: { id: true, name: true, email: true, department: true },
+        select: { id: true, name: true, email: true, role: true, isActive: true },
       },
       category: {
         select: { id: true, name: true },

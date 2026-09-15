@@ -309,7 +309,7 @@ export const CreateTicketForm: React.FC<CreateTicketFormProps> = ({ onTicketCrea
           <div>
             <span style={{ fontSize: "12px", fontWeight: "700", color: "#475569", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "2px" }}>Requester Identity</span>
             <strong style={{ fontSize: "15px", color: "var(--color-text-primary)" }}>
-              {selectedRequester ? `${selectedRequester.name} (${selectedRequester.department})` : "None Selected"}
+              {selectedRequester ? selectedRequester.name : "Not signed in"}
             </strong>
           </div>
         </div>

@@ -13,7 +13,3 @@ export const listCategories = asyncHandler(async (_req, res) => {
 export const listRelatedSystems = asyncHandler(async (_req, res) => {
   res.status(200).json(await service.listRelatedSystems());
 }, "Failed to fetch related systems");
-
-export const listRequesters = asyncHandler(async (_req, res) => {
-  res.status(200).json(await service.listRequesters());
-}, "Failed to fetch active requesters");

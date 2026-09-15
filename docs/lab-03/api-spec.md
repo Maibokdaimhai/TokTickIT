@@ -64,6 +64,8 @@ Validates the current password and password policy, rejects reuse of the current
 
 ## 4. Requester Ticket Compatibility API
 
+Increment boundary: the following is the final #28 contract. In #27, a full active session gates existing ticket/attachment APIs, but their legacy requesterId inputs still apply. The complete server-derived ownership and endpoint role matrix lands in #28; do not treat the intermediate authentication branch as an authorization-complete release. Authentication endpoints in §3 are implemented in #27. The retired `/api/requesters` endpoint returns safe 404 without listing identities.
+
 Existing ticket route paths are preserved, with ownership derived from req.auth.userId. requesterId is removed from the final client requests; a legacy supplied value is ignored by the backend for the whole Lab 3 increment and can never select an identity. GET /api/requesters is removed (404). GET /api/health remains public and returns the existing Lab 1 shape.
 
 - `GET /categories`

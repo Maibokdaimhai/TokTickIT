@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import supertest from "supertest";
+import supertest, { testPasswordHash } from "../authenticated-request.js";
 import app from "../../src/app.js";
 import { getPrisma } from "../../src/prisma.js";
 import { generateTicketNumber } from "../../src/utils/ticket-number.js";
@@ -20,29 +20,29 @@ describe("Create Ticket API & Reference Endpoints (Lab 2)", () => {
       },
     });
 
-    await prisma.requesterUser.deleteMany({
+    await prisma.user.deleteMany({
       where: {
         email: { in: ["active.ticket.test@example.com", "inactive.ticket.test@example.com"] },
       },
     });
 
     // Create Active Test Requester
-    const activeRequester = await prisma.requesterUser.create({
+    const activeRequester = await prisma.user.create({
       data: {
         name: "Active Ticket Tester",
         email: "active.ticket.test@example.com",
-        department: "Quality Assurance",
+        passwordHash: testPasswordHash, mustChangePassword: false,
         isActive: true,
       },
     });
     activeRequesterId = activeRequester.id;
 
     // Create Inactive Test Requester
-    const inactiveRequester = await prisma.requesterUser.create({
+    const inactiveRequester = await prisma.user.create({
       data: {
         name: "Inactive Ticket Tester",
         email: "inactive.ticket.test@example.com",
-        department: "Quality Assurance",
+        passwordHash: testPasswordHash, mustChangePassword: false,
         isActive: false,
       },
     });
@@ -63,7 +63,7 @@ describe("Create Ticket API & Reference Endpoints (Lab 2)", () => {
         summary: { startsWith: "[Test Ticket]" },
       },
     });
-    await prisma.requesterUser.deleteMany({
+    await prisma.user.deleteMany({
       where: {
         email: { in: ["active.ticket.test@example.com", "inactive.ticket.test@example.com"] },
       },
