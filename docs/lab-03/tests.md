@@ -258,4 +258,24 @@ Browser verification ran from `/private/tmp/toktickit-auth-e2e.6tRyy0` with its 
 
 During implementation, old User-schema fixtures and synchronous pre-auth App tests initially failed and were adapted to the intentional authentication change. Type checking caught unsupported test options; the test glob was expanded to include the new `.test.ts` API-client checks. A development-port collision was resolved by using isolated test ports. The former production start path was corrected to `dist/src/index.js` and smoke-tested. This was iterative implementation/regression verification; no unobserved test-first/red result is claimed. Dependency installation reported eight existing server audit advisories; no unrelated dependency upgrade or audit fix was performed.
 
-Remaining: complete #28 server-derived ownership/endpoint roles, later staff/admin workflows, complete responsive/final evidence, user-created PR/peer approval, and final staging/main reruns. The author's selected AI prompts/reflection remain untouched.
+Remaining after this recorded #27 run: complete #28 server-derived ownership/endpoint roles, later staff/admin workflows, complete responsive/final evidence, user-created PR/peer approval, and final staging/main reruns. The author's selected AI prompts/reflection remain untouched.
+
+## 14. Issue #28 Authenticated Requester Authorization Verification
+
+Executed on 2026-09-15 on `feature/lab3-authorization-requester`, based on merged PR #36 / `4275095`. This is feature-branch evidence for AC-07, AC-08, AC-22, and AC-24; peer review and staging merge remain user-owned GitHub steps.
+
+Implemented: requester ticket creation, listing, detail, rollback, attachment upload, and soft removal derive identity only from the persisted session. Final client requests no longer send `requesterId`; any legacy value supplied to a recognized body/query location is ignored and cannot select another identity. Unknown fields remain rejected. Inaccessible requester tickets and attachments use non-disclosing 404 responses. Requester-only routes reject IT Staff and Administrators before resource or multipart processing. Attachment metadata and active-file download permit all authenticated roles, retain ticket/attachment pair validation, hide storage paths, and continue to block removed downloads. Compensation rollback now locks and rechecks the ticket, returning 409 if assignment, status, comments, notes, or a resolution indication show that work has started.
+
+New `requester-authorization.api.test.ts` coverage uses real persisted sessions for all three roles. It verifies forged legacy identity resistance, cross-requester 404 behavior, direct cross-role 403 behavior, reference-data access, privileged active attachment reads, removed metadata/download rules, mismatch handling, storage-path omission, and rollback retention after staff work. Lab 2 server and client fixtures were adapted to the session contract without dropping creation, list/filter/page, detail, attachment, compensation, or stale-response assertions.
+
+| Verification | Result |
+| --- | --- |
+| Complete backend suite on disposable migrated/seeded database | 109/109 passed in 14 files |
+| Complete client suite | 36/36 passed in seven files |
+| Focused authorization and requester regressions | 53/53 passed in six server files |
+| Server production build | Passed |
+| Client production build | Passed |
+| Authenticated requester browser regressions | 3/3 passed |
+| `git diff --check` | Passed |
+
+The backend and browser suites used `toktickit_lab3_auth_final_20260914`; the ordinary development database was not migrated or reset. Browser servers used isolated ports 3103/5174 and temporary output under `/private/tmp/toktickit-auth-e2e.6tRyy0`; durable cross-role screenshot evidence remains assigned to #32. The expected diagnostic output from error-boundary tests contains only sanitized route/error context. No dependencies were added for Issue #28. The author's `ai-use.md` remains untouched.

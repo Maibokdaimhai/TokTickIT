@@ -8,7 +8,7 @@ import { hashPassword } from "../src/utils/password.js";
 // Existing endpoint regressions run behind a real persisted session. Auth-specific
 // tests separately exercise issuance through login; no production middleware bypass.
 const token = newSessionToken();
-let userId: number;
+export let testUserId: number;
 export let testPasswordHash: string;
 beforeAll(async () => {
   testPasswordHash = await hashPassword("Regression-only-pass1!");
@@ -16,10 +16,20 @@ beforeAll(async () => {
     name: "Endpoint regression session", email: `${randomUUID()}@regression.example`,
     passwordHash: testPasswordHash, mustChangePassword: false,
   } });
-  userId = user.id;
-  await getPrisma().session.create({ data: { userId, tokenDigest: digest(token), expiresAt: new Date(Date.now() + SESSION_LIFETIME) } });
+  testUserId = user.id;
+  await getPrisma().session.create({ data: { userId: testUserId, tokenDigest: digest(token), expiresAt: new Date(Date.now() + SESSION_LIFETIME) } });
 });
-afterAll(async () => { if (userId) await getPrisma().user.delete({ where: { id: userId } }); });
+afterAll(async () => { if (testUserId) await getPrisma().user.delete({ where: { id: testUserId } }); });
 export default function authenticatedRequest(app: Parameters<typeof supertest>[0]) {
   return supertest.agent(app).set("Origin", "http://localhost:5173").set("Cookie", `toktickit_session=${token}`);
+}
+
+export async function authenticatedAgentFor(app: Parameters<typeof supertest>[0], userId: number) {
+  const roleToken = newSessionToken();
+  await getPrisma().session.create({ data: {
+    userId,
+    tokenDigest: digest(roleToken),
+    expiresAt: new Date(Date.now() + SESSION_LIFETIME),
+  } });
+  return supertest.agent(app).set("Origin", "http://localhost:5173").set("Cookie", `toktickit_session=${roleToken}`);
 }

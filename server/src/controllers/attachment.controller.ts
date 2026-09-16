@@ -4,11 +4,11 @@ import fs from "fs";
 import { formatContentDisposition } from "../utils/filename.js";
 
 export const uploadAttachment = asyncHandler(async (req, res) => {
-  res.status(201).json(await service.uploadAttachment({ ticketId: req.params.id }, req.body, req.file));
+  res.status(201).json(await service.uploadAttachment({ ticketId: req.params.id }, req.body, res.locals.user.id, req.file));
 }, "Failed to upload attachment");
 
 export const downloadAttachment = asyncHandler(async (req, res, next) => {
-  const attachment = await service.downloadAttachment({ ticketId: req.params.id, attachmentId: req.params.attachmentId }, req.query);
+  const attachment = await service.downloadAttachment({ ticketId: req.params.id, attachmentId: req.params.attachmentId }, res.locals.user, req.query);
   const disposition = formatContentDisposition("inline", attachment.originalName);
   const stream = fs.createReadStream(attachment.filePath);
   let failed = false;
@@ -38,9 +38,9 @@ export const downloadAttachment = asyncHandler(async (req, res, next) => {
 }, "Failed to stream attachment");
 
 export const getAttachmentMetadata = asyncHandler(async (req, res) => {
-  res.status(200).json(await service.getAttachmentMetadata({ ticketId: req.params.id, attachmentId: req.params.attachmentId }, req.query));
+  res.status(200).json(await service.getAttachmentMetadata({ ticketId: req.params.id, attachmentId: req.params.attachmentId }, res.locals.user, req.query));
 }, "Failed to retrieve attachment metadata");
 
 export const removeAttachment = asyncHandler(async (req, res) => {
-  res.status(200).json(await service.removeAttachment({ ticketId: req.params.id, attachmentId: req.params.attachmentId }, req.body));
+  res.status(200).json(await service.removeAttachment({ ticketId: req.params.id, attachmentId: req.params.attachmentId }, req.body, res.locals.user.id));
 }, "Failed to execute attachment removal");

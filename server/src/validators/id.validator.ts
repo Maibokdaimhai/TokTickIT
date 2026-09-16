@@ -2,11 +2,11 @@ import { ApiError } from "../errors/api-error.js";
 
 export function isValidIntegerId(val: unknown): boolean {
   if (typeof val === "number") {
-    return Number.isInteger(val) && val > 0;
+    return Number.isSafeInteger(val) && val > 0 && val <= 2_147_483_647;
   }
   if (typeof val === "string") {
     const trimmed = val.trim();
-    return /^[1-9]\d*$/.test(trimmed);
+    return /^[1-9]\d*$/.test(trimmed) && BigInt(trimmed) <= 2_147_483_647n;
   }
   return false;
 }
@@ -18,21 +18,13 @@ export function requireIntegerId(value: unknown, message: string): number {
   return Number(value);
 }
 
-export function parseTicketIdentity(ticketId: unknown, requesterId: unknown, source: "query" | "body" = "query") {
-  return {
-    ticketId: requireIntegerId(ticketId, "Ticket ID parameter must be a valid positive integer"),
-    requesterId: requireIntegerId(requesterId, source === "query"
-      ? "requesterId query parameter must be a valid positive integer"
-      : "requesterId must be a valid positive integer"),
-  };
+export function parseTicketId(ticketId: unknown): number {
+  return requireIntegerId(ticketId, "Ticket ID parameter must be a valid positive integer");
 }
 
-export function parseAttachmentIdentity(ticketId: unknown, attachmentId: unknown, requesterId: unknown, source: "query" | "body" = "query") {
+export function parseAttachmentIds(ticketId: unknown, attachmentId: unknown) {
   return {
-    ticketId: requireIntegerId(ticketId, "Ticket ID parameter must be a valid positive integer"),
+    ticketId: parseTicketId(ticketId),
     attachmentId: requireIntegerId(attachmentId, "Attachment ID parameter must be a valid positive integer"),
-    requesterId: requireIntegerId(requesterId, source === "query"
-      ? "requesterId query parameter must be a valid positive integer"
-      : "requesterId must be a valid positive integer"),
   };
 }

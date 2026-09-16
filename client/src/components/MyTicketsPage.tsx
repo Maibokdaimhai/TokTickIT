@@ -117,7 +117,6 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
     setError(null);
 
     fetchMyTickets({
-      requesterId: selectedRequester.id,
       search: debouncedSearch,
       category: categoryId === "" ? undefined : categoryId,
       priority: priority === "" ? undefined : priority,

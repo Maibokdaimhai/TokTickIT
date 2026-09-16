@@ -11,7 +11,7 @@ vi.mock("../../src/api.js", () => ({
   removeAttachment: vi.fn(),
   uploadAttachment: vi.fn(),
   getAttachmentDownloadUrl: vi.fn(
-    (tId, aId, rId) => `http://localhost:3000/api/tickets/${tId}/attachments/${aId}?requesterId=${rId}`
+    (tId, aId) => `http://localhost:3000/api/tickets/${tId}/attachments/${aId}`
   ),
 }));
 
