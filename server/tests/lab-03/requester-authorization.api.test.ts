@@ -84,6 +84,37 @@ describe("Issue #28: requester ownership and role authorization", () => {
     }
   });
 
+  it("returns identical attachment error bodies for missing and unauthorized requester tickets", async () => {
+    const missingTicketId = 2_147_483_647;
+    const expectedBody = { error: { code: "NOT_FOUND", message: "Attachment not found" } };
+    const upload = (ticketId: number) => requester
+      .post(`/api/tickets/${ticketId}/attachments`)
+      .attach("file", Buffer.from("%PDF-1.4 hidden ticket probe"), { filename: "probe.pdf", contentType: "application/pdf" });
+    const operations = [
+      [await upload(missingTicketId), await upload(otherTicketId)],
+      [
+        await requester.get(`/api/tickets/${missingTicketId}/attachments/${activeAttachmentId}`),
+        await requester.get(`/api/tickets/${otherTicketId}/attachments/${activeAttachmentId}`),
+      ],
+      [
+        await requester.get(`/api/tickets/${missingTicketId}/attachments/${activeAttachmentId}/metadata`),
+        await requester.get(`/api/tickets/${otherTicketId}/attachments/${activeAttachmentId}/metadata`),
+      ],
+      [
+        await requester.post(`/api/tickets/${missingTicketId}/attachments/${activeAttachmentId}/remove`).send({ removalReason: "Probe resource" }),
+        await requester.post(`/api/tickets/${otherTicketId}/attachments/${activeAttachmentId}/remove`).send({ removalReason: "Probe resource" }),
+      ],
+    ];
+
+    for (const [missing, unauthorized] of operations) {
+      expect(missing.status).toBe(404);
+      expect(unauthorized.status).toBe(404);
+      expect(missing.body).toEqual(expectedBody);
+      expect(unauthorized.body).toEqual(expectedBody);
+      expect(unauthorized.body).toEqual(missing.body);
+    }
+  });
+
   it("returns 409 and retains an owned ticket after staff work has started", async () => {
     const prisma = getPrisma();
     await prisma.publicComment.create({ data: { ticketId: ownTicketId, authorId: staffId, content: "Staff investigation has started." } });

@@ -9,15 +9,20 @@ import { removeUploadedFile, type UploadedFile } from "../storage/attachments.js
 import type { AuthenticatedActor } from "../types/auth.js";
 import { validateLegacyRequesterQuery } from "../validators/ticket.validator.js";
 
+const attachmentResourceNotFound = () => new ApiError(404, {
+  code: "NOT_FOUND",
+  message: "Attachment not found",
+});
+
 function assertCanRead(requesterId: number, actor: AuthenticatedActor) {
   if (actor.role === "REQUESTER" && requesterId !== actor.id) {
-    throw new ApiError(404, { code: "NOT_FOUND", message: "Attachment not found" });
+    throw attachmentResourceNotFound();
   }
 }
 
 function assertOwnTicket(requesterId: number, actorId: number) {
   if (requesterId !== actorId) {
-    throw new ApiError(404, { code: "NOT_FOUND", message: "Attachment not found" });
+    throw attachmentResourceNotFound();
   }
 }
 
@@ -32,7 +37,7 @@ export async function uploadAttachment(input: { ticketId: unknown }, body: Recor
       where: { id: ticketId },
     });
     if (!ticket) {
-      throw new ApiError(404, { code: "NOT_FOUND", message: "Ticket not found" });
+      throw attachmentResourceNotFound();
     }
     // BR-05 Ownership isolation check
     assertOwnTicket(ticket.requesterId, actorId);
@@ -72,7 +77,7 @@ export async function downloadAttachment(input: { ticketId: unknown; attachmentI
     where: { id: ticketId },
   });
   if (!ticket) {
-    throw new ApiError(404, { code: "NOT_FOUND", message: "Ticket not found" });
+    throw attachmentResourceNotFound();
   }
   // BR-05 Ownership isolation check
   assertCanRead(ticket.requesterId, actor);
@@ -80,7 +85,7 @@ export async function downloadAttachment(input: { ticketId: unknown; attachmentI
     where: { id: attachmentId, ticketId },
   });
   if (!attachment) {
-    throw new ApiError(404, { code: "NOT_FOUND", message: "Attachment not found" });
+    throw attachmentResourceNotFound();
   }
   // BR-09 / AC-07 Block download of soft-removed attachments
   if (attachment.isRemoved) {
@@ -103,14 +108,14 @@ export async function getAttachmentMetadata(input: { ticketId: unknown; attachme
     where: { id: ticketId },
   });
   if (!ticket) {
-    throw new ApiError(404, { code: "NOT_FOUND", message: "Ticket not found" });
+    throw attachmentResourceNotFound();
   }
   assertCanRead(ticket.requesterId, actor);
   const attachment = await prisma.attachment.findFirst({
     where: { id: attachmentId, ticketId },
   });
   if (!attachment) {
-    throw new ApiError(404, { code: "NOT_FOUND", message: "Attachment not found" });
+    throw attachmentResourceNotFound();
   }
   return {
     id: attachment.id,
@@ -133,7 +138,7 @@ export async function removeAttachment(input: { ticketId: unknown; attachmentId:
     where: { id: ticketId },
   });
   if (!ticket) {
-    throw new ApiError(404, { code: "NOT_FOUND", message: "Ticket not found" });
+    throw attachmentResourceNotFound();
   }
   // BR-05 Ownership isolation
   assertOwnTicket(ticket.requesterId, actorId);
@@ -141,7 +146,7 @@ export async function removeAttachment(input: { ticketId: unknown; attachmentId:
     where: { id: attachmentId, ticketId },
   });
   if (!attachment) {
-    throw new ApiError(404, { code: "NOT_FOUND", message: "Attachment not found" });
+    throw attachmentResourceNotFound();
   }
   if (attachment.isRemoved) {
     throw new ApiError(400, {

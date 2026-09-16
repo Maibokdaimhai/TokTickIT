@@ -270,9 +270,9 @@ New `requester-authorization.api.test.ts` coverage uses real persisted sessions 
 
 | Verification | Result |
 | --- | --- |
-| Complete backend suite on disposable migrated/seeded database | 108/108 passed in 14 files |
+| Complete backend suite on disposable migrated/seeded database | 109/109 passed in 14 files |
 | Complete client suite | 36/36 passed in seven files |
-| Focused authorization and requester regressions | 52/52 passed in six server files |
+| Focused authorization and requester regressions | 53/53 passed in six server files |
 | Server production build | Passed |
 | Client production build | Passed |
 | Authenticated requester browser regressions | 3/3 passed |
