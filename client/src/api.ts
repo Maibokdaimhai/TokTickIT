@@ -8,12 +8,17 @@ import {
   TicketsResponse,
   Attachment,
   TicketDetail,
+  StaffTicketDetail,
   FetchStaffTicketsParams,
   StaffTicketsResponse,
   EligibleOwner,
+  Entry,
+  TicketStatus,
+  UpdateStatusPayload,
+  ProblemAppearsResolvedPayload,
 } from "./types.js";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 export class AuthError extends Error {
   constructor(message: string, public status: number, public code?: string) { super(message); }
@@ -208,6 +213,13 @@ export function getAttachmentDownloadUrl(ticketId: number, attachmentId: number)
   return `${API_URL}/api/tickets/${ticketId}/attachments/${attachmentId}`;
 }
 
+export async function downloadAttachmentByUrl(url: string): Promise<Response> {
+  const targetUrl = url.startsWith("http://") || url.startsWith("https://")
+    ? url
+    : `${API_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+  return await apiFetch(targetUrl);
+}
+
 export async function fetchStaffTickets(params: FetchStaffTicketsParams = {}): Promise<StaffTicketsResponse> {
   const query = new URLSearchParams();
   if (params.search && params.search.trim()) {
@@ -261,5 +273,163 @@ export async function fetchEligibleOwners(): Promise<{ owners: EligibleOwner[] }
     throw new ApiClientError(errorMsg, res.status, data?.error?.code);
   }
 
+  return data;
+}
+
+export async function fetchStaffTicketDetail(ticketId: number): Promise<StaffTicketDetail> {
+  const res = await apiFetch(`${API_URL}/api/staff/tickets/${ticketId}`);
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiClientError(data?.error?.message || "Failed to fetch staff ticket detail", res.status, data?.error?.code);
+  }
+  return data;
+}
+
+export async function claimStaffTicket(
+  ticketId: number,
+  expectedVersionOrPayload: number | { expectedVersion: number }
+): Promise<{ ticket: StaffTicketDetail }> {
+  const expectedVersion =
+    typeof expectedVersionOrPayload === "object"
+      ? expectedVersionOrPayload.expectedVersion
+      : expectedVersionOrPayload;
+  const res = await apiFetch(`${API_URL}/api/staff/tickets/${ticketId}/claim`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ expectedVersion }),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiClientError(data?.error?.message || "Failed to claim ticket", res.status, data?.error?.code);
+  }
+  return data;
+}
+export const claimTicket = claimStaffTicket;
+
+export async function updateStaffTicketOwner(
+  ticketId: number,
+  ownerIdOrPayload: number | null | { ownerId: number | null; expectedVersion: number },
+  expectedVersionArg?: number
+): Promise<{ ticket: StaffTicketDetail }> {
+  let ownerId: number | null;
+  let expectedVersion: number;
+  if (typeof ownerIdOrPayload === "object" && ownerIdOrPayload !== null) {
+    ownerId = ownerIdOrPayload.ownerId;
+    expectedVersion = ownerIdOrPayload.expectedVersion;
+  } else {
+    ownerId = ownerIdOrPayload as number | null;
+    expectedVersion = expectedVersionArg!;
+  }
+  const res = await apiFetch(`${API_URL}/api/staff/tickets/${ticketId}/owner`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ownerId, expectedVersion }),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiClientError(data?.error?.message || "Failed to update owner", res.status, data?.error?.code);
+  }
+  return data;
+}
+export const updateTicketOwner = updateStaffTicketOwner;
+
+export async function updateStaffTicketItPriority(
+  ticketId: number,
+  itPriorityOrPayload: Priority | { itPriority: Priority; expectedVersion: number },
+  expectedVersionArg?: number
+): Promise<{ ticket: StaffTicketDetail }> {
+  let itPriority: Priority;
+  let expectedVersion: number;
+  if (typeof itPriorityOrPayload === "object") {
+    itPriority = itPriorityOrPayload.itPriority;
+    expectedVersion = itPriorityOrPayload.expectedVersion;
+  } else {
+    itPriority = itPriorityOrPayload;
+    expectedVersion = expectedVersionArg!;
+  }
+  const res = await apiFetch(`${API_URL}/api/staff/tickets/${ticketId}/it-priority`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ itPriority, expectedVersion }),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiClientError(data?.error?.message || "Failed to update IT priority", res.status, data?.error?.code);
+  }
+  return data;
+}
+export const updateTicketItPriority = updateStaffTicketItPriority;
+
+export async function updateStaffTicketStatus(
+  ticketId: number,
+  payload: UpdateStatusPayload
+): Promise<{ ticket: StaffTicketDetail }> {
+  const res = await apiFetch(`${API_URL}/api/staff/tickets/${ticketId}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiClientError(data?.error?.message || "Failed to update ticket status", res.status, data?.error?.code);
+  }
+  return data;
+}
+export const updateTicketStatus = updateStaffTicketStatus;
+
+export async function fetchPublicComments(ticketId: number): Promise<{ comments: Entry[] }> {
+  const res = await apiFetch(`${API_URL}/api/tickets/${ticketId}/public-comments`);
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiClientError(data?.error?.message || "Failed to fetch public comments", res.status, data?.error?.code);
+  }
+  return data;
+}
+
+export async function addPublicComment(ticketId: number, content: string): Promise<{ comment: Entry }> {
+  const res = await apiFetch(`${API_URL}/api/tickets/${ticketId}/public-comments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiClientError(data?.error?.message || "Failed to add public comment", res.status, data?.error?.code);
+  }
+  return data;
+}
+
+export async function fetchInternalNotes(ticketId: number): Promise<{ notes: Entry[] }> {
+  const res = await apiFetch(`${API_URL}/api/staff/tickets/${ticketId}/internal-notes`);
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiClientError(data?.error?.message || "Failed to fetch internal notes", res.status, data?.error?.code);
+  }
+  return data;
+}
+
+export async function addInternalNote(ticketId: number, content: string): Promise<{ note: Entry }> {
+  const res = await apiFetch(`${API_URL}/api/staff/tickets/${ticketId}/internal-notes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiClientError(data?.error?.message || "Failed to add internal note", res.status, data?.error?.code);
+  }
+  return data;
+}
+
+export async function indicateProblemAppearsResolved(ticketId: number, payload: ProblemAppearsResolvedPayload): Promise<{ ticket: TicketDetail }> {
+  const res = await apiFetch(`${API_URL}/api/tickets/${ticketId}/problem-appears-resolved`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiClientError(data?.error?.message || "Failed to indicate problem appears resolved", res.status, data?.error?.code);
+  }
   return data;
 }

@@ -19,6 +19,7 @@ vi.mock("../../src/api.js", async (original) => ({
   fetchCategories: vi.fn(),
   fetchEligibleOwners: vi.fn(),
   fetchStaffTickets: vi.fn(),
+  fetchStaffTicketDetail: vi.fn(),
   getSession: vi.fn(),
   login: vi.fn(),
   logout: vi.fn(),
@@ -87,9 +88,38 @@ describe("UI-04: Staff Ticket Queue Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.pushState(null, "", "/");
     vi.mocked(api.fetchCategories).mockResolvedValue(mockCategories);
     vi.mocked(api.fetchEligibleOwners).mockResolvedValue({ owners: mockEligibleOwners });
     vi.mocked(api.fetchStaffTickets).mockResolvedValue(sampleResponse);
+    vi.mocked(api.fetchStaffTicketDetail).mockResolvedValue({
+      id: 201,
+      ticketNumber: "TKT-2026-000201",
+      requesterId: 1,
+      requester: { id: 1, name: "Jennifer Anderson", email: "jennifer@example.com" },
+      categoryId: 1,
+      category: { id: 1, name: "Hardware" },
+      relatedSystemId: 7,
+      relatedSystem: { id: 7, name: "Corporate Laptop" },
+      summary: "Monitor display glitch",
+      description: "Display glitch description",
+      requestedPriority: "LOW",
+      itPriority: "LOW",
+      status: "OPEN",
+      owner: null,
+      createdAt: "2026-09-16T12:00:00.000Z",
+      updatedAt: "2026-09-16T12:00:00.000Z",
+      version: 1,
+      attachments: [],
+      publicComments: [],
+      internalNotes: [],
+      problemAppearsResolvedAt: null,
+      problemAppearsResolvedById: null,
+    });
+  });
+
+  afterEach(() => {
+    window.history.pushState(null, "", "/");
   });
 
   it("renders queue table columns, ticket rows, and badges correctly", async () => {
@@ -516,6 +546,7 @@ describe("Role Navigation & Queue State Preservation Integration", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.pushState(null, "", "/");
     vi.mocked(api.fetchCategories).mockResolvedValue([]);
     vi.mocked(api.fetchEligibleOwners).mockResolvedValue({ owners: [] });
     vi.mocked(api.fetchStaffTickets).mockResolvedValue({
@@ -608,12 +639,10 @@ describe("Role Navigation & Queue State Preservation Integration", () => {
     const openButtons = screen.getAllByRole("button", { name: /open/i });
     fireEvent.click(openButtons[0]);
 
-    // Detail placeholder is shown
+    // Staff ticket detail is shown
     await waitFor(() => {
-      expect(screen.getByTestId("ticket-detail-placeholder")).toBeInTheDocument();
+      expect(screen.getByTestId("staff-ticket-number-heading")).toHaveTextContent("TKT-2026-000201");
     });
-    expect(screen.getByRole("heading", { name: "Ticket #201" })).toBeInTheDocument();
-    expect(screen.getByText(/Ticket operations, comments, and internal notes belong to Issue #30/i)).toBeInTheDocument();
 
     // Click "← Back to Ticket Queue"
     const backBtn = screen.getByRole("button", { name: "← Back to Ticket Queue" });
@@ -690,12 +719,12 @@ describe("Role Navigation & Queue State Preservation Integration", () => {
       );
     });
 
-    // Click "Open" to navigate into detail placeholder
+    // Click "Open" to navigate into detail
     const openButtons = screen.getAllByRole("button", { name: /open/i });
     fireEvent.click(openButtons[0]);
 
     await waitFor(() => {
-      expect(screen.getByTestId("ticket-detail-placeholder")).toBeInTheDocument();
+      expect(screen.getByTestId("staff-ticket-number-heading")).toHaveTextContent("TKT-2026-000201");
     });
 
     // Click "← Back to Ticket Queue" to return

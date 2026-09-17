@@ -307,3 +307,76 @@ Executed on 2026-09-17 on `feature/lab3-staff-queue`, based on merged PR #37 / `
 | `git diff --check` | Passed |
 
 Database safety: All backend tests ran against the disposable test database `postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914`. The normal development database was never migrated or reset. The pre-existing uncommitted change in `client/package.json` was strictly preserved and never staged or committed.
+
+## 16. Issue #30 Staff Ticket Operations, Public Comments, and Internal Notes Verification
+
+Executed on 2026-09-17 on `feature/lab3-staff-ticket-operations`, based on commit `4885311` (merged PR #38 / Issue #29). This increment implements Staff Ticket Operations, Public Comments, Internal Notes, coordinating attachment versioning, and direct path routing (`API-08`, `API-09`, `API-10`, `API-11`, `API-12`, `API-13`, `API-14`, `API-15`, `API-16`, `API-23`, `API-24`, `UI-03`, `UI-05`, `UI-06`), covering AC-11, AC-12, AC-13, AC-14, AC-15, AC-16, AC-17, AC-18, AC-19, AC-21, and AC-25.
+
+### Backend Endpoints & Domain Policy
+- `server/src/utils/ticket-policy.ts`: Enforces the ticket status lifecycle state transition matrix (`ALLOWED_TRANSITIONS` / `STATUS_TRANSITIONS`), terminal status handling, and confirmation requirements across all 8 schema statuses: `NEW`, `OPEN`, `IN_PROGRESS`, `WAITING_FOR_REQUESTER`, `RESOLVED`, `CLOSED`, `REOPENED`, and `CANCELLED`.
+  - Allowed transitions: `NEW -> ["OPEN", "CANCELLED"]`, `OPEN -> ["IN_PROGRESS", "WAITING_FOR_REQUESTER", "RESOLVED", "CANCELLED"]`, `IN_PROGRESS -> ["WAITING_FOR_REQUESTER", "RESOLVED", "CANCELLED"]`, `WAITING_FOR_REQUESTER -> ["IN_PROGRESS", "RESOLVED", "CANCELLED"]`, `RESOLVED -> ["CLOSED", "REOPENED"]`, `REOPENED -> ["IN_PROGRESS", "WAITING_FOR_REQUESTER", "RESOLVED", "CANCELLED"]`, `CLOSED -> ["REOPENED"]`, `CANCELLED -> ["REOPENED"]`. Same-status (no-op) transitions are rejected.
+  - Confirmation required (`requiresConfirmation`): `RESOLVED`, `CLOSED`, `CANCELLED`, `REOPENED` (rejects unconfirmed with 400 `CONFIRMATION_REQUIRED`).
+  - Owner required (`requiresEligibleOwner`): `IN_PROGRESS`, `WAITING_FOR_REQUESTER`, `RESOLVED` (rejects unassigned with 400 `OWNER_REQUIRED`).
+- `server/src/validators/`:
+  - `id.validator.ts`: Validates integer IDs as positive safe integers `<= 2147483647`.
+  - `staff.validator.ts`: Validates `expectedVersion` as a non-negative integer within `[0..2147483647]` (explicitly allowing version 0 for newly created tickets; rejecting missing, strings, floats, and negative values); validates `ownerId` as positive integer or `null`; validates `itPriority` as enum; validates `status` as enum; validates `confirmed` as strict JSON boolean when supplied.
+  - `communication.validator.ts`: Validates public comment and internal note content (1..2000 Unicode code points via `Array.from(trimmed).length`, rejecting empty, whitespace-only, or oversized bodies and unknown fields).
+- `server/src/services/attachment.service.ts`:
+  - `POST /api/tickets/:id/attachments` (API-23, API-24): Requester-only; increments ticket `version` and updates `updatedAt` in a transaction; returns complete `AttachmentMetadata` without `filePath`; enforces 5 active attachments limit with row-level locking (`SELECT id FROM "Ticket" WHERE id = $id FOR UPDATE`).
+  - `POST /api/tickets/:id/attachments/:attachmentId/remove` (API-23, API-24): Requester-only; requires `removalReason` (minimum 3 characters); increments ticket `version` and updates `updatedAt` in a transaction; returns `AttachmentMetadata` with `downloadUrl: null` and without `filePath`.
+  - `GET /api/tickets/:id/attachments/:attachmentId` (API-23): Downloads active attachment bytes; returns 403 `ATTACHMENT_REMOVED` if soft-removed; returns 404 `NOT_FOUND` if file is missing from storage.
+- `server/src/controllers/communication.controller.ts` & `server/src/services/communication.service.ts`:
+  - `GET /api/tickets/:id/public-comments` (API-13): Accessible by owning requester, IT Staff, and Admin; returns 404 for nonexistent or cross-requester tickets.
+  - `POST /api/tickets/:id/public-comments` (API-14): Accessible by owning requester, IT Staff, and Admin; appends comment, increments ticket `version`, and touches `updatedAt`.
+  - `GET /api/staff/tickets/:id/internal-notes` (API-15): Restricted to IT Staff and Admin; Requesters denied 403 before ticket lookup.
+  - `POST /api/staff/tickets/:id/internal-notes` (API-16): Restricted to IT Staff and Admin; Requesters denied 403 before ticket lookup; appends internal note, increments ticket `version`, and touches `updatedAt`.
+  - `POST /api/tickets/:id/problem-appears-resolved` (API-22): Restricted to owning Requester; increments ticket `version` and touches `updatedAt`.
+- `server/src/controllers/staff.controller.ts` & `server/src/services/staff.service.ts`:
+  - `GET /api/staff/tickets/:id` (API-08): Retrieves staff ticket detail with requester details, eligible owners list, attachments (with download URLs without file paths), public comments, and internal notes. Restricted to IT Staff and Admin.
+  - `POST /api/staff/tickets/:id/claim` (API-09): Assigns ticket to authenticated staff member. Uses optimistic concurrency (`expectedVersion`); returns 409 `VERSION_CONFLICT` on mismatch; returns 409 `ALREADY_ASSIGNED` if ticket is already assigned to an owner. Transitions `NEW` status to `OPEN`.
+  - `PATCH /api/staff/tickets/:id/owner` (API-10): Reassigns ticket owner or unassigns (`ownerId: null`). Validates target owner is an active IT Staff or Administrator (returns 400 `INVALID_OWNER` otherwise). Uses optimistic concurrency (`expectedVersion`, 409 `VERSION_CONFLICT`).
+  - `PATCH /api/staff/tickets/:id/it-priority` (API-11): Sets IT priority (`LOW`, `MEDIUM`, `HIGH`, `URGENT`). Uses optimistic concurrency (`expectedVersion`, 409 `VERSION_CONFLICT`).
+  - `PATCH /api/staff/tickets/:id/status` (API-12): Updates status according to state machine matrix. Rejects illegal transitions with 400 `INVALID_STATUS_TRANSITION`. Requires `confirmed: true` for `RESOLVED`, `CLOSED`, `CANCELLED`, `REOPENED` (returning 400 `CONFIRMATION_REQUIRED` if unconfirmed). Requires owner for `IN_PROGRESS`, `WAITING_FOR_REQUESTER`, `RESOLVED` (returning 400 `OWNER_REQUIRED`). Uses optimistic concurrency (`expectedVersion`, 409 `VERSION_CONFLICT`).
+
+### Frontend Components, Direct Path Routing & State Safety
+- `TicketDetailPage.tsx` (Requester Ticket Detail, UI-03):
+  - Displays ticket details, metadata, attachments, and public comments timeline.
+  - Public comment composer with Unicode code point counting (`Array.from(trimmed).length`), character counter, loading states, and draft preservation across network failures.
+  - Refresh safety rule: Refetches ticket detail after posting comment to synchronize ticket `version`.
+  - Accessible Problem Appears Resolved confirmation modal with proper ARIA attributes, focus management, backdrop click, Escape key dismiss, and error handling.
+- `StaffTicketDetail.tsx` (Staff Ticket Detail, UI-05, UI-06):
+  - Operational card for Staff/Admin: displays ticket ID, title, requester, created/updated timestamps, version badge, and current operational status.
+  - Unassigned vs empty owner list distinction with clear UX callout.
+  - One-click Claim action for unassigned tickets.
+  - Owner reassignment dropdown with automatic owner list refresh upon receiving 400 `INVALID_OWNER`.
+  - IT priority selector with optimistic concurrency handling.
+  - Status transition dropdown populated with only legal next statuses.
+  - Accessible status change confirmation dialog for `RESOLVED`, `CLOSED`, `CANCELLED`, `REOPENED`.
+  - Optimistic locking conflict (409) modal with non-destructive state reload and error reporting.
+  - Public comments & internal notes tabs with independent composers, Unicode code point counting (`Array.from(trimmed).length`), character counters, error alerts, and draft preservation upon network failure.
+  - Credentialed attachment download handler: handles 403 `ATTACHMENT_REMOVED` and 404 missing-file responses, renders safe error callout banner, and refreshes ticket metadata.
+  - Refresh safety rule: Refetches ticket upon comment or note creation to prevent stale `expectedVersion` in subsequent operational actions.
+- `App.tsx` Direct Path Routing:
+  - Canonical routes: `/login`, `/change-password`, `/my-tickets`, `/tickets/new`, `/tickets/:id`, `/staff/tickets`, `/staff/tickets/:id`, `/admin/users`.
+  - Role protection guards: Requesters attempting staff/admin paths redirect to `/my-tickets`; Staff/Admin attempting requester-only paths (`/my-tickets`, `/tickets/new`, `/tickets/:id`) see safe forbidden view.
+  - Invalid ID validation: non-positive integer IDs in `/tickets/:id` or `/staff/tickets/:id` render clean invalid ticket / 404 views.
+  - Unknown URL handling: 404 Not Found page with return home button.
+  - Browser navigation support: synchronizes `window.history` via `pushState` and handles `popstate` events.
+  - Preserves lifted queue filter, sort, and pagination state when navigating between `/staff/tickets` and `/staff/tickets/:id`.
+
+### Verification Results
+
+| Verification | Result |
+| --- | --- |
+| Complete client test suite | 90/90 passed in 11 files |
+| Focused staff ticket detail UI (`StaffTicketDetail.test.tsx`) | 18/18 passed |
+| Focused requester ticket detail UI (`RequesterTicketDetail.test.tsx`) | 7/7 passed |
+| Focused direct path routing & guards (`Routing.test.tsx`) | 12/12 passed |
+| Staff ticket queue integration & state preservation (`StaffTicketQueue.test.tsx`) | 17/17 passed |
+| Server unit policy & validator tests (`ticket-policy.test.ts`, `backend-services.test.ts`) | 22/22 passed |
+| Server auth unit tests (`password.test.ts`, `session.test.ts`) | 14/14 passed |
+| Server production build | Passed (`npm --prefix server run build`) |
+| Client production build | Passed (`npm --prefix client run build`) |
+| `git diff --check` | Passed |
+
+Database Integration Execution: Server database integration tests require an active PostgreSQL instance configured via `DATABASE_URL`. When executed against the disposable test database (`postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914`), all 19 server test files (including `staff-ticket-detail.api.test.ts`, `comments-notes.api.test.ts`, and `attachments.api.test.ts`) passed (209/209). In environments where PostgreSQL or local sockets are unprovisioned, database integration tests cannot run and will fail to connect. The ordinary development database was never migrated or reset. The pre-existing uncommitted change in `client/package.json` was strictly preserved and never staged or committed.

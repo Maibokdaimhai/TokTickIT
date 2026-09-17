@@ -88,3 +88,135 @@ describe("Issue #26: service boundaries", () => {
     expect(cleanup).toHaveBeenCalledWith(file.path);
   });
 });
+
+import { parseExpectedVersion } from "../../src/validators/id.validator.js";
+import {
+  parseClaimTicket,
+  parseUpdateOwner,
+  parseUpdateItPriority,
+  parseUpdateStatus,
+} from "../../src/validators/staff.validator.js";
+import {
+  parseCreateCommunication,
+  parseProblemAppearsResolved,
+} from "../../src/validators/communication.validator.js";
+
+describe("UNIT-04: Issue #30 staff and communication validators", () => {
+  it("validates expectedVersion allowing 0 and safe integers, rejecting strings and invalid values", () => {
+    expect(parseExpectedVersion(0)).toBe(0);
+    expect(parseExpectedVersion(42)).toBe(42);
+    expect(parseExpectedVersion(2_147_483_647)).toBe(2_147_483_647);
+
+    expect(() => parseExpectedVersion("0")).toThrow();
+    expect(() => parseExpectedVersion("42")).toThrow();
+    expect(() => parseExpectedVersion(-1)).toThrow();
+    expect(() => parseExpectedVersion(1.5)).toThrow();
+    expect(() => parseExpectedVersion(2_147_483_648)).toThrow();
+    expect(() => parseExpectedVersion(null)).toThrow();
+    expect(() => parseExpectedVersion(undefined)).toThrow();
+  });
+
+  it("validates claim ticket payload strictly", () => {
+    expect(parseClaimTicket({ expectedVersion: 0 })).toEqual({ expectedVersion: 0 });
+    expect(() => parseClaimTicket({})).toThrow();
+    expect(() => parseClaimTicket({ expectedVersion: "0" })).toThrow();
+    expect(() => parseClaimTicket({ expectedVersion: 1, extra: true })).toThrow();
+    expect(() => parseClaimTicket(null)).toThrow();
+  });
+
+  it("validates update owner payload strictly (null or positive integer)", () => {
+    expect(parseUpdateOwner({ ownerId: null, expectedVersion: 0 })).toEqual({ ownerId: null, expectedVersion: 0 });
+    expect(parseUpdateOwner({ ownerId: 7, expectedVersion: 1 })).toEqual({ ownerId: 7, expectedVersion: 1 });
+
+    expect(() => parseUpdateOwner({ ownerId: "7", expectedVersion: 1 })).toThrow();
+    expect(() => parseUpdateOwner({ ownerId: 0, expectedVersion: 1 })).toThrow();
+    expect(() => parseUpdateOwner({ ownerId: -5, expectedVersion: 1 })).toThrow();
+    expect(() => parseUpdateOwner({ ownerId: 1.5, expectedVersion: 1 })).toThrow();
+    expect(() => parseUpdateOwner({ ownerId: 2_147_483_648, expectedVersion: 1 })).toThrow();
+    expect(() => parseUpdateOwner({ expectedVersion: 1 })).toThrow();
+    expect(() => parseUpdateOwner({ ownerId: 7 })).toThrow();
+    expect(() => parseUpdateOwner({ ownerId: 7, expectedVersion: 1, extra: "unknown" })).toThrow();
+  });
+
+  it("validates update IT priority strictly", () => {
+    expect(parseUpdateItPriority({ itPriority: "HIGH", expectedVersion: 2 })).toEqual({ itPriority: "HIGH", expectedVersion: 2 });
+    expect(() => parseUpdateItPriority({ itPriority: "INVALID", expectedVersion: 2 })).toThrow();
+    expect(() => parseUpdateItPriority({ itPriority: "HIGH" })).toThrow();
+    expect(() => parseUpdateItPriority({ expectedVersion: 2 })).toThrow();
+    expect(() => parseUpdateItPriority({ itPriority: "HIGH", expectedVersion: 2, other: 1 })).toThrow();
+  });
+
+  it("validates update status strictly including boolean confirmed check", () => {
+    expect(parseUpdateStatus({ status: "RESOLVED", expectedStatus: "OPEN", expectedVersion: 3, confirmed: true })).toEqual({
+      status: "RESOLVED",
+      expectedStatus: "OPEN",
+      expectedVersion: 3,
+      confirmed: true,
+    });
+    expect(parseUpdateStatus({ status: "OPEN", expectedStatus: "NEW", expectedVersion: 0 })).toEqual({
+      status: "OPEN",
+      expectedStatus: "NEW",
+      expectedVersion: 0,
+      confirmed: undefined,
+    });
+
+    // confirmed must be boolean when supplied, not string
+    expect(() => parseUpdateStatus({ status: "RESOLVED", expectedStatus: "OPEN", expectedVersion: 1, confirmed: "true" })).toThrow();
+    expect(() => parseUpdateStatus({ status: "RESOLVED", expectedStatus: "OPEN", expectedVersion: 1, confirmed: 1 })).toThrow();
+
+    // missing required fields
+    expect(() => parseUpdateStatus({ expectedStatus: "OPEN", expectedVersion: 1 })).toThrow();
+    expect(() => parseUpdateStatus({ status: "RESOLVED", expectedVersion: 1 })).toThrow();
+    expect(() => parseUpdateStatus({ status: "RESOLVED", expectedStatus: "OPEN" })).toThrow();
+
+    // invalid enum values
+    expect(() => parseUpdateStatus({ status: "BOGUS", expectedStatus: "OPEN", expectedVersion: 1 })).toThrow();
+    expect(() => parseUpdateStatus({ status: "OPEN", expectedStatus: "BOGUS", expectedVersion: 1 })).toThrow();
+
+    // unknown fields rejected
+    expect(() => parseUpdateStatus({ status: "OPEN", expectedStatus: "NEW", expectedVersion: 1, unexpected: "field" })).toThrow();
+  });
+
+  it("validates communication content (1-2000 Unicode code points, rejects whitespace and forged fields)", () => {
+    expect(parseCreateCommunication({ content: "Single character: a" })).toEqual({ content: "Single character: a" });
+    expect(parseCreateCommunication({ content: "x" })).toEqual({ content: "x" });
+
+    const exactly2000 = "ก".repeat(2000);
+    expect(parseCreateCommunication({ content: exactly2000 })).toEqual({ content: exactly2000 });
+
+    // 2001 chars
+    expect(() => parseCreateCommunication({ content: "a".repeat(2001) })).toThrow();
+
+    // whitespace-only
+    expect(() => parseCreateCommunication({ content: "   \n\t  " })).toThrow();
+    expect(() => parseCreateCommunication({ content: "" })).toThrow();
+
+    // forged fields
+    expect(() => parseCreateCommunication({ content: "Hello", author: "Hacker" })).toThrow();
+    expect(() => parseCreateCommunication({ content: "Hello", authorId: 999 })).toThrow();
+    expect(() => parseCreateCommunication({ content: "Hello", createdAt: new Date().toISOString() })).toThrow();
+    expect(() => parseCreateCommunication({ content: "Hello", seedKey: "key" })).toThrow();
+    expect(() => parseCreateCommunication({})).toThrow();
+  });
+
+  it("validates problem appears resolved payload", () => {
+    expect(parseProblemAppearsResolved({ expectedVersion: 0 })).toEqual({ expectedVersion: 0, comment: undefined });
+    expect(parseProblemAppearsResolved({ expectedVersion: 3, comment: "Looks fixed!" })).toEqual({
+      expectedVersion: 3,
+      comment: "Looks fixed!",
+    });
+
+    // whitespace-only comment rejected
+    expect(() => parseProblemAppearsResolved({ expectedVersion: 1, comment: "   " })).toThrow();
+
+    // >2000 code points comment rejected
+    expect(() => parseProblemAppearsResolved({ expectedVersion: 1, comment: "b".repeat(2001) })).toThrow();
+
+    // missing expectedVersion
+    expect(() => parseProblemAppearsResolved({})).toThrow();
+    expect(() => parseProblemAppearsResolved({ comment: "Fixed" })).toThrow();
+
+    // unknown fields rejected
+    expect(() => parseProblemAppearsResolved({ expectedVersion: 1, extra: 123 })).toThrow();
+  });
+});

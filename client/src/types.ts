@@ -94,7 +94,23 @@ export interface Attachment {
   removalReason?: string | null;
   removedAt?: string | null;
   createdAt: string;
+  downloadUrl?: string | null;
 }
+
+export interface Entry {
+  id: number;
+  ticketId: number;
+  content: string;
+  createdAt: string;
+  author: {
+    id: number;
+    name: string;
+    role: UserRole;
+  };
+}
+
+export type PublicComment = Entry;
+export type InternalNote = Entry;
 
 export interface Ticket {
   id: number;
@@ -130,9 +146,32 @@ export interface TicketDetail {
   requestedPriority: Priority;
   itPriority?: Priority | null;
   status: TicketStatus;
+  owner?: SafeOwner | null;
   createdAt: string;
   updatedAt: string;
+  version?: number;
+  attachmentCount?: number;
+  publicCommentCount?: number;
   attachments: Attachment[];
+  publicComments?: PublicComment[];
+  problemAppearsResolvedAt?: string | null;
+  problemAppearsResolvedById?: number | null;
+}
+
+export interface StaffTicketDetail extends TicketDetail {
+  internalNotes: InternalNote[];
+}
+
+export interface UpdateStatusPayload {
+  status: TicketStatus;
+  expectedStatus: TicketStatus;
+  expectedVersion: number;
+  confirmed?: boolean;
+}
+
+export interface ProblemAppearsResolvedPayload {
+  expectedVersion: number;
+  comment?: string;
 }
 
 export interface PaginationInfo {

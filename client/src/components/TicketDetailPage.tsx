@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRequester } from "../context/RequesterContext.js";
-import { TicketDetail, Attachment } from "../types.js";
+import { TicketDetail, Attachment, Entry } from "../types.js";
 import {
   fetchTicketDetail,
   removeAttachment,
   uploadAttachment,
   getAttachmentDownloadUrl,
+  addPublicComment,
+  indicateProblemAppearsResolved,
 } from "../api.js";
 
 interface TicketDetailPageProps {
@@ -30,6 +32,35 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({ ticketId, on
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Public comments state
+  const [comments, setComments] = useState<Entry[]>([]);
+  const [commentDraft, setCommentDraft] = useState<string>("");
+  const [commentError, setCommentError] = useState<string | null>(null);
+  const [isSubmittingComment, setIsSubmittingComment] = useState<boolean>(false);
+
+  // Refresh safety state
+  const [refreshFailed, setRefreshFailed] = useState<boolean>(false);
+
+  // Problem Appears Resolved modal state
+  const [resolutionModalOpen, setResolutionModalOpen] = useState<boolean>(false);
+  const [resolutionComment, setResolutionComment] = useState<string>("");
+  const [resolutionError, setResolutionError] = useState<string | null>(null);
+  const [isResolving, setIsResolving] = useState<boolean>(false);
+  const resolveTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const resolutionModalRef = useRef<HTMLDivElement | null>(null);
+
+  const reloadTicket = async () => {
+    try {
+      const data = await fetchTicketDetail(ticketId);
+      setTicket(data);
+      setComments(data.publicComments ?? []);
+      setRefreshFailed(false);
+    } catch (err: any) {
+      setRefreshFailed(true);
+      throw err;
+    }
+  };
+
   const loadTicket = async () => {
     if (!selectedRequester) return;
     setIsLoading(true);
@@ -37,6 +68,8 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({ ticketId, on
     try {
       const data = await fetchTicketDetail(ticketId);
       setTicket(data);
+      setComments(data.publicComments ?? []);
+      setRefreshFailed(false);
     } catch (err: any) {
       setError(err?.message || "Failed to load ticket details");
     } finally {
@@ -161,6 +194,109 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({ ticketId, on
     }
   };
 
+  const handleOpenResolutionModal = () => {
+    setResolutionComment("");
+    setResolutionError(null);
+    setResolutionModalOpen(true);
+  };
+
+  const handleCloseResolutionModal = () => {
+    if (isResolving) return;
+    setResolutionModalOpen(false);
+    setResolutionComment("");
+    setResolutionError(null);
+    setTimeout(() => {
+      resolveTriggerRef.current?.focus();
+    }, 0);
+  };
+
+  const handleConfirmResolution = async () => {
+    if (!ticket) return;
+    const trimmedComment = resolutionComment.trim();
+    if (trimmedComment && Array.from(trimmedComment).length > 2000) {
+      setResolutionError("Resolution note must not exceed 2000 characters.");
+      return;
+    }
+    setIsResolving(true);
+    setResolutionError(null);
+    try {
+      const res = await indicateProblemAppearsResolved(ticketId, {
+        expectedVersion: ticket.version ?? 0,
+        comment: trimmedComment || undefined,
+      });
+      setTicket(res.ticket);
+      setComments(res.ticket.publicComments ?? []);
+      setResolutionModalOpen(false);
+      setResolutionComment("");
+      setTimeout(() => {
+        resolveTriggerRef.current?.focus();
+      }, 0);
+    } catch (err: any) {
+      setResolutionError(err?.message || "Failed to mark problem as resolved");
+    } finally {
+      setIsResolving(false);
+    }
+  };
+
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = commentDraft.trim();
+    const codePoints = Array.from(trimmed).length;
+    if (!trimmed || codePoints > 2000) {
+      setCommentError("Comment must be between 1 and 2000 characters.");
+      return;
+    }
+    setIsSubmittingComment(true);
+    setCommentError(null);
+    try {
+      const res = await addPublicComment(ticketId, trimmed);
+      const newEntry = res.comment;
+      setComments((prev) => [...prev, newEntry]);
+      setCommentDraft("");
+      try {
+        await reloadTicket();
+      } catch (reloadErr) {
+        // Refresh failed rule: comment was already created, do not retry comment creation!
+      }
+    } catch (err: any) {
+      setCommentError(err?.message || "Failed to submit comment");
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!resolutionModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (!isResolving) {
+          handleCloseResolutionModal();
+        }
+      } else if (e.key === "Tab") {
+        if (!resolutionModalRef.current) return;
+        const focusableElements = resolutionModalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length === 0) return;
+        const first = focusableElements[0];
+        const last = focusableElements[focusableElements.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [resolutionModalOpen, isResolving]);
+
   if (isLoading) {
     return (
       <div style={{ textAlign: "center", padding: "80px 20px" }} data-testid="detail-loading">
@@ -225,6 +361,16 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({ ticketId, on
   const removedAttachments = ticket.attachments.filter((a) => a.isRemoved);
   const activeCount = activeAttachments.length;
   const canUploadMore = activeCount < 5;
+
+  const PERMITTED_RESOLUTION_STATUSES = [
+    "NEW",
+    "OPEN",
+    "IN_PROGRESS",
+    "WAITING_FOR_REQUESTER",
+    "REOPENED",
+  ];
+  const canIndicateResolved = PERMITTED_RESOLUTION_STATUSES.includes(ticket.status);
+  const isAlreadyResolved = ticket.problemAppearsResolvedAt !== null;
 
   const renderStatusBadge = (status: string) => {
     switch (status) {
@@ -398,25 +544,121 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({ ticketId, on
             </div>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              backgroundColor: "var(--color-pale-green)",
-              padding: "6px 12px",
-              borderRadius: "6px",
-              fontSize: "13px",
-              color: "var(--color-primary)",
-              fontWeight: 600,
-            }}
-          >
-            👤 {ticket.requester.name}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            {canIndicateResolved && (
+              <button
+                type="button"
+                ref={resolveTriggerRef}
+                data-testid="btn-problem-appears-resolved"
+                disabled={isAlreadyResolved || refreshFailed || isResolving}
+                onClick={handleOpenResolutionModal}
+                style={{
+                  padding: "6px 12px",
+                  backgroundColor: isAlreadyResolved ? "#E2E8F0" : "var(--color-primary)",
+                  color: isAlreadyResolved ? "#64748B" : "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: isAlreadyResolved || refreshFailed || isResolving ? "not-allowed" : "pointer",
+                  opacity: isAlreadyResolved || refreshFailed || isResolving ? 0.6 : 1,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                {isAlreadyResolved ? "✓ Marked Resolved" : "✓ Problem Appears Resolved"}
+              </button>
+            )}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                backgroundColor: "var(--color-pale-green)",
+                padding: "6px 12px",
+                borderRadius: "6px",
+                fontSize: "13px",
+                color: "var(--color-primary)",
+                fontWeight: 600,
+              }}
+            >
+              👤 {ticket.requester.name}
+            </div>
           </div>
         </div>
 
         {/* Read-Only Information Grid */}
         <div style={{ padding: "24px" }}>
+          {/* Refresh Failure Banner */}
+          {refreshFailed && (
+            <div
+              data-testid="refresh-failed-banner"
+              style={{
+                backgroundColor: "#FFFBEB",
+                border: "1px solid #FCD34D",
+                borderRadius: "8px",
+                padding: "12px 16px",
+                marginBottom: "20px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "12px",
+                color: "#92400E",
+              }}
+            >
+              <div>
+                <strong>Refresh Failed</strong>
+                <p style={{ margin: "4px 0 0", fontSize: "13px" }}>
+                  Your update was saved, but refreshing latest ticket state failed. Please reload ticket.
+                </p>
+              </div>
+              <button
+                type="button"
+                data-testid="btn-reload-ticket"
+                onClick={() => reloadTicket().catch(() => {})}
+                style={{
+                  padding: "6px 14px",
+                  backgroundColor: "#D97706",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontWeight: 600,
+                  fontSize: "13px",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Reload Ticket
+              </button>
+            </div>
+          )}
+
+          {/* Problem Appears Resolved Banner */}
+          {ticket.problemAppearsResolvedAt && (
+            <div
+              data-testid="problem-resolved-banner"
+              style={{
+                backgroundColor: "#ECFDF5",
+                border: "1px solid #A7F3D0",
+                borderRadius: "8px",
+                padding: "12px 16px",
+                marginBottom: "20px",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                color: "#065F46",
+              }}
+            >
+              <span style={{ fontSize: "18px" }}>✓</span>
+              <div>
+                <strong>Marked as resolved by requester</strong>
+                <div style={{ fontSize: "12px", color: "#047857" }}>
+                  Reported resolved on {formatDate(ticket.problemAppearsResolvedAt)}
+                </div>
+              </div>
+            </div>
+          )}
           <div
             style={{
               display: "grid",
@@ -833,6 +1075,148 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({ ticketId, on
               </div>
             )}
           </div>
+
+          {/* Public Comments Section */}
+          <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "24px", marginTop: "24px" }}>
+            <div style={{ marginBottom: "16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <h2 style={{ fontSize: "18px", fontWeight: 700, color: "var(--color-text-primary)", margin: 0 }}>
+                  Public Comments
+                </h2>
+                <span style={{ fontSize: "13px", color: "var(--color-text-secondary)" }}>
+                  Visible to requester and IT staff ({comments.length})
+                </span>
+              </div>
+            </div>
+
+            {/* Comments Timeline */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }} data-testid="comments-list">
+              {comments.length === 0 ? (
+                <div
+                  style={{
+                    backgroundColor: "#FAFCFA",
+                    border: "1px dashed var(--color-border)",
+                    borderRadius: "8px",
+                    padding: "20px",
+                    textAlign: "center",
+                    color: "var(--color-text-secondary)",
+                    fontSize: "14px",
+                  }}
+                  data-testid="no-comments-msg"
+                >
+                  No public comments yet.
+                </div>
+              ) : (
+                comments.map((c) => {
+                  const isReq = c.author.role === "REQUESTER";
+                  return (
+                    <div
+                      key={c.id}
+                      data-testid={`comment-item-${c.id}`}
+                      style={{
+                        backgroundColor: isReq ? "#F0FDF4" : "#F8FAFC",
+                        border: isReq ? "1px solid #BBF7D0" : "1px solid var(--color-border)",
+                        borderRadius: "8px",
+                        padding: "14px 16px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: "8px",
+                          flexWrap: "wrap",
+                          gap: "8px",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ fontWeight: 600, fontSize: "13.5px", color: "var(--color-text-primary)" }}>
+                            {c.author.name}
+                          </span>
+                          <span
+                            style={{
+                              backgroundColor: isReq ? "var(--color-pale-green)" : "#E0E7FF",
+                              color: isReq ? "var(--color-primary)" : "#3730A3",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              padding: "2px 8px",
+                              borderRadius: "12px",
+                            }}
+                          >
+                            {c.author.role === "REQUESTER" ? "Requester" : c.author.role === "IT_STAFF" ? "IT Staff" : "Admin"}
+                          </span>
+                        </div>
+                        <span style={{ fontSize: "12px", color: "var(--color-text-secondary)" }}>
+                          {formatDate(c.createdAt)}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: "14px", color: "var(--color-text-primary)", whiteSpace: "pre-wrap", lineHeight: "1.5" }}>
+                        {c.content}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Add Public Comment Composer */}
+            <form onSubmit={handleAddComment} style={{ backgroundColor: "#FFFFFF", border: "1px solid var(--color-border)", borderRadius: "8px", padding: "16px" }}>
+              <h3 style={{ fontSize: "14px", fontWeight: 700, marginBottom: "8px", color: "var(--color-text-primary)" }}>
+                Add a Public Comment
+              </h3>
+              <div style={{ marginBottom: "8px" }}>
+                <textarea
+                  data-testid="input-public-comment"
+                  value={commentDraft}
+                  onChange={(e) => {
+                    setCommentDraft(e.target.value);
+                    if (commentError) setCommentError(null);
+                  }}
+                  disabled={isSubmittingComment || refreshFailed}
+                  placeholder="Type a message visible to IT Staff and requesters..."
+                  rows={3}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "6px",
+                    border: commentError ? "1px solid var(--color-error)" : "1px solid var(--color-input-border)",
+                    fontSize: "14px",
+                    fontFamily: "inherit",
+                    resize: "vertical",
+                  }}
+                />
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "var(--color-text-secondary)", marginTop: "4px" }}>
+                  <span>{Array.from(commentDraft.trim()).length} / 2000 characters</span>
+                </div>
+              </div>
+
+              {commentError && (
+                <div style={{ color: "var(--color-error)", fontSize: "13px", marginBottom: "10px" }} data-testid="comment-error">
+                  {commentError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                data-testid="btn-submit-public-comment"
+                disabled={isSubmittingComment || !commentDraft.trim() || refreshFailed}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "var(--color-primary)",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontWeight: 600,
+                  fontSize: "13px",
+                  cursor: isSubmittingComment || !commentDraft.trim() || refreshFailed ? "not-allowed" : "pointer",
+                  opacity: isSubmittingComment || !commentDraft.trim() || refreshFailed ? 0.6 : 1,
+                }}
+              >
+                {isSubmittingComment ? "Posting..." : "Post Comment"}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
 
@@ -983,6 +1367,151 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({ ticketId, on
                 data-testid="btn-confirm-removal"
               >
                 {isRemoving ? "Removing..." : "Confirm Removal"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Problem Appears Resolved Confirmation Modal */}
+      {resolutionModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            ref={resolutionModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="resolution-modal-title"
+            style={{
+              backgroundColor: "white",
+              borderRadius: "12px",
+              padding: "24px",
+              maxWidth: "480px",
+              width: "100%",
+              boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+            }}
+            data-testid="resolution-confirmation-dialog"
+          >
+            <h3
+              id="resolution-modal-title"
+              style={{
+                fontSize: "18px",
+                fontWeight: 700,
+                color: "var(--color-text-primary)",
+                marginBottom: "8px",
+              }}
+            >
+              Confirm Problem Appears Resolved
+            </h3>
+            <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", marginBottom: "16px" }}>
+              Let IT Staff know that the problem has been resolved from your perspective. You may add an optional note below.
+            </p>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label
+                htmlFor="resolution-comment-textarea"
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "var(--color-text-primary)",
+                  marginBottom: "6px",
+                }}
+              >
+                Optional note / details
+              </label>
+              <textarea
+                id="resolution-comment-textarea"
+                data-testid="textarea-resolution-comment"
+                value={resolutionComment}
+                onChange={(e) => {
+                  setResolutionComment(e.target.value);
+                  if (resolutionError) setResolutionError(null);
+                }}
+                placeholder="e.g., Working fine now after reboot, thanks!"
+                rows={3}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "6px",
+                  border: "1px solid var(--color-input-border)",
+                  fontSize: "14px",
+                  fontFamily: "inherit",
+                  resize: "vertical",
+                }}
+              />
+              <div style={{ display: "flex", justifyContent: "flex-end", fontSize: "12px", color: "var(--color-text-secondary)", marginTop: "4px" }}>
+                <span>{Array.from(resolutionComment.trim()).length} / 2000 characters</span>
+              </div>
+            </div>
+
+            {resolutionError && (
+              <div
+                style={{
+                  backgroundColor: "#FEE2E2",
+                  color: "#991B1B",
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  fontSize: "13px",
+                  marginBottom: "16px",
+                }}
+                data-testid="resolution-error"
+              >
+                {resolutionError}
+              </div>
+            )}
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+              <button
+                type="button"
+                disabled={isResolving}
+                onClick={handleCloseResolutionModal}
+                data-testid="btn-cancel-resolution"
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#F1F5F9",
+                  color: "var(--color-text-secondary)",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontWeight: 600,
+                  fontSize: "13px",
+                  cursor: isResolving ? "not-allowed" : "pointer",
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={isResolving}
+                onClick={handleConfirmResolution}
+                data-testid="btn-confirm-resolution-indication"
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "var(--color-primary)",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontWeight: 600,
+                  fontSize: "13px",
+                  cursor: isResolving ? "not-allowed" : "pointer",
+                  opacity: isResolving ? 0.6 : 1,
+                }}
+              >
+                {isResolving ? "Submitting..." : "Confirm Resolved"}
               </button>
             </div>
           </div>
