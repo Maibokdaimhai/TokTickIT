@@ -394,9 +394,19 @@ body {
   color: #0369A1;
 }
 
+.badge-status-open {
+  background-color: #E0F2FE;
+  color: #0369A1;
+}
+
 .badge-status-in_progress {
   background-color: #FEF08A;
   color: #854D0E;
+}
+
+.badge-status-waiting_for_requester {
+  background-color: #FEF3C7;
+  color: #92400E;
 }
 
 .badge-status-resolved {
@@ -405,6 +415,16 @@ body {
 }
 
 .badge-status-closed {
+  background-color: #F1F5F9;
+  color: #64748B;
+}
+
+.badge-status-reopened {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+.badge-status-cancelled {
   background-color: #F1F5F9;
   color: #64748B;
 }
@@ -456,6 +476,8 @@ body {
   flex-direction: column;
   gap: 12px;
   margin-top: 16px;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .ticket-card {
@@ -466,6 +488,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 767px) {

@@ -161,15 +161,23 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
   const renderStatusBadge = (s: TicketStatus) => {
     const classMap: Record<TicketStatus, string> = {
       NEW: "badge-status-new",
+      OPEN: "badge-status-open",
       IN_PROGRESS: "badge-status-in_progress",
+      WAITING_FOR_REQUESTER: "badge-status-waiting_for_requester",
       RESOLVED: "badge-status-resolved",
       CLOSED: "badge-status-closed",
+      REOPENED: "badge-status-reopened",
+      CANCELLED: "badge-status-cancelled",
     };
     const labelMap: Record<TicketStatus, string> = {
       NEW: "New",
+      OPEN: "Open",
       IN_PROGRESS: "In Progress",
+      WAITING_FOR_REQUESTER: "Waiting for Requester",
       RESOLVED: "Resolved",
       CLOSED: "Closed",
+      REOPENED: "Reopened",
+      CANCELLED: "Cancelled",
     };
     return <span className={`badge ${classMap[s] || "badge-status-new"}`}>{labelMap[s] || s}</span>;
   };

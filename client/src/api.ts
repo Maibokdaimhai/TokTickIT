@@ -1,9 +1,29 @@
-import { AuthResult, Category, RelatedSystem, Priority, Ticket, FetchTicketsParams, TicketsResponse, Attachment, TicketDetail } from "./types.js";
+import {
+  AuthResult,
+  Category,
+  RelatedSystem,
+  Priority,
+  Ticket,
+  FetchTicketsParams,
+  TicketsResponse,
+  Attachment,
+  TicketDetail,
+  FetchStaffTicketsParams,
+  StaffTicketsResponse,
+  EligibleOwner,
+} from "./types.js";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 export class AuthError extends Error {
   constructor(message: string, public status: number, public code?: string) { super(message); }
+}
+
+export class ApiClientError extends Error {
+  constructor(message: string, public status: number, public code?: string) {
+    super(message);
+    this.name = "ApiClientError";
+  }
 }
 // All browser requests use the HttpOnly session cookie, never localStorage credentials.
 async function apiFetch(url: string, init?: RequestInit) {
@@ -186,4 +206,60 @@ export async function removeAttachment(
 
 export function getAttachmentDownloadUrl(ticketId: number, attachmentId: number): string {
   return `${API_URL}/api/tickets/${ticketId}/attachments/${attachmentId}`;
+}
+
+export async function fetchStaffTickets(params: FetchStaffTicketsParams = {}): Promise<StaffTicketsResponse> {
+  const query = new URLSearchParams();
+  if (params.search && params.search.trim()) {
+    query.append("search", params.search.trim());
+  }
+  if (params.category !== undefined && params.category !== null) {
+    query.append("category", String(params.category));
+  }
+  if (params.requestedPriority) {
+    query.append("requestedPriority", params.requestedPriority);
+  }
+  if (params.itPriority) {
+    query.append("itPriority", params.itPriority);
+  }
+  if (params.status) {
+    query.append("status", params.status);
+  }
+  if (params.owner !== undefined && params.owner !== null && params.owner !== "") {
+    query.append("owner", String(params.owner));
+  }
+  if (params.sort) {
+    query.append("sort", params.sort);
+  }
+  if (params.page !== undefined && params.page !== null) {
+    query.append("page", String(params.page));
+  }
+  if (params.limit !== undefined && params.limit !== null) {
+    query.append("limit", String(params.limit));
+  }
+
+  const queryString = query.toString();
+  const url = `${API_URL}/api/staff/tickets${queryString ? `?${queryString}` : ""}`;
+
+  const res = await apiFetch(url, { signal: params.signal });
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    const errorMsg = data?.error?.message || "Failed to fetch staff ticket queue";
+    throw new ApiClientError(errorMsg, res.status, data?.error?.code);
+  }
+
+  return data;
+}
+
+export async function fetchEligibleOwners(): Promise<{ owners: EligibleOwner[] }> {
+  const res = await apiFetch(`${API_URL}/api/staff/eligible-owners`);
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    const errorMsg = data?.error?.message || "Failed to fetch eligible owners";
+    throw new ApiClientError(errorMsg, res.status, data?.error?.code);
+  }
+
+  return data;
 }

@@ -3,8 +3,8 @@ import { useAuth } from "../context/AuthContext.js";
 import { TokTickLogo } from "./TokTickLogo.js";
 
 interface HeaderProps {
-  activeTab: "my-tickets" | "create-ticket";
-  setActiveTab: (tab: "my-tickets" | "create-ticket") => void;
+  activeTab: "my-tickets" | "create-ticket" | "ticket-queue" | "user-management";
+  setActiveTab: (tab: "my-tickets" | "create-ticket" | "ticket-queue" | "user-management") => void;
   onChangePassword: () => void;
 }
 
@@ -25,16 +25,26 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onChang
       .slice(0, 2);
   };
 
+  const handleBrandClick = () => {
+    if (session?.user.role === "IT_STAFF") {
+      setActiveTab("ticket-queue");
+    } else if (session?.user.role === "ADMINISTRATOR") {
+      setActiveTab("user-management");
+    } else {
+      setActiveTab("my-tickets");
+    }
+  };
+
   return (
     <header className="app-header">
       <div
         className="app-brand"
-        onClick={() => setActiveTab("my-tickets")}
+        onClick={handleBrandClick}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
-            setActiveTab("my-tickets");
+            handleBrandClick();
           }
         }}
         title="TokTickIT Home"
@@ -47,21 +57,57 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onChang
       </div>
 
       <nav className="app-nav" aria-label="Main Navigation">
-        {session?.user.role === "REQUESTER" && <><button
-          type="button"
-          className={`nav-item ${activeTab === "my-tickets" ? "active" : ""}`}
-          onClick={() => setActiveTab("my-tickets")}
-        >
-          📋 My Tickets
-        </button>
+        {session?.user.role === "REQUESTER" && (
+          <>
+            <button
+              type="button"
+              className={`nav-item ${activeTab === "my-tickets" ? "active" : ""}`}
+              onClick={() => setActiveTab("my-tickets")}
+            >
+              📋 My Tickets
+            </button>
 
-        <button
-          type="button"
-          className={`nav-item ${activeTab === "create-ticket" ? "active" : ""}`}
-          onClick={() => setActiveTab("create-ticket")}
-        >
-          ➕ Create Ticket
-        </button></>}
+            <button
+              type="button"
+              className={`nav-item ${activeTab === "create-ticket" ? "active" : ""}`}
+              onClick={() => setActiveTab("create-ticket")}
+            >
+              ➕ Create Ticket
+            </button>
+          </>
+        )}
+
+        {session?.user.role === "IT_STAFF" && (
+          <button
+            type="button"
+            data-testid="nav-ticket-queue"
+            className={`nav-item ${activeTab === "ticket-queue" ? "active" : ""}`}
+            onClick={() => setActiveTab("ticket-queue")}
+          >
+            🎫 Ticket Queue
+          </button>
+        )}
+
+        {session?.user.role === "ADMINISTRATOR" && (
+          <>
+            <button
+              type="button"
+              data-testid="nav-user-management"
+              className={`nav-item ${activeTab === "user-management" ? "active" : ""}`}
+              onClick={() => setActiveTab("user-management")}
+            >
+              👥 User Management
+            </button>
+            <button
+              type="button"
+              data-testid="nav-ticket-queue"
+              className={`nav-item ${activeTab === "ticket-queue" ? "active" : ""}`}
+              onClick={() => setActiveTab("ticket-queue")}
+            >
+              🎫 Ticket Queue
+            </button>
+          </>
+        )}
 
         <div className="account-menu" onKeyDown={event => { if (event.key === "Escape") { setMenuOpen(false); accountButton.current?.focus(); } }}>
         <button

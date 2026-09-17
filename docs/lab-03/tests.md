@@ -21,7 +21,7 @@ Status: Plan with per-PR implementation evidence. Issue #27 results are recorded
 | API-04 | API | AC-05 | Logout revokes cookie access; expired/revoked session is unauthorized | `server/tests/lab-03/auth.api.test.ts` | Passed for #27; see §13 |
 | API-05 | API | AC-22 | Role middleware rejects direct cross-role API access | `server/tests/lab-03/authorization.api.test.ts` | Planned |
 | API-06 | API | AC-07 | Requester identity comes from session; supplied foreign requester ID cannot cross ownership | `server/tests/lab-03/authorization.api.test.ts` | Planned |
-| API-07 | API | AC-09 | Staff queue search/filter/sort/pagination and invalid query behavior | `server/tests/lab-03/staff-queue.api.test.ts` | Planned |
+| API-07 | API | AC-09 | Staff queue search/filter/sort/pagination and invalid query behavior | `server/tests/lab-03/staff-queue.api.test.ts` | Implemented for #29; see §15 |
 | API-08 | API | AC-10 | Claim/reassign accepts eligible owners and rejects invalid, inactive, and stale updates | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
 | API-09 | API | AC-11 | IT Priority initializes correctly and only permitted roles can update it | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
 | API-10 | API | AC-12 | Status transition matrix permits valid and rejects invalid/stale transitions | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
@@ -31,7 +31,7 @@ Status: Plan with per-PR implementation evidence. Issue #27 results are recorded
 | API-14 | API | AC-16, AC-17 | Administrator list/search/filter/create/edit and duplicate/invalid input | `server/tests/lab-03/users-admin.api.test.ts` | Planned |
 | API-15 | API | AC-18 | Initial-password reset revokes sessions and forces next-login change | `server/tests/lab-03/users-admin.api.test.ts` | Planned |
 | API-16 | API | AC-19 | Self-deactivation and final-active-administrator removal are blocked transactionally | `server/tests/lab-03/users-admin.api.test.ts` | Planned |
-| API-17 | API | AC-10 | Eligible-owner endpoint returns only active IT Staff/Administrators and rejects Requesters | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
+| API-17 | API | AC-10 | Eligible-owner endpoint returns only active IT Staff/Administrators and rejects Requesters | `server/tests/lab-03/staff-queue.api.test.ts` | Implemented for #29; see §15 |
 | API-18 | API | AC-24 | Staff/Admin can read metadata and download active attachments; Requester ownership and removed-download rules remain enforced | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
 | UNIT-01 | Unit | AC-04, AC-25 | Password code-point/UTF-8 byte boundaries, exact confirmation, NUL/reuse rejection, fresh salted hashes | `server/tests/lab-03/password.test.ts` | Passed for #27; see §13 |
 | UNIT-02 | Unit | AC-05, AC-25 | Token generation/digest, absolute expiry, clock boundaries, rotation/revocation | `server/tests/lab-03/session.test.ts` | Passed for #27; see §13 |
@@ -46,7 +46,7 @@ Status: Plan with per-PR implementation evidence. Issue #27 results are recorded
 | UI-01 | Component | AC-01, AC-02, AC-03 | Login validation, busy state, safe errors, success routing | `client/tests/lab-03/Authentication.test.tsx` | Passed for #27; see §13 |
 | UI-02 | Component | AC-04 | Mandatory Change Password validation, checklist, busy/error/success | `client/tests/lab-03/Authentication.test.tsx` | Passed for #27; see §13 |
 | UI-03 | Component | AC-05, AC-06 | Role navigation and logout remove protected access | `client/tests/lab-03/Authentication.test.tsx` | #27 subset passed; later scope pending (§13) |
-| UI-04 | Component | AC-09, AC-20 | Queue results, queries, pagination, empty/no-results/failure, mobile cards | `client/tests/lab-03/StaffTicketQueue.test.tsx` | Planned |
+| UI-04 | Component | AC-09, AC-20 | Queue results, queries, pagination, empty/no-results/failure, mobile cards | `client/tests/lab-03/StaffTicketQueue.test.tsx` | Implemented for #29; see §15 |
 | UI-05 | Component | AC-10, AC-11, AC-12 | Claim/reassign, priority/status controls, confirmation and conflict feedback | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Planned |
 | UI-06 | Component | AC-13, AC-14 | Public/private visual distinction, validation, and role restrictions | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Planned |
 | UI-07 | Component | AC-16-AC-19 | User list/search/filter/create/edit/reset and safety feedback | `client/tests/lab-03/UserManagement.test.tsx` | Planned |
@@ -148,6 +148,8 @@ For each implementation PR record: issue, branch/commit, test IDs, command, init
 | Issue #26 refactor evidence | c0e983a | Commands/results in §11 | Server 62/62; client 29/29; browser 3/3; type check/build passed |
 | Issue #26 error-handling review fixes | 3e706dd | Commands/results in §12 | Server 68/68; client 29/29; browser 3/3; both builds/type check passed |
 | Issue #27 authentication and migration | 397aa9b | Commands/results in §13 | Server 96/96; client 36/36; browser 6/6; builds passed |
+| Issue #28 requester authorization | 4275095 | Commands/results in §14 | Server 109/109; client 36/36; browser 3/3; builds passed |
+| Issue #29 IT Staff ticket queue | feature/lab3-staff-queue | Commands/results in §15 | Server 146/146; client 52/52; builds passed |
 | Later feature-PR implementation evidence | Pending | Pending | Not run |
 | Final lab3-staging validation | Pending | Pending | Not run |
 | Final main validation | Pending | Pending | Not run |
@@ -279,3 +281,29 @@ New `requester-authorization.api.test.ts` coverage uses real persisted sessions 
 | `git diff --check` | Passed |
 
 The backend and browser suites used `toktickit_lab3_auth_final_20260914`; the ordinary development database was not migrated or reset. Browser servers used isolated ports 3103/5174 and temporary output under `/private/tmp/toktickit-auth-e2e.6tRyy0`; durable cross-role screenshot evidence remains assigned to #32. The expected diagnostic output from error-boundary tests contains only sanitized route/error context. No dependencies were added for Issue #28. The author's `ai-use.md` remains untouched.
+
+## 15. Issue #29 IT Staff Ticket Queue Verification
+
+Executed on 2026-09-17 on `feature/lab3-staff-queue`, based on merged PR #37 / `99470c2`. This increment implements the IT Staff Ticket Queue (`API-07`, `API-17`, and `UI-04`), covering AC-09, AC-10, and AC-20.
+
+### Backend Endpoints
+- `GET /api/staff/tickets`: Supports search (ticket number/summary up to 150 chars), category, requestedPriority, itPriority, status (all 8 lifecycle statuses), owner (`unassigned`, `me`, or positive user ID), and sort (with custom `itPriority_desc` implementing URGENT → HIGH → MEDIUM → LOW, tie-broken by `updatedAt: "desc"` and `id: "asc"`). Validates and rejects unknown query fields, returning 400 for invalid inputs while treating empty optional queries as unapplied. Safely projects exact queue fields, omitting private comments, internal notes, passwords, and server storage paths.
+- `GET /api/staff/eligible-owners`: Returns active users with role `IT_STAFF` or `ADMINISTRATOR`, excluding inactive accounts and Requesters, deterministically ordered case-insensitively by name and ID.
+- Role enforcement: Rejects unauthenticated requests (401) and Requester sessions (403).
+
+### Frontend Component & Role Navigation
+- `StaffTicketQueue.tsx`: Implements responsive Zen Green queue table (9 columns) and mobile cards (< 768px, with no horizontal scrolling). Features debounced search (300 ms), dual priority filters (Requested Priority and IT Priority), category/status/owner filters, sort selector, pagination controls (10/20/50 per page), true empty state, filtered no-results state with filter clearing, safe error retry, and distinct HTTP 403 Forbidden callout without retry.
+- Role-controlled shell in `App.tsx` & `Header.tsx`: IT Staff defaults to `"ticket-queue"`, Administrator defaults to `"user-management"` placeholder with Ticket Queue option, and Requester defaults to `"my-tickets"` with no staff queue navigation.
+- State lifting & detail placeholder: Minimal "Open" action displays ticket ID and Issue #30 notice while lifting queue filter/sort/pagination criteria in `App.tsx` so returning from detail retains active filters.
+
+| Verification | Result |
+| --- | --- |
+| Complete backend suite on disposable database | 146/146 passed in 15 files |
+| Complete client suite | 52/52 passed in 8 files |
+| Focused staff queue API tests (`staff-queue.api.test.ts`) | 37/37 passed |
+| Focused queue UI and role navigation integration (`StaffTicketQueue.test.tsx`) | 16/16 passed |
+| Server production build | Passed (`npm --prefix server run build`) |
+| Client production build | Passed (`npm --prefix client run build`) |
+| `git diff --check` | Passed |
+
+Database safety: All backend tests ran against the disposable test database `postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914`. The normal development database was never migrated or reset. The pre-existing uncommitted change in `client/package.json` was strictly preserved and never staged or committed.

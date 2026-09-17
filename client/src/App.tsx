@@ -7,12 +7,27 @@ import { AuthPage } from "./components/AuthPage.js";
 import { CreateTicketForm } from "./components/CreateTicketForm.js";
 import { MyTicketsPage } from "./components/MyTicketsPage.js";
 import { TicketDetailPage } from "./components/TicketDetailPage.js";
+import { StaffTicketQueue } from "./components/StaffTicketQueue.js";
+import { FetchStaffTicketsParams } from "./types.js";
+
+type TabType = "my-tickets" | "create-ticket" | "ticket-queue" | "user-management";
 
 const MainContent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"my-tickets" | "create-ticket">("my-tickets");
-  const [selectedTicketId, setSelectedTicketId] = useState<number | undefined>(undefined);
-  const { selectedRequester } = useRequester();
   const { session } = useAuth();
+  const getInitialTab = (): TabType => {
+    if (session?.user.role === "IT_STAFF") return "ticket-queue";
+    if (session?.user.role === "ADMINISTRATOR") return "user-management";
+    return "my-tickets";
+  };
+
+  const [activeTab, setActiveTab] = useState<TabType>(getInitialTab);
+  const [selectedTicketId, setSelectedTicketId] = useState<number | undefined>(undefined);
+  const [staffQueueParams, setStaffQueueParams] = useState<FetchStaffTicketsParams>({
+    page: 1,
+    limit: 10,
+    sort: "updatedAt_desc",
+  });
+  const { selectedRequester } = useRequester();
   const [changingPassword, setChangingPassword] = useState(false);
 
   // Reset selected ticket if requester identity changes
@@ -20,7 +35,7 @@ const MainContent: React.FC = () => {
     setSelectedTicketId(undefined);
   }, [selectedRequester?.id]);
 
-  const handleTabChange = (tab: "my-tickets" | "create-ticket") => {
+  const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
     setSelectedTicketId(undefined);
   };
@@ -31,7 +46,6 @@ const MainContent: React.FC = () => {
       <Header activeTab={activeTab} setActiveTab={handleTabChange} onChangePassword={() => setChangingPassword(true)} />
 
       <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px 16px" }}>
-        {session?.user.role !== "REQUESTER" && <p role="status">Signed in as {session?.user.role}. Staff and administrator workspaces will be added in the next Sprint 3 issues.</p>}
         {session?.user.role === "REQUESTER" && activeTab === "my-tickets" && !selectedTicketId && (
           <MyTicketsPage
             onNavigateToCreate={() => handleTabChange("create-ticket")}
@@ -52,6 +66,38 @@ const MainContent: React.FC = () => {
               handleTabChange("my-tickets");
             }}
           />
+        )}
+
+        {(session?.user.role === "IT_STAFF" || session?.user.role === "ADMINISTRATOR") && activeTab === "ticket-queue" && !selectedTicketId && (
+          <StaffTicketQueue
+            initialParams={staffQueueParams}
+            onParamsChange={setStaffQueueParams}
+            onOpenTicket={(id) => setSelectedTicketId(id)}
+          />
+        )}
+
+        {(session?.user.role === "IT_STAFF" || session?.user.role === "ADMINISTRATOR") && activeTab === "ticket-queue" && selectedTicketId && (
+          <div className="ticket-detail-container" data-testid="ticket-detail-placeholder" style={{ padding: "24px" }}>
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={() => setSelectedTicketId(undefined)}
+              style={{ marginBottom: "16px" }}
+            >
+              ← Back to Ticket Queue
+            </button>
+            <h2>Ticket #{selectedTicketId}</h2>
+            <div className="alert alert-info" role="status" style={{ marginTop: "16px" }}>
+              Ticket operations, comments, and internal notes belong to Issue #30.
+            </div>
+          </div>
+        )}
+
+        {session?.user.role === "ADMINISTRATOR" && activeTab === "user-management" && (
+          <div data-testid="user-management-placeholder" role="status" style={{ padding: "24px" }}>
+            <h2>User Management</h2>
+            <p>Administrator user management workspace will be added in Issue #31.</p>
+          </div>
         )}
       </main>
     </div>

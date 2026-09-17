@@ -21,7 +21,67 @@ export interface RelatedSystem {
 
 export type Priority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
-export type TicketStatus = "NEW" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+export type TicketStatus =
+  | "NEW"
+  | "OPEN"
+  | "IN_PROGRESS"
+  | "WAITING_FOR_REQUESTER"
+  | "RESOLVED"
+  | "CLOSED"
+  | "REOPENED"
+  | "CANCELLED";
+
+export interface SafeOwner {
+  id: number;
+  name: string;
+  email: string;
+  role: "IT_STAFF" | "ADMINISTRATOR";
+}
+
+export type EligibleOwner = SafeOwner;
+
+export interface StaffTicketRow {
+  id: number;
+  ticketNumber: string;
+  createdAt: string;
+  updatedAt: string;
+  summary: string;
+  category: Category;
+  relatedSystem: RelatedSystem;
+  requestedPriority: Priority;
+  itPriority: Priority;
+  status: TicketStatus;
+  owner: SafeOwner | null;
+  version: number;
+  attachmentCount: number;
+  publicCommentCount: number;
+}
+
+export interface StaffTicketsResponse {
+  tickets: StaffTicketRow[];
+  pagination: PaginationInfo;
+}
+
+export type StaffSortOption =
+  | "updatedAt_desc"
+  | "createdAt_desc"
+  | "createdAt_asc"
+  | "ticketNumber_asc"
+  | "ticketNumber_desc"
+  | "itPriority_desc";
+
+export interface FetchStaffTicketsParams {
+  search?: string;
+  category?: number;
+  requestedPriority?: Priority;
+  itPriority?: Priority;
+  status?: TicketStatus;
+  owner?: string | number;
+  sort?: StaffSortOption;
+  page?: number;
+  limit?: number;
+  signal?: AbortSignal;
+}
 
 export interface Attachment {
   id: number;
