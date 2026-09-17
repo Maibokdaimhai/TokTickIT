@@ -268,6 +268,45 @@ describe("UI-04: Staff Ticket Queue Component", () => {
     });
   });
 
+  it("keeps pagination controls visible for an out-of-range page response", async () => {
+    vi.mocked(api.fetchStaffTickets).mockResolvedValue({
+      tickets: [],
+      pagination: {
+        page: 4,
+        limit: 10,
+        totalItems: 25,
+        totalPages: 3,
+      },
+    });
+
+    render(
+      <StaffTicketQueue
+        initialParams={{ page: 4, limit: 10 }}
+        onOpenTicket={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("queue-page-out-of-range")).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId("queue-empty")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("queue-no-results")).not.toBeInTheDocument();
+    expect(
+      screen.getByText((_, element) => element?.textContent?.trim() === "25 tickets available")
+    ).toBeInTheDocument();
+
+    const previousButton = screen.getByRole("button", { name: "Previous page" });
+    expect(previousButton).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Page 3" })).toBeInTheDocument();
+
+    fireEvent.click(previousButton);
+    await waitFor(() => {
+      expect(api.fetchStaffTickets).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 3, limit: 10 })
+      );
+    });
+  });
+
   it("renders distinct true empty state when queue has 0 tickets and no filters active", async () => {
     vi.mocked(api.fetchStaffTickets).mockResolvedValue({
       tickets: [],

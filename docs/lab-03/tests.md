@@ -149,7 +149,7 @@ For each implementation PR record: issue, branch/commit, test IDs, command, init
 | Issue #26 error-handling review fixes | 3e706dd | Commands/results in §12 | Server 68/68; client 29/29; browser 3/3; both builds/type check passed |
 | Issue #27 authentication and migration | 397aa9b | Commands/results in §13 | Server 96/96; client 36/36; browser 6/6; builds passed |
 | Issue #28 requester authorization | 4275095 | Commands/results in §14 | Server 109/109; client 36/36; browser 3/3; builds passed |
-| Issue #29 IT Staff ticket queue | feature/lab3-staff-queue | Commands/results in §15 | Server 146/146; client 52/52; builds passed |
+| Issue #29 IT Staff ticket queue | feature/lab3-staff-queue | Commands/results in §15 | Server 146/146; client 53/53; builds passed |
 | Later feature-PR implementation evidence | Pending | Pending | Not run |
 | Final lab3-staging validation | Pending | Pending | Not run |
 | Final main validation | Pending | Pending | Not run |
@@ -299,9 +299,9 @@ Executed on 2026-09-17 on `feature/lab3-staff-queue`, based on merged PR #37 / `
 | Verification | Result |
 | --- | --- |
 | Complete backend suite on disposable database | 146/146 passed in 15 files |
-| Complete client suite | 52/52 passed in 8 files |
+| Complete client suite | 53/53 passed in 8 files |
 | Focused staff queue API tests (`staff-queue.api.test.ts`) | 37/37 passed |
-| Focused queue UI and role navigation integration (`StaffTicketQueue.test.tsx`) | 16/16 passed |
+| Focused queue UI and role navigation integration (`StaffTicketQueue.test.tsx`) | 17/17 passed |
 | Server production build | Passed (`npm --prefix server run build`) |
 | Client production build | Passed (`npm --prefix client run build`) |
 | `git diff --check` | Passed |

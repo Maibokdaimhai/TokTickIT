@@ -602,7 +602,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
       {!loading && !error && !isForbidden && (
         <>
           {/* True Empty State */}
-          {tickets.length === 0 && !hasActiveFilters && (
+          {tickets.length === 0 && pagination?.totalItems === 0 && !hasActiveFilters && (
             <div
               data-testid="queue-empty"
               style={{
@@ -625,7 +625,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
           )}
 
           {/* Filtered No-Results State */}
-          {tickets.length === 0 && hasActiveFilters && (
+          {tickets.length === 0 && pagination?.totalItems === 0 && hasActiveFilters && (
             <div
               data-testid="queue-no-results"
               style={{
@@ -647,6 +647,29 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
               <button type="button" className="btn-secondary" onClick={clearFilters}>
                 Clear All Filters
               </button>
+            </div>
+          )}
+
+          {/* Out-of-range Page Recovery */}
+          {tickets.length === 0 && pagination && pagination.totalItems > 0 && (
+            <div
+              data-testid="queue-page-out-of-range"
+              role="status"
+              style={{
+                padding: "32px 24px",
+                textAlign: "center",
+                backgroundColor: "#F8FAFC",
+                borderRadius: "8px",
+                border: "1px solid var(--color-border)",
+                margin: "20px 0",
+              }}
+            >
+              <h2 style={{ fontSize: "16px", color: "var(--color-text-primary)", marginBottom: "4px" }}>
+                This Page Has No Tickets
+              </h2>
+              <p style={{ color: "var(--color-text-secondary)", fontSize: "14px", margin: 0 }}>
+                Page {pagination.page} is outside the available results. Use the pagination controls to return to a valid page.
+              </p>
             </div>
           )}
 
@@ -772,77 +795,84 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                 ))}
               </div>
 
-              {/* Pagination Bar */}
-              {pagination && (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: "20px",
-                    flexWrap: "wrap",
-                    gap: "12px",
-                    fontSize: "13px",
-                    color: "var(--color-text-secondary)",
-                  }}
-                >
-                  <div>
-                    Showing{" "}
-                    <strong>{pagination.totalItems === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1}</strong> to{" "}
+            </>
+          )}
+
+          {/* Keep pagination available even when the requested page is out of range. */}
+          {pagination && pagination.totalItems > 0 && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginTop: "20px",
+                flexWrap: "wrap",
+                gap: "12px",
+                fontSize: "13px",
+                color: "var(--color-text-secondary)",
+              }}
+            >
+              <div>
+                {tickets.length > 0 ? (
+                  <>
+                    Showing <strong>{(pagination.page - 1) * pagination.limit + 1}</strong> to{" "}
                     <strong>{Math.min(pagination.page * pagination.limit, pagination.totalItems)}</strong> of{" "}
                     <strong>{pagination.totalItems}</strong> tickets
-                  </div>
+                  </>
+                ) : (
+                  <><strong>{pagination.totalItems}</strong> tickets available</>
+                )}
+              </div>
 
-                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      aria-label="Previous page"
-                      style={{ padding: "6px 12px", minHeight: "32px", fontSize: "13px" }}
-                      disabled={pagination.page <= 1}
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    >
-                      ◀ Previous
-                    </button>
+              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  aria-label="Previous page"
+                  style={{ padding: "6px 12px", minHeight: "32px", fontSize: "13px" }}
+                  disabled={pagination.page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  ◀ Previous
+                </button>
 
-                    {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((pNum) => (
-                      <button
-                        key={pNum}
-                        type="button"
-                        style={{
-                          minWidth: "32px",
-                          height: "32px",
-                          padding: "0 6px",
-                          borderRadius: "6px",
-                          border:
-                            pNum === pagination.page
-                              ? "1px solid var(--color-primary)"
-                              : "1px solid var(--color-border)",
-                          backgroundColor: pNum === pagination.page ? "var(--color-primary)" : "white",
-                          color: pNum === pagination.page ? "white" : "var(--color-text-primary)",
-                          fontWeight: pNum === pagination.page ? "bold" : "normal",
-                          cursor: "pointer",
-                        }}
-                        onClick={() => setPage(pNum)}
-                      >
-                        {pNum}
-                      </button>
-                    ))}
+                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((pNum) => (
+                  <button
+                    key={pNum}
+                    type="button"
+                    aria-label={`Page ${pNum}`}
+                    style={{
+                      minWidth: "32px",
+                      height: "32px",
+                      padding: "0 6px",
+                      borderRadius: "6px",
+                      border:
+                        pNum === pagination.page
+                          ? "1px solid var(--color-primary)"
+                          : "1px solid var(--color-border)",
+                      backgroundColor: pNum === pagination.page ? "var(--color-primary)" : "white",
+                      color: pNum === pagination.page ? "white" : "var(--color-text-primary)",
+                      fontWeight: pNum === pagination.page ? "bold" : "normal",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => setPage(pNum)}
+                  >
+                    {pNum}
+                  </button>
+                ))}
 
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      aria-label="Next page"
-                      style={{ padding: "6px 12px", minHeight: "32px", fontSize: "13px" }}
-                      disabled={pagination.page >= pagination.totalPages}
-                      onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-                    >
-                      Next ▶
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  aria-label="Next page"
+                  style={{ padding: "6px 12px", minHeight: "32px", fontSize: "13px" }}
+                  disabled={pagination.page >= pagination.totalPages}
+                  onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+                >
+                  Next ▶
+                </button>
+              </div>
+            </div>
           )}
         </>
       )}
