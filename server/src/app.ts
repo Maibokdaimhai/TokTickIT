@@ -4,6 +4,7 @@ import cors from "cors";
 import { router as referenceRoutes } from "./routes/reference.routes.js";
 import { router as ticketRoutes } from "./routes/ticket.routes.js";
 import { router as attachmentRoutes } from "./routes/attachment.routes.js";
+import { router as staffRoutes } from "./routes/staff.routes.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { router as authRoutes } from "./routes/auth.routes.js";
 import { requireOrigin, requireSession } from "./middleware/auth.js";
@@ -25,6 +26,7 @@ app.use("/api", requireSession);
 app.use("/api", referenceRoutes);
 app.use("/api", ticketRoutes);
 app.use("/api", attachmentRoutes);
+app.use("/api", staffRoutes);
 app.use(errorHandler);
 
 export default app;
