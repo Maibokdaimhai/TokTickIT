@@ -380,3 +380,62 @@ Executed on 2026-09-17 on `feature/lab3-staff-ticket-operations`, based on commi
 | `git diff --check` | Passed |
 
 Database Integration Execution: Server database integration tests require an active PostgreSQL instance configured via `DATABASE_URL`. When executed against the disposable test database (`postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914`), all 19 server test files (including `staff-ticket-detail.api.test.ts`, `comments-notes.api.test.ts`, and `attachments.api.test.ts`) passed (209/209). In environments where PostgreSQL or local sockets are unprovisioned, database integration tests cannot run and will fail to connect. The ordinary development database was never migrated or reset. The pre-existing uncommitted change in `client/package.json` was strictly preserved and never staged or committed.
+
+## 17. Issue #31 Administrator User Management Verification
+
+Executed on 2026-09-18 on `feature/lab3-admin-users`. This increment implements minimalist Administrator User Management according to AC-16 through AC-19, and AC-26 (`API-14`, `API-15`, `API-16`, `API-20`, `UI-07`).
+
+### Backend Endpoints & Concurrency Protections
+- `server/src/validators/admin.validator.ts`: Validates admin user management inputs:
+  - Query parameters: accepts `search` (trimmed string, at most 150 code points) and `role` (`REQUESTER`, `IT_STAFF`, `ADMINISTRATOR`) only; rejects any unknown query keys with 400 `VALIDATION_ERROR`. No pagination, status filter, or sorting parameters are supported.
+  - Creation payload (`POST /admin/users`): requires `name` (1..100 characters), `email` (normalized, lowercase <= 254), `role` (enum), `isActive` (boolean), and `initialPassword` (requires shared policy: at least 10 Unicode code points, at most 72 UTF-8 bytes, no NUL, uppercase, lowercase, digit, and symbol excluding letters, digits, and whitespace).
+  - Update payload (`PATCH /admin/users/:id`): optional `name`, `email`, `role`, and `isActive`; rejects empty bodies and unknown fields.
+  - Password reset payload (`POST /admin/users/:id/initial-password`): requires matching `initialPassword` and `confirmPassword` conforming to the shared 10-code-point/72-byte password policy.
+- `server/src/services/admin.service.ts`:
+  - `GET /admin/users` (`API-14`): Filters users by search (matching name or email case-insensitively) and role; returns 200 `{ "users": AdminUser[] }` sorted case-insensitively by name, then id.
+  - `POST /admin/users` (`API-14`): Creates user with cost-12 bcrypt hash; sets `mustChangePassword: true`; acquires `pg_advisory_xact_lock(hashtext('admin-user-count'))` to protect admin counts; returns 201 `{ "user": AdminUser }`. Duplicate email returns 409 `DUPLICATE_EMAIL`.
+  - `PATCH /admin/users/:id` (`API-14`, `API-16`, `API-20`):
+    - Email uniqueness check when email is updated (409 `DUPLICATE_EMAIL`).
+    - Prevents self-deactivation: rejects with 409 `SELF_DEACTIVATION` when an administrator attempts to deactivate their own account.
+    - Prevents deactivating or demoting the last active administrator: acquires advisory transaction lock `pg_advisory_xact_lock(hashtext('admin-user-count'))`, verifies active administrator count under the lock, and returns 409 `LAST_ACTIVE_ADMIN`.
+    - Global lock ordering: Locks target user row first (`SELECT id FROM "User" WHERE id = $id FOR UPDATE`), then updates affected tickets.
+    - Session revocation (`API-20`): Automatically revokes all active sessions for the target user if `patch.isActive === false || ('role' in patch && patch.role !== targetUser.role)`.
+    - All-ticket unassignment with version increment (`API-20`): Atomically unassigns all tickets owned by the target user (`ownerId: null`, `version = version + 1`, `updatedAt: new Date()`) if the user is deactivated or demoted to `REQUESTER`.
+  - `POST /admin/users/:id/initial-password` (`API-15`): Sets new hashed initial password, sets `mustChangePassword: true`, revokes all active sessions for the target user, and returns 204.
+  - User deletion: User deletion endpoints do not exist; requests to `DELETE /api/admin/users/:id` fall through to the default Express 404 handler.
+- Global Lock Ordering in `server/src/services/staff.service.ts`:
+  - `claimTicket` (API-09): Inside the transaction, locks the authenticated actor's User row first (`SELECT id FROM "User" WHERE id = $actorId FOR UPDATE`) and re-checks that the actor remains active and IT_STAFF or ADMINISTRATOR; throws 403 `FORBIDDEN` (`code: "FORBIDDEN"`) if the actor has been deactivated or demoted, before locking the Ticket row second (`SELECT id FROM "Ticket" WHERE id = $id FOR UPDATE`).
+  - `updateOwner` (API-10): Locks target User row first (`SELECT id FROM "User" WHERE id = $ownerId FOR UPDATE`), verifies eligibility, and locks Ticket row second (`SELECT id FROM "Ticket" WHERE id = $id FOR UPDATE`).
+  - Ensures consistent global lock order (`User` row before `Ticket` row), preventing deadlocks with concurrent administrator deactivation or demotion operations.
+
+### Frontend Components & Security Safety
+- `client/src/components/UserManagement.tsx` (`UI-07`):
+  - Responsive Zen Green styling: desktop table (>= 768px) and mobile cards (< 768px) without horizontal overflow.
+  - Search input with 300ms debounce and role filter dropdown.
+  - User status pills and password state badges with clear textual labels.
+  - Accessible modal dialogs for Create User, Edit User, and Reset Initial Password with focus trap, Escape key dismiss, and aria labelling.
+  - Edit modal disables `Active Account` toggle with helper tooltip when editing own administrator account.
+  - Password policy alignment: Reuses the shared `passwordRules` utility (at least 10 code points, at most 72 UTF-8 bytes, uppercase, lowercase, digit, symbol excluding whitespace, no NUL) across Create User and Reset Initial Password forms.
+  - Effect-scoped cancellation and request-generation guards before every state update (including `finally`), preventing stale or out-of-order responses from overwriting current results or modifying loading state.
+  - Password privacy enforcement: Form automatically wipes password inputs on API submission failure without re-rendering credentials in DOM or error banners.
+- `client/src/App.tsx`:
+  - Replaced placeholder admin shell with fully integrated `<UserManagement />` component on `/admin/users` route.
+  - Updated role navigation to route Administrators directly to `/admin/users` by default.
+
+### Verification Results
+
+| Verification command | Result |
+| --- | --- |
+| Complete backend suite on disposable database | 269/269 passed in 21 files (`DATABASE_URL=postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914 npm --prefix server test -- --run`) |
+| Complete client test suite | 112/112 passed in 12 files (`npm --prefix client test -- --run`) |
+| Admin user API integration tests (`users-admin.api.test.ts`) | 34/34 passed |
+| Admin input validator unit tests (`validation.test.ts`) | 26/26 passed |
+| Staff ticket detail lock ordering tests (`staff-ticket-detail.api.test.ts`) | 22/22 passed |
+| Admin user management UI tests (`UserManagement.test.tsx`) | 19/19 passed |
+| Staff ticket queue UI tests (`StaffTicketQueue.test.tsx`) | 17/17 passed |
+| Routing & authorization guards (`Routing.test.tsx`) | 15/15 passed |
+| Server production build | Passed (`npm --prefix server run build`) |
+| Client production build | Passed (`npm --prefix client run build`) |
+| Git whitespace check | Passed (`git diff --check`) |
+
+Database safety: All backend integration tests ran against the disposable test database `postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914`. The normal development database was never migrated or reset. The pre-existing uncommitted change in `client/package.json` (`@testing-library/user-egvent`) was strictly preserved and never staged or committed.
