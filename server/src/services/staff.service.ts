@@ -229,6 +229,19 @@ export async function claimTicket(ticketIdParam: unknown, body: unknown, actor: 
   const prisma = getPrisma();
 
   return await runInTransaction(prisma, async (tx) => {
+    // 1. Lock and validate the authenticated actor's User row first (global lock order: User -> Ticket)
+    if (typeof tx.$executeRaw === "function") {
+      await tx.$executeRaw`SELECT id FROM "User" WHERE id = ${actor.id} FOR UPDATE`;
+    }
+    const actorUser = await tx.user.findUnique({
+      where: { id: actor.id },
+      select: { id: true, isActive: true, role: true },
+    });
+    if (!actorUser || !actorUser.isActive || !["IT_STAFF", "ADMINISTRATOR"].includes(actorUser.role)) {
+      throw new ApiError(403, { code: "FORBIDDEN", message: "User is no longer eligible to claim tickets" });
+    }
+
+    // 2. Lock Ticket row second
     if (typeof tx.$executeRaw === "function") {
       await tx.$executeRaw`SELECT id FROM "Ticket" WHERE id = ${ticketId} FOR UPDATE`;
     }
@@ -276,6 +289,21 @@ export async function updateOwner(ticketIdParam: unknown, body: unknown, _actor:
   const prisma = getPrisma();
 
   return await runInTransaction(prisma, async (tx) => {
+    // 1. Lock and validate target User first (consistent global lock order: User -> Ticket)
+    if (ownerId !== null) {
+      if (typeof tx.$executeRaw === "function") {
+        await tx.$executeRaw`SELECT id FROM "User" WHERE id = ${ownerId} FOR UPDATE`;
+      }
+      const targetUser = await tx.user.findUnique({
+        where: { id: ownerId },
+        select: { id: true, isActive: true, role: true },
+      });
+      if (!targetUser || !targetUser.isActive || !["IT_STAFF", "ADMINISTRATOR"].includes(targetUser.role)) {
+        throw new ApiError(400, { code: "INVALID_OWNER", message: "Target owner must be an active IT Staff or Administrator" });
+      }
+    }
+
+    // 2. Lock Ticket row second
     if (typeof tx.$executeRaw === "function") {
       await tx.$executeRaw`SELECT id FROM "Ticket" WHERE id = ${ticketId} FOR UPDATE`;
     }
@@ -288,16 +316,6 @@ export async function updateOwner(ticketIdParam: unknown, body: unknown, _actor:
     }
     if (ticket.version !== expectedVersion) {
       throw new ApiError(409, { code: "VERSION_CONFLICT", message: "Ticket version mismatch" });
-    }
-
-    if (ownerId !== null) {
-      const targetUser = await tx.user.findUnique({
-        where: { id: ownerId },
-        select: { id: true, isActive: true, role: true },
-      });
-      if (!targetUser || !targetUser.isActive || !["IT_STAFF", "ADMINISTRATOR"].includes(targetUser.role)) {
-        throw new ApiError(400, { code: "INVALID_OWNER", message: "Target owner must be an active IT Staff or Administrator" });
-      }
     }
 
     const updated = await tx.ticket.update({

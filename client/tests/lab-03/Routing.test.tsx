@@ -40,6 +40,7 @@ vi.mock("../../src/api.js", async (original) => ({
     tickets: [],
     pagination: { page: 1, limit: 10, totalItems: 0, totalPages: 0 },
   }),
+  fetchAdminUsers: vi.fn().mockResolvedValue({ users: [] }),
 }));
 
 describe("Routing & Direct Path Navigation Tests", () => {

@@ -28,6 +28,7 @@ vi.mock("../../src/api.js", async (original) => ({
     tickets: [],
     pagination: { page: 1, limit: 10, totalItems: 0, totalPages: 0 },
   }),
+  fetchAdminUsers: vi.fn().mockResolvedValue({ users: [] }),
 }));
 
 describe("UI-04: Staff Ticket Queue Component", () => {
@@ -583,15 +584,14 @@ describe("Role Navigation & Queue State Preservation Integration", () => {
     expect(screen.queryByRole("button", { name: /My Tickets/ })).not.toBeInTheDocument();
   });
 
-  it("ADMINISTRATOR session defaults to User Management placeholder and can navigate to Ticket Queue", async () => {
+  it("ADMINISTRATOR session defaults to User Management and can navigate to Ticket Queue", async () => {
     vi.mocked(api.getSession).mockResolvedValue(adminSession);
     render(<App />);
 
-    // Defaults to User Management placeholder
+    // Defaults to User Management
     await waitFor(() => {
-      expect(screen.getByTestId("user-management-placeholder")).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "User Management" })).toBeInTheDocument();
     });
-    expect(screen.getByText("Administrator user management workspace will be added in Issue #31.")).toBeInTheDocument();
 
     // Both User Management and Ticket Queue buttons exist
     expect(screen.getByTestId("nav-user-management")).toBeInTheDocument();

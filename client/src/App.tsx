@@ -9,6 +9,7 @@ import { MyTicketsPage } from "./components/MyTicketsPage.js";
 import { TicketDetailPage } from "./components/TicketDetailPage.js";
 import { StaffTicketQueue } from "./components/StaffTicketQueue.js";
 import { StaffTicketDetail } from "./components/StaffTicketDetail.js";
+import { UserManagement } from "./components/UserManagement.js";
 import { FetchStaffTicketsParams } from "./types.js";
 
 type TabType = "my-tickets" | "create-ticket" | "ticket-queue" | "user-management";
@@ -249,10 +250,7 @@ const MainContent: React.FC<MainContentProps> = ({ pathname, navigate }) => {
         {/* 3. Admin User Management */}
         {pathname === "/admin/users" && (
           role === "ADMINISTRATOR" ? (
-            <div data-testid="user-management-placeholder" role="status" style={{ padding: "24px" }}>
-              <h2>User Management</h2>
-              <p>Administrator user management workspace will be added in Issue #31.</p>
-            </div>
+            <UserManagement />
           ) : (
             <ForbiddenView
               message="You do not have permission to access user management."

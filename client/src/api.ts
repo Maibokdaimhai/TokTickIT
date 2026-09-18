@@ -16,6 +16,11 @@ import {
   TicketStatus,
   UpdateStatusPayload,
   ProblemAppearsResolvedPayload,
+  AdminUser,
+  FetchAdminUsersParams,
+  CreateUserPayload,
+  UpdateUserPayload,
+  ResetInitialPasswordPayload,
 } from "./types.js";
 
 export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -432,4 +437,62 @@ export async function indicateProblemAppearsResolved(ticketId: number, payload: 
     throw new ApiClientError(data?.error?.message || "Failed to indicate problem appears resolved", res.status, data?.error?.code);
   }
   return data;
+}
+
+export async function fetchAdminUsers(params: FetchAdminUsersParams = {}): Promise<{ users: AdminUser[] }> {
+  const query = new URLSearchParams();
+  if (params.search && params.search.trim()) {
+    query.append("search", params.search.trim());
+  }
+  if (params.role) {
+    query.append("role", params.role);
+  }
+  const url = `${API_URL}/api/admin/users${query.toString() ? `?${query.toString()}` : ""}`;
+  const res = await apiFetch(url, { signal: params.signal });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiClientError(data?.error?.message || "Failed to fetch users", res.status, data?.error?.code);
+  }
+  return data;
+}
+
+export async function createAdminUser(payload: CreateUserPayload): Promise<{ user: AdminUser }> {
+  const res = await apiFetch(`${API_URL}/api/admin/users`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiClientError(data?.error?.message || "Failed to create user", res.status, data?.error?.code);
+  }
+  return data;
+}
+
+export async function updateAdminUser(id: number, payload: UpdateUserPayload): Promise<{ user: AdminUser }> {
+  const res = await apiFetch(`${API_URL}/api/admin/users/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiClientError(data?.error?.message || "Failed to update user", res.status, data?.error?.code);
+  }
+  return data;
+}
+
+export async function resetAdminUserPassword(id: number, payload: ResetInitialPasswordPayload): Promise<void> {
+  const res = await apiFetch(`${API_URL}/api/admin/users/${id}/initial-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (res.status === 204) {
+    return;
+  }
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiClientError(data?.error?.message || "Failed to reset password", res.status, data?.error?.code);
+  }
 }

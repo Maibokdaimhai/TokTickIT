@@ -196,3 +196,40 @@ export interface FetchTicketsParams {
   limit?: number;
   signal?: AbortSignal;
 }
+
+export interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  role: UserRole;
+  isActive: boolean;
+  mustChangePassword: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FetchAdminUsersParams {
+  search?: string;
+  role?: UserRole;
+  signal?: AbortSignal;
+}
+
+export interface CreateUserPayload {
+  name: string;
+  email: string;
+  role: UserRole;
+  isActive: boolean;
+  initialPassword: string;
+}
+
+export interface UpdateUserPayload {
+  name?: string;
+  email?: string;
+  role?: UserRole;
+  isActive?: boolean;
+}
+
+export interface ResetInitialPasswordPayload {
+  initialPassword: string;
+  confirmPassword: string;
+}
