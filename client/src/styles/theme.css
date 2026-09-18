@@ -194,7 +194,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 40px;
+  min-height: 44px;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -213,7 +213,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 40px;
+  min-height: 44px;
 }
 
 .btn-secondary:hover:not(:disabled) {
@@ -323,9 +323,10 @@ body {
   color: var(--color-error);
 }
 
-.form-select, .form-input {
+.form-select, .form-input, input.form-control {
   width: 100%;
-  height: 42px;
+  min-height: 44px;
+  height: 44px;
   padding: 8px 12px;
   border: 1px solid var(--color-input-border);
   border-radius: var(--radius);
@@ -334,7 +335,11 @@ body {
   color: var(--color-text-primary);
 }
 
-.form-select:focus, .form-input:focus {
+textarea.form-control {
+  min-height: 44px;
+}
+
+.form-select:focus, .form-input:focus, .form-control:focus {
   outline: var(--focus-ring);
   outline-offset: 2px;
 }
@@ -351,9 +356,12 @@ body {
     flex-direction: column;
     gap: 12px;
     align-items: stretch;
+    padding: 12px 16px;
   }
 
   .app-nav {
+    flex-wrap: wrap;
+    gap: 8px;
     justify-content: space-between;
   }
 }
@@ -505,7 +513,7 @@ body {
 .auth-card { width: 100%; max-width: 460px; padding: 28px; border-radius: 12px; background: white; box-shadow: 0 4px 20px #0001; }
 .auth-card h1 { font-size: 1.6rem; margin: 20px 0; }
 .auth-field { display: block; margin: 16px 0; }
-.auth-field input { margin-top: 6px; width: 100%; }
+.auth-field input { margin-top: 6px; width: 100%; min-height: 44px; height: 44px; padding: 8px 12px; border: 1px solid var(--color-input-border); border-radius: var(--radius); }
 .auth-card button { margin: 8px 8px 0 0; min-height: 44px; }
 .auth-card .btn-primary { --bs-btn-hover-bg: var(--color-primary-hover); --bs-btn-active-bg: var(--color-primary-hover); --bs-btn-hover-border-color: var(--color-primary-hover); --bs-btn-active-border-color: var(--color-primary-hover); }
 .account-menu { position: relative; }
@@ -942,6 +950,11 @@ body {
   color: var(--color-text-secondary);
   cursor: pointer;
   padding: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .dialog-error-banner {
@@ -982,6 +995,9 @@ body {
   color: var(--color-primary);
   cursor: pointer;
   padding: 4px 8px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .password-checklist {
@@ -1079,5 +1095,145 @@ body {
   }
   .mobile-only {
     display: flex;
+  }
+}
+
+/* Staff Ticket Detail Layout & Controls */
+.ticket-detail-back-bar {
+  margin-bottom: 20px;
+}
+
+.ticket-detail-header {
+  padding: 20px 24px;
+  gap: 12px;
+}
+
+.ticket-detail-body {
+  padding: 24px;
+}
+
+.operational-controls-card {
+  background-color: #F8FAFC;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin-bottom: 24px;
+}
+
+.operational-controls-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+  color: var(--color-text-primary);
+}
+
+.operational-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.op-control-section {
+  background-color: #FFFFFF;
+  padding: 14px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  box-sizing: border-box;
+}
+
+.op-control-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.op-control-select {
+  flex: 1 1 160px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--color-input-border);
+  font-size: 13px;
+  background-color: #FFFFFF;
+  color: var(--color-text-primary);
+  box-sizing: border-box;
+}
+
+.op-control-btn {
+  min-height: 44px;
+  padding: 6px 14px;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.btn-claim-ticket-control {
+  min-height: 44px;
+  padding: 6px 12px;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+@media (max-width: 767px) {
+  .ticket-detail-back-bar {
+    margin-bottom: 10px;
+  }
+  .ticket-detail-header {
+    padding: 12px 14px;
+    gap: 8px;
+  }
+  .ticket-detail-body {
+    padding: 12px;
+  }
+  .operational-controls-card {
+    padding: 12px 10px;
+    margin-bottom: 14px;
+  }
+  .operational-controls-title {
+    font-size: 14px;
+    margin: 0 0 8px 0;
+  }
+  .operational-controls-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .op-control-section {
+    padding: 10px;
+  }
+  .op-control-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .op-control-row-status {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .op-control-row-status .op-control-select,
+  .op-control-row-status .op-control-btn {
+    width: 100%;
+    flex: none;
   }
 }

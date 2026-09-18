@@ -716,8 +716,8 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
 
   return (
     <div style={{ maxWidth: "1100px", margin: "0 auto", paddingBottom: "48px" }}>
-      {/* Top Navigation */}
-      <div style={{ marginBottom: "20px" }}>
+      {/* Top back button to queue */}
+      <div className="ticket-detail-back-bar">
         <button
           type="button"
           onClick={onBack}
@@ -840,15 +840,14 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
       >
         {/* Ticket Header */}
         <div
+          className="ticket-detail-header"
           style={{
-            padding: "20px 24px",
             borderBottom: "1px solid var(--color-border)",
             backgroundColor: "#FAFCFA",
             display: "flex",
             flexWrap: "wrap",
             justifyContent: "space-between",
             alignItems: "center",
-            gap: "12px",
           }}
         >
           <div>
@@ -891,7 +890,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
         </div>
 
         {/* Content Body */}
-        <div style={{ padding: "24px" }}>
+        <div className="ticket-detail-body">
           {/* Problem Appears Resolved Notice if indicated by requester */}
           {ticket.problemAppearsResolvedAt && (
             <div
@@ -920,29 +919,17 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
 
           {/* Operational Controls Card */}
           <div
-            style={{
-              backgroundColor: "#F8FAFC",
-              border: "1px solid var(--color-border)",
-              borderRadius: "8px",
-              padding: "18px 20px",
-              marginBottom: "24px",
-            }}
+            className="operational-controls-card"
             data-testid="operational-card"
           >
-            <h2 style={{ fontSize: "15px", fontWeight: 700, margin: "0 0 16px 0", color: "var(--color-text-primary)" }}>
+            <h2 className="operational-controls-title">
               Operational Controls
             </h2>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                gap: "20px",
-              }}
-            >
+            <div className="operational-controls-grid">
               {/* Owner Assignment & Claim */}
-              <div style={{ backgroundColor: "#FFFFFF", padding: "14px", borderRadius: "6px", border: "1px solid var(--color-border)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <div className="op-control-section">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
                   <label style={{ fontSize: "12.5px", fontWeight: 700, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>
                     Assigned Owner
                   </label>
@@ -950,17 +937,12 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                     <button
                       type="button"
                       data-testid="btn-claim-ticket"
+                      className="btn-claim-ticket-control"
                       onClick={handleClaim}
                       disabled={isClaiming || refreshFailed}
                       style={{
-                        padding: "4px 10px",
-                        backgroundColor: "var(--color-primary)",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        fontSize: "12px",
-                        fontWeight: 600,
                         cursor: isClaiming || refreshFailed ? "not-allowed" : "pointer",
+                        opacity: isClaiming || refreshFailed ? 0.6 : 1,
                       }}
                     >
                       {isClaiming ? "Claiming..." : "Claim Ticket"}
@@ -987,9 +969,10 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                 )}
 
                 {/* Reassignment Selector */}
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <div className="op-control-row">
                   <select
                     data-testid="select-owner"
+                    className="op-control-select"
                     value={selectedOwnerId}
                     disabled={ownersLoading || isSavingOwner || refreshFailed}
                     onChange={(e) => {
@@ -997,11 +980,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                       if (ownerError) setOwnerError(null);
                     }}
                     style={{
-                      flex: 1,
-                      padding: "6px 10px",
-                      borderRadius: "6px",
-                      border: ownerError ? "1px solid var(--color-error)" : "1px solid var(--color-input-border)",
-                      fontSize: "13px",
+                      border: ownerError ? "1px solid var(--color-error)" : undefined,
                     }}
                   >
                     <option value="">Unassigned</option>
@@ -1015,16 +994,10 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                   <button
                     type="button"
                     data-testid="btn-save-owner"
+                    className="op-control-btn"
                     onClick={handleSaveOwner}
                     disabled={ownersLoading || isSavingOwner || refreshFailed}
                     style={{
-                      padding: "6px 12px",
-                      backgroundColor: "var(--color-primary)",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "6px",
-                      fontSize: "12.5px",
-                      fontWeight: 600,
                       cursor: ownersLoading || isSavingOwner || refreshFailed ? "not-allowed" : "pointer",
                       opacity: ownersLoading || isSavingOwner || refreshFailed ? 0.6 : 1,
                     }}
@@ -1046,26 +1019,20 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
               </div>
 
               {/* IT Priority */}
-              <div style={{ backgroundColor: "#FFFFFF", padding: "14px", borderRadius: "6px", border: "1px solid var(--color-border)" }}>
+              <div className="op-control-section">
                 <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--color-text-secondary)", textTransform: "uppercase", marginBottom: "8px" }}>
                   IT Priority
                 </label>
 
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <div className="op-control-row">
                   <select
                     data-testid="select-it-priority"
+                    className="op-control-select"
                     value={selectedItPriority}
                     disabled={isSavingItPriority || refreshFailed}
                     onChange={(e) => {
                       setSelectedItPriority(e.target.value as Priority);
                       if (itPriorityError) setItPriorityError(null);
-                    }}
-                    style={{
-                      flex: 1,
-                      padding: "6px 10px",
-                      borderRadius: "6px",
-                      border: "1px solid var(--color-input-border)",
-                      fontSize: "13px",
                     }}
                   >
                     <option value="LOW">LOW</option>
@@ -1077,16 +1044,10 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                   <button
                     type="button"
                     data-testid="btn-save-it-priority"
+                    className="op-control-btn"
                     onClick={handleSaveItPriority}
                     disabled={isSavingItPriority || refreshFailed}
                     style={{
-                      padding: "6px 12px",
-                      backgroundColor: "var(--color-primary)",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "6px",
-                      fontSize: "12.5px",
-                      fontWeight: 600,
                       cursor: isSavingItPriority || refreshFailed ? "not-allowed" : "pointer",
                       opacity: isSavingItPriority || refreshFailed ? 0.6 : 1,
                     }}
@@ -1103,14 +1064,15 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
               </div>
 
               {/* Status Transition */}
-              <div style={{ backgroundColor: "#FFFFFF", padding: "14px", borderRadius: "6px", border: "1px solid var(--color-border)" }}>
+              <div className="op-control-section">
                 <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--color-text-secondary)", textTransform: "uppercase", marginBottom: "8px" }}>
                   Next Status
                 </label>
 
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <div className="op-control-row op-control-row-status">
                   <select
                     data-testid="select-status"
+                    className="op-control-select"
                     value={selectedStatus}
                     disabled={legalNextStatuses.length === 0 || isSavingStatus || refreshFailed}
                     onChange={(e) => {
@@ -1119,11 +1081,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                       if (statusOwnerRequiredError) setStatusOwnerRequiredError(null);
                     }}
                     style={{
-                      flex: 1,
-                      padding: "6px 10px",
-                      borderRadius: "6px",
-                      border: statusError || statusOwnerRequiredError ? "1px solid var(--color-error)" : "1px solid var(--color-input-border)",
-                      fontSize: "13px",
+                      border: statusError || statusOwnerRequiredError ? "1px solid var(--color-error)" : undefined,
                     }}
                   >
                     {legalNextStatuses.length === 0 ? (
@@ -1141,16 +1099,10 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                     type="button"
                     ref={statusTriggerRef}
                     data-testid="btn-save-status"
+                    className="op-control-btn"
                     onClick={handleStatusChangeClick}
                     disabled={legalNextStatuses.length === 0 || isSavingStatus || refreshFailed}
                     style={{
-                      padding: "6px 12px",
-                      backgroundColor: "var(--color-primary)",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "6px",
-                      fontSize: "12.5px",
-                      fontWeight: 600,
                       cursor: legalNextStatuses.length === 0 || isSavingStatus || refreshFailed ? "not-allowed" : "pointer",
                       opacity: legalNextStatuses.length === 0 || isSavingStatus || refreshFailed ? 0.6 : 1,
                     }}

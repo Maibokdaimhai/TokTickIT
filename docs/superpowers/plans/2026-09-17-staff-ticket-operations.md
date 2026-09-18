@@ -18,7 +18,7 @@
 - Branch: Stay on `feature/lab3-staff-ticket-operations`.
 - Do not commit or push yet; leave completed changes ready for review.
 - Preserve the existing uncommitted `client/package.json` change: `@testing-library/user-event` was changed to `@testing-library/user-egvent`. Do not fix, stage, or include this unrelated change.
-- Database: Use only disposable database `postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914`. Do not reset or migrate the normal development database.
+- Database: Use only disposable database `toktickit_lab3_auth_final_20260914`. Do not reset or migrate the normal development database.
 - Avoid new dependencies; reuse existing libraries and components.
 - Do not edit `docs/lab-03/ai-use.md` or invent review entries in `reviewer.md`.
 - Keep this issue separate from Administrator user management (#31).
@@ -118,7 +118,7 @@ describe("UNIT-03: Ticket Policy & Status Transition Matrix", () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test -- tests/lab-03/ticket-policy.test.ts`
+Run: `DATABASE_URL="<runtime disposable database URL>" npm --prefix server test -- tests/lab-03/ticket-policy.test.ts`
 Expected: FAIL (module not found).
 
 - [ ] **Step 3: Implement `server/src/utils/ticket-policy.ts`**
@@ -167,7 +167,7 @@ export function requiresEligibleOwner(status: TicketStatus): boolean {
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test -- tests/lab-03/ticket-policy.test.ts`
+Run: `DATABASE_URL="<runtime disposable database URL>" npm --prefix server test -- tests/lab-03/ticket-policy.test.ts`
 Expected: PASS.
 
 ---
@@ -215,7 +215,7 @@ Assert:
 - [ ] **Step 2: Implement validators in `id.validator.ts`, `staff.validator.ts`, and `communication.validator.ts`**
 - [ ] **Step 3: Run test to verify it passes**
 
-Run: `DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test -- tests/lab-03/backend-services.test.ts`
+Run: `DATABASE_URL="<runtime disposable database URL>" npm --prefix server test -- tests/lab-03/backend-services.test.ts`
 Expected: PASS.
 
 ---
@@ -267,7 +267,7 @@ Test scenarios:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test -- tests/lab-03/attachments.api.test.ts`
+Run: `DATABASE_URL="<runtime disposable database URL>" npm --prefix server test -- tests/lab-03/attachments.api.test.ts`
 Expected: FAIL.
 
 - [ ] **Step 3: Update `server/src/services/attachment.service.ts`**
@@ -283,7 +283,7 @@ Expected: FAIL.
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test -- tests/lab-03/attachments.api.test.ts`
+Run: `DATABASE_URL="<runtime disposable database URL>" npm --prefix server test -- tests/lab-03/attachments.api.test.ts`
 Expected: PASS.
 
 ---
@@ -356,7 +356,7 @@ Include all required scenarios:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test -- tests/lab-03/comments-notes.api.test.ts`
+Run: `DATABASE_URL="<runtime disposable database URL>" npm --prefix server test -- tests/lab-03/comments-notes.api.test.ts`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement `communication.service.ts`, `communication.controller.ts`, `communication.routes.ts`, mount in `app.ts`**
@@ -370,7 +370,7 @@ Coordinate all appends in `prisma.$transaction`:
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test -- tests/lab-03/comments-notes.api.test.ts`
+Run: `DATABASE_URL="<runtime disposable database URL>" npm --prefix server test -- tests/lab-03/comments-notes.api.test.ts`
 Expected: PASS.
 
 ---
@@ -438,7 +438,7 @@ Test:
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test -- tests/lab-03/staff-ticket-detail.api.test.ts`
+Run: `DATABASE_URL="<runtime disposable database URL>" npm --prefix server test -- tests/lab-03/staff-ticket-detail.api.test.ts`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement staff operations in `staff.service.ts`, `staff.controller.ts`, `staff.routes.ts`, and update `ticket.service.ts`**
@@ -447,12 +447,12 @@ Use Prisma transaction with row-level locks (`SELECT id FROM "Ticket" WHERE id =
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test -- tests/lab-03/staff-ticket-detail.api.test.ts`
+Run: `DATABASE_URL="<runtime disposable database URL>" npm --prefix server test -- tests/lab-03/staff-ticket-detail.api.test.ts`
 Expected: PASS.
 
 - [ ] **Step 5: Run all server tests to verify zero regressions across all 16 files**
 
-Run: `DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test`
+Run: `DATABASE_URL="<runtime disposable database URL>" npm --prefix server test`
 Expected: ALL test files pass.
 
 ---
@@ -652,7 +652,7 @@ Expected: PASS.
 
 - [ ] **Step 1: Run complete backend test suite against disposable database**
 
-Run: `DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test`
+Run: `DATABASE_URL="<runtime disposable database URL>" npm --prefix server test`
 Expected: ALL backend tests pass (16+ test files).
 
 - [ ] **Step 2: Run complete client test suite**

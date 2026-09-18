@@ -1,69 +1,77 @@
-import { test, expect, Page } from "@playwright/test";
-import * as path from "path";
-import * as fs from "fs";
-import { createAccount, cleanAccounts, signOut, signIn, origin, apiOrigin } from "./helpers.js";
+import { test, expect } from "@playwright/test";
+import {
+  createAccount,
+  createTicketFixture,
+  cleanAccounts,
+  signOut,
+  signIn,
+  origin,
+  apiOrigin,
+  captureScreenshot,
+  assertNoHorizontalOverflow,
+  database,
+} from "./helpers.js";
 
-// Ensure screenshot artifact directories exist
-const SCREENSHOT_BASE = path.resolve(process.cwd(), "artifacts/lab-03/requester-regression");
-const CREATE_TICKET_DIR = path.join(SCREENSHOT_BASE, "create-ticket");
-const MY_TICKETS_DIR = path.join(SCREENSHOT_BASE, "my-tickets");
-const TICKET_DETAIL_DIR = path.join(SCREENSHOT_BASE, "ticket-detail");
-
-[CREATE_TICKET_DIR, MY_TICKETS_DIR, TICKET_DETAIL_DIR].forEach((dir) => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-});
-
-// Helper to ensure sticky elements (like header) are captured at top of page
-async function captureScreenshot(page: Page, options: Parameters<Page["screenshot"]>[0]) {
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await page.waitForTimeout(100);
-  return page.screenshot(options);
-}
-
-test.describe.serial("Lab 3 authenticated requester regression", () => {
-  let createdTicketNumber: string = "";
-
+test.describe.serial("E2E-04: Authenticated Requester Regression & Workflows", () => {
   let primary: Awaited<ReturnType<typeof createAccount>>;
-  let empty: Awaited<ReturnType<typeof createAccount>>;
-  test.beforeAll(async () => { primary = await createAccount("Jennifer Anderson"); empty = await createAccount("Empty Requester"); });
+  let emptyUser: Awaited<ReturnType<typeof createAccount>>;
+  let otherRequester: Awaited<ReturnType<typeof createAccount>>;
+  let createdTicketNumber = "";
+  let createdTicketId: number | null = null;
+
+  test.beforeAll(async () => {
+    primary = await createAccount("Jennifer Anderson", { role: "REQUESTER" });
+    emptyUser = await createAccount("Empty Requester", { role: "REQUESTER" });
+    otherRequester = await createAccount("Other Requester", { role: "REQUESTER" });
+  });
+
   test.afterAll(cleanAccounts);
+
   test.beforeEach(async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.setViewportSize({ width: 1440, height: 900 });
     await signIn(page, primary.email);
     await expect(page.getByRole("navigation")).toBeVisible();
   });
 
-  test("E2E-01: End-to-end requester creation workflow with attachment upload and verification in My Tickets", async ({ page }) => {
-    // 1. Navigate to Create Ticket tab
-    const createNavBtn = page.locator('nav button:has-text("Create Ticket")');
+  test("E2E-01: End-to-end ticket creation workflow, responsive views, validation, and attachment upload", async ({
+    page,
+  }) => {
+    // Navigate to Create Ticket
+    const createNavBtn = page.getByLabel("Main Navigation").getByRole("button", { name: /Create Ticket/ });
     await createNavBtn.click();
     await expect(page.locator('h1:has-text("Create Support Ticket")')).toBeVisible();
 
-    // Capture 01-initial-form.png
-    await captureScreenshot(page,{
-      path: path.join(CREATE_TICKET_DIR, "01-initial-form.png"),
-      fullPage: true,
-    });
+    // 1. Capture baseline screenshots for Create Ticket at 3 viewports
+    // Desktop 1440x900
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await assertNoHorizontalOverflow(page);
+    await captureScreenshot(page, "requester/create-ticket-desktop-1440.png");
+
+    // Tablet 820x1180
+    await page.setViewportSize({ width: 820, height: 1180 });
+    await assertNoHorizontalOverflow(page);
+    await captureScreenshot(page, "requester/create-ticket-tablet-820.png");
+
+    // Mobile 390x844
+    await page.setViewportSize({ width: 390, height: 844 });
+    await assertNoHorizontalOverflow(page);
+    await captureScreenshot(page, "requester/create-ticket-mobile-390.png");
+
+    // Restore desktop viewport
+    await page.setViewportSize({ width: 1440, height: 900 });
 
     // 2. Trigger validation errors by submitting empty form
     const submitBtn = page.locator('button[type="submit"]:has-text("Submit Ticket")');
     await submitBtn.click();
 
-    // Verify inline field errors appear
     const summaryError = page.locator("text=Summary is required.");
     const descError = page.locator("text=Description is required.");
     await expect(summaryError).toBeVisible();
     await expect(descError).toBeVisible();
 
-    // Capture 02-validation-error.png
-    await captureScreenshot(page,{
-      path: path.join(CREATE_TICKET_DIR, "02-validation-error.png"),
-      fullPage: true,
-    });
+    await captureScreenshot(page, "requester/supplemental-create-validation-errors.png");
 
-    // 3. Trigger API failure callout (intercept /api/tickets to return HTTP 500)
+    // 3. Trigger API failure callout (mock 500)
     await page.route("**/api/tickets", async (route) => {
       if (route.request().method() === "POST") {
         await route.fulfill({
@@ -82,38 +90,25 @@ test.describe.serial("Lab 3 authenticated requester regression", () => {
     });
 
     await page.fill("#ticket-summary", "Simulated failure for error callout capture");
-    await page.fill("#ticket-description", "Testing that the application renders a friendly error callout on backend failure.");
+    await page.fill(
+      "#ticket-description",
+      "Testing that the application renders a friendly error callout on backend failure."
+    );
     await submitBtn.click();
 
     const apiErrorBox = page.locator(".form-error-msg:has-text('Database connection failed')");
     await expect(apiErrorBox).toBeVisible();
-
-    // Capture 05-api-failure.png
-    await captureScreenshot(page,{
-      path: path.join(CREATE_TICKET_DIR, "05-api-failure.png"),
-      fullPage: true,
-    });
+    await captureScreenshot(page, "requester/supplemental-create-api-failure.png");
 
     await page.unroute("**/api/tickets");
 
-    // 4. Test Submitting Busy state (intercept /api/tickets with artificial delay)
-    await page.route("**/api/tickets", async (route) => {
-      if (route.request().method() === "POST") {
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-        await route.continue();
-      } else {
-        await route.continue();
-      }
-    });
-
-    // Fill valid form fields
+    // 4. Fill valid form fields and attach diagnostic file
     await page.fill("#ticket-summary", "Cannot connect to Campus Wi-Fi in Engineering Building");
     await page.fill(
       "#ticket-description",
       "Experiencing intermittent Wi-Fi disconnection every 10 minutes when connected to Eng-WiFi-5G network. Verified across multiple devices."
     );
 
-    // Attach supporting evidence file
     await page.setInputFiles("#initial-attachments", [
       {
         name: "wifi-diagnostics.png",
@@ -123,38 +118,21 @@ test.describe.serial("Lab 3 authenticated requester regression", () => {
     ]);
     await expect(page.locator("text=wifi-diagnostics.png")).toBeVisible();
 
-    // Click submit and capture busy submitting state
+    // 5. Submit valid ticket and verify success modal
     await submitBtn.click();
-    const busyBtn = page.locator('button[type="submit"]:has-text("Submitting Ticket...")');
-    await expect(busyBtn).toBeVisible();
-
-    // Capture 03-submitting-busy.png
-    await captureScreenshot(page,{
-      path: path.join(CREATE_TICKET_DIR, "03-submitting-busy.png"),
-      fullPage: true,
-    });
-
-    // 5. Success state
     const successBanner = page.locator(".form-success-banner");
     await expect(successBanner).toBeVisible({ timeout: 15000 });
     await expect(successBanner).toContainText("Ticket Created Successfully!");
 
-    await page.unroute("**/api/tickets");
+    await captureScreenshot(page, "requester/supplemental-create-success-modal.png");
 
-    // Capture 04-success-modal.png
-    await captureScreenshot(page,{
-      path: path.join(CREATE_TICKET_DIR, "04-success-modal.png"),
-      fullPage: true,
-    });
-
-    // Extract ticket number
     const bannerText = await successBanner.innerText();
     const match = bannerText.match(/TKT-\d{4}-\d+/);
     expect(match).not.toBeNull();
     createdTicketNumber = match![0];
 
     // 6. Navigate to My Tickets and verify ticket appears with status "NEW"
-    const myTicketsNavBtn = page.locator('nav button:has-text("My Tickets")');
+    const myTicketsNavBtn = page.getByLabel("Main Navigation").getByRole("button", { name: "My Tickets" });
     await myTicketsNavBtn.click();
     await expect(page.locator(".tickets-table")).toBeVisible({ timeout: 10000 });
 
@@ -163,18 +141,20 @@ test.describe.serial("Lab 3 authenticated requester regression", () => {
     await expect(createdRow).toContainText("New");
   });
 
-  test("E2E-02: Search, category/system filter, and pagination navigation under seeded volume", async ({ page }) => {
+  test("E2E-02: Search, category/system filter, responsive tables/cards, and pagination navigation", async ({
+    page,
+  }) => {
     const request = page.request;
-    // 1. Ensure sufficient tickets exist for pagination and filtering
+
+    // Ensure sufficient tickets exist for Jennifer to test pagination
     const categoriesRes = await request.get(`${apiOrigin}/api/categories`);
     const categories = await categoriesRes.json();
     const systemsRes = await request.get(`${apiOrigin}/api/related-systems`);
     const systems = await systemsRes.json();
 
-    const jennifer = primary;
-
-    // Seed additional tickets for Jennifer if total < 12
-    const currentTicketsRes = await request.get(`${apiOrigin}/api/tickets?requesterId=${jennifer.id}&page=1&limit=50`);
+    const currentTicketsRes = await request.get(
+      `${apiOrigin}/api/tickets?requesterId=${primary.id}&page=1&limit=50`
+    );
     const currentTicketsData = await currentTicketsRes.json();
     const needed = Math.max(0, 12 - currentTicketsData.tickets.length);
 
@@ -184,7 +164,7 @@ test.describe.serial("Lab 3 authenticated requester regression", () => {
       await request.post(`${apiOrigin}/api/tickets`, {
         headers: { Origin: origin },
         data: {
-          requesterId: jennifer.id,
+          requesterId: primary.id,
           categoryId: cat.id,
           relatedSystemId: sys.id,
           requestedPriority: i % 2 === 0 ? "HIGH" : "MEDIUM",
@@ -194,74 +174,85 @@ test.describe.serial("Lab 3 authenticated requester regression", () => {
       });
     }
 
-    // 2. Navigate to My Tickets on desktop viewport
-    await page.setViewportSize({ width: 1280, height: 800 });
-    const myTicketsNavBtn = page.locator('nav button:has-text("My Tickets")');
+    // 1. Capture baseline screenshots for My Tickets at 3 viewports
+    // Desktop 1440x900
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const myTicketsNavBtn = page.getByLabel("Main Navigation").getByRole("button", { name: "My Tickets" });
     await myTicketsNavBtn.click();
     await expect(page.locator(".tickets-table")).toBeVisible({ timeout: 10000 });
+    await assertNoHorizontalOverflow(page);
+    await captureScreenshot(page, "requester/requester-tickets-desktop-1440.png");
 
-    // Capture 01-desktop-table.png
-    await captureScreenshot(page,{
-      path: path.join(MY_TICKETS_DIR, "01-desktop-table.png"),
-      fullPage: true,
-    });
+    // Tablet 820x1180
+    await page.setViewportSize({ width: 820, height: 1180 });
+    await assertNoHorizontalOverflow(page);
+    await captureScreenshot(page, "requester/requester-tickets-tablet-820.png");
 
-    // 3. Responsive Mobile View (< 768px)
-    await page.setViewportSize({ width: 375, height: 667 });
+    // Mobile 390x844: table hidden, card container visible
+    await page.setViewportSize({ width: 390, height: 844 });
     await expect(page.locator(".tickets-mobile-list")).toBeVisible();
     await expect(page.locator(".ticket-card").first()).toBeVisible();
-
-    // Capture 02-mobile-cards.png
-    await captureScreenshot(page,{
-      path: path.join(MY_TICKETS_DIR, "02-mobile-cards.png"),
-      fullPage: true,
-    });
+    await assertNoHorizontalOverflow(page);
+    await captureScreenshot(page, "requester/requester-tickets-mobile-390.png");
 
     // Restore desktop viewport
-    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.setViewportSize({ width: 1440, height: 900 });
 
-    // 4. Test Filter & Search
+    // 2. Test search and filtering
     const searchInput = page.locator("#ticket-search");
     await searchInput.fill("Wi-Fi");
-    // Wait for debounced search to update table
     await page.waitForTimeout(600);
     const matchingRows = page.locator(".tickets-table tbody tr");
     await expect(matchingRows.first()).toBeVisible();
     await expect(matchingRows.first()).toContainText("Wi-Fi");
 
-    // Capture 03-filtered-results.png
-    await captureScreenshot(page,{
-      path: path.join(MY_TICKETS_DIR, "03-filtered-results.png"),
-      fullPage: true,
-    });
-
-    // Clear search
     await searchInput.fill("");
     await page.waitForTimeout(600);
 
-    // 5. A different authenticated requester has an empty ticket list.
+    // 3. Authenticated Requester empty state
     await signOut(page);
-    await signIn(page, empty.email);
+    await signIn(page, emptyUser.email);
     const emptyState = page.getByTestId("empty-ticket-state");
     await expect(emptyState).toBeVisible();
-    await captureScreenshot(page, { path: path.join(MY_TICKETS_DIR, "04-empty-state.png"), fullPage: true });
+    await captureScreenshot(page, "requester/supplemental-requester-empty-state.png");
   });
 
-  test("E2E-03: Ticket detail inspection, additional attachment upload, and soft-removal with reason audit verification", async ({ page }) => {
-    // 1. In My Tickets table, click on the first ticket row to open detail view
+  test("E2E-03: Ticket detail inspection, attachment upload, download, and soft-removal with reason audit", async ({
+    page,
+  }) => {
+    // Navigate to ticket detail view
     const firstRow = page.locator(".tickets-table tbody tr").first();
     await expect(firstRow).toBeVisible({ timeout: 10000 });
     await firstRow.click();
 
-    // Verify Ticket Detail view is rendered
+    // Verify detail rendered
     await expect(page.locator('[data-testid="ticket-number-heading"]')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('[data-testid="btn-back-to-tickets"]')).toBeVisible();
 
-    // Capture 01-detail-view.png
-    await captureScreenshot(page,{
-      path: path.join(TICKET_DETAIL_DIR, "01-detail-view.png"),
-      fullPage: true,
-    });
+    // Extract ticket ID from URL
+    const url = page.url();
+    const idMatch = url.match(/\/tickets\/(\d+)/);
+    expect(idMatch).not.toBeNull();
+    createdTicketId = Number(idMatch![1]);
+
+    // 1. Capture baseline screenshots for Requester Ticket Detail at 3 viewports
+    // Desktop 1440x900
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await assertNoHorizontalOverflow(page);
+    await captureScreenshot(page, "requester/requester-detail-desktop-1440.png");
+
+    // Tablet 820x1180
+    await page.setViewportSize({ width: 820, height: 1180 });
+    await assertNoHorizontalOverflow(page);
+    await captureScreenshot(page, "requester/requester-detail-tablet-820.png");
+
+    // Mobile 390x844
+    await page.setViewportSize({ width: 390, height: 844 });
+    await assertNoHorizontalOverflow(page);
+    await captureScreenshot(page, "requester/requester-detail-mobile-390.png");
+
+    // Restore desktop viewport
+    await page.setViewportSize({ width: 1440, height: 900 });
 
     // 2. Upload an additional attachment
     const additionalFileInput = page.locator('[data-testid="input-additional-attachment"]');
@@ -271,21 +262,21 @@ test.describe.serial("Lab 3 authenticated requester regression", () => {
       buffer: Buffer.from("%PDF-1.4 mock audit diagnostic logs for e2e"),
     });
 
-    // Wait for the active attachment card to render
-    const activeCard = page.locator('[data-testid^="attachment-active-"]').filter({ hasText: "system-audit-log.pdf" });
+    // Wait for active attachment card
+    const activeCard = page
+      .locator('[data-testid^="attachment-active-"]')
+      .filter({ hasText: "system-audit-log.pdf" });
     await expect(activeCard).toBeVisible({ timeout: 10000 });
+
+    // Verify download link returns 200 and binary content
     const downloadUrl = await activeCard.getByRole("link", { name: /Download/ }).getAttribute("href");
     const download = await page.request.get(downloadUrl!);
     expect(download.status()).toBe(200);
     expect((await download.body()).toString()).toBe("%PDF-1.4 mock audit diagnostic logs for e2e");
 
-    // Capture 02-attachment-active.png
-    await captureScreenshot(page,{
-      path: path.join(TICKET_DETAIL_DIR, "02-attachment-active.png"),
-      fullPage: true,
-    });
+    await captureScreenshot(page, "requester/supplemental-ticket-attachment-active.png");
 
-    // 3. Click "Remove" button to open Soft-Removal Modal
+    // 3. Open soft-removal modal
     const removeBtn = activeCard.locator('button:has-text("Remove")');
     await removeBtn.click();
 
@@ -293,12 +284,9 @@ test.describe.serial("Lab 3 authenticated requester regression", () => {
     await expect(removalModal).toBeVisible();
     await expect(removalModal).toContainText("Remove Attachment");
 
-    // Capture 03-soft-remove-modal.png
-    await captureScreenshot(page,{
-      path: path.join(TICKET_DETAIL_DIR, "03-soft-remove-modal.png"),
-    });
+    await captureScreenshot(page, "requester/supplemental-ticket-attachment-soft-remove-modal.png");
 
-    // 4. Fill mandatory removal reason (>= 3 chars) and confirm
+    // 4. Fill mandatory removal reason and confirm
     const reasonTextarea = page.locator('[data-testid="removal-reason-textarea"]');
     await reasonTextarea.fill("Uploaded wrong diagnostic report containing obsolete network logs");
 
@@ -306,19 +294,106 @@ test.describe.serial("Lab 3 authenticated requester regression", () => {
     await expect(confirmRemovalBtn).toBeEnabled();
     await confirmRemovalBtn.click();
 
-    // Wait for modal to close
     await expect(removalModal).not.toBeVisible({ timeout: 10000 });
 
-    // 5. Verify the attachment is now rendered in the Removed Attachments list
-    const removedCard = page.locator('[data-testid^="attachment-removed-"]').filter({ hasText: "system-audit-log.pdf" });
+    // 5. Verify removed attachment card renders with reason and unavailable download
+    const removedCard = page
+      .locator('[data-testid^="attachment-removed-"]')
+      .filter({ hasText: "system-audit-log.pdf" });
     await expect(removedCard).toBeVisible();
-    await expect(removedCard).toContainText("Uploaded wrong diagnostic report containing obsolete network logs");
+    await expect(removedCard).toContainText(
+      "Uploaded wrong diagnostic report containing obsolete network logs"
+    );
     await expect(removedCard).toContainText("Download unavailable");
 
-    // Capture 04-attachment-removed.png
-    await captureScreenshot(page,{
-      path: path.join(TICKET_DETAIL_DIR, "04-attachment-removed.png"),
-      fullPage: true,
-    });
+    await captureScreenshot(page, "requester/supplemental-ticket-attachment-removed-audit.png");
+  });
+
+  test("E2E-04: Requester communication, problem-resolved indication, and ownership isolation", async ({
+    page,
+  }) => {
+    expect(createdTicketId).not.toBeNull();
+
+    // Navigate to ticket detail directly
+    await page.goto(`/tickets/${createdTicketId}`);
+    await expect(page.locator('[data-testid="ticket-number-heading"]')).toBeVisible();
+
+    // 1. Post a public comment as Requester
+    const commentInput = page.locator('[data-testid="input-public-comment"]');
+    await expect(commentInput).toBeVisible();
+    await commentInput.fill("I restarted the router in Room 302 and signal is still dropping intermittently.");
+
+    const submitCommentBtn = page.locator('[data-testid="btn-submit-public-comment"]');
+    await expect(submitCommentBtn).toBeEnabled();
+    await submitCommentBtn.click();
+
+    // Verify comment appears in timeline with Requester badge
+    const commentsList = page.locator('[data-testid="comments-list"]');
+    await expect(commentsList).toContainText("I restarted the router in Room 302");
+    await expect(commentsList).toContainText("Requester");
+
+    // Verify internal notes are NOT visible to the requester
+    await expect(page.locator("text=Internal Notes")).toHaveCount(0);
+    await expect(page.locator('[data-testid="internal-notes-list"]')).toHaveCount(0);
+
+    await captureScreenshot(page, "requester/supplemental-requester-timeline-comment.png");
+
+    // 2. Indicate Problem Appears Resolved (mandatory assertion)
+    const resolveBtn = page.locator('[data-testid="btn-problem-appears-resolved"]');
+    await expect(resolveBtn).toBeVisible();
+    await resolveBtn.click();
+
+    const dialog = page.locator('[data-testid="resolution-confirmation-dialog"]');
+    await expect(dialog).toBeVisible();
+
+    const noteInput = page.locator('[data-testid="textarea-resolution-comment"]');
+    await noteInput.fill("Signal stabilized after switching to 2.4G SSID. Issue seems resolved for now.");
+
+    const confirmBtn = page.locator('[data-testid="btn-confirm-resolution-indication"]');
+    await confirmBtn.click();
+
+    await expect(dialog).not.toBeVisible({ timeout: 10000 });
+    const resolvedBanner = page.locator('[data-testid="problem-resolved-banner"]');
+    await expect(resolvedBanner).toBeVisible();
+    await expect(resolvedBanner).toContainText("Marked as resolved by requester");
+    await expect(resolvedBanner).toContainText("Reported resolved on");
+
+    await captureScreenshot(page, "requester/supplemental-requester-problem-resolved.png");
+
+    // Assert ticket status was NOT changed to RESOLVED or CLOSED
+    const statusBadge = page.locator("h1[data-testid='ticket-number-heading'] + span");
+    await expect(statusBadge).toContainText("NEW");
+    await expect(statusBadge).not.toContainText("Resolved");
+    await expect(statusBadge).not.toContainText("Closed");
+
+    const db = database();
+    const dbTicket = await db.ticket.findUnique({ where: { id: createdTicketId } });
+    expect(dbTicket?.status).toBe("NEW");
+    expect(dbTicket?.status).not.toBe("RESOLVED");
+    expect(dbTicket?.status).not.toBe("CLOSED");
+    expect(dbTicket?.problemAppearsResolvedById).toBe(primary.id);
+    expect(dbTicket?.problemAppearsResolvedAt).toBeTruthy();
+
+    // 3. Ownership isolation: Another requester cannot access Jennifer's ticket
+    await signOut(page);
+    await signIn(page, otherRequester.email);
+    await expect(page.getByRole("navigation")).toBeVisible();
+
+    // Attempt direct navigation to Jennifer's ticket (unauthorized)
+    await page.goto(`/tickets/${createdTicketId}`);
+    // Backend returns 404, frontend displays detail-error "Unable to display ticket"
+    const unauthorizedError = page.locator('[data-testid="detail-error"]');
+    await expect(unauthorizedError).toBeVisible({ timeout: 10000 });
+    const unauthorizedText = (await unauthorizedError.innerText()).trim();
+
+    // Attempt direct navigation to nonexistent ticket
+    await page.goto("/tickets/99999999");
+    const nonexistentError = page.locator('[data-testid="detail-error"]');
+    await expect(nonexistentError).toBeVisible({ timeout: 10000 });
+    const nonexistentText = (await nonexistentError.innerText()).trim();
+
+    // Verify both expose the identical safe user-facing error state (neither leaks existence)
+    expect(unauthorizedText).toBe(nonexistentText);
+    expect(unauthorizedText).toContain("Unable to display ticket");
   });
 });

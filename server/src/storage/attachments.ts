@@ -1,8 +1,10 @@
 import fs from "fs";
 import path from "path";
 
-// Keep the existing cwd-relative storage location for the Lab 2 API.
-export const uploadDirectory = path.resolve(process.cwd(), "uploads");
+// Keep the existing cwd-relative storage location for the Lab 2 API unless overridden by UPLOADS_DIR.
+export const uploadDirectory = process.env.UPLOADS_DIR
+  ? path.resolve(process.env.UPLOADS_DIR)
+  : path.resolve(process.cwd(), "uploads");
 if (!fs.existsSync(uploadDirectory)) {
   fs.mkdirSync(uploadDirectory, { recursive: true });
 }

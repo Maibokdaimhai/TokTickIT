@@ -15,7 +15,7 @@
 - **Typed Client Error**: `fetchStaffTickets` preserves HTTP status in a typed error (`ApiClientError` with `status: number`, `message: string`, `code?: string`). This enables `StaffTicketQueue` to reliably distinguish HTTP 403 forbidden responses from network/500 failures.
 - **AbortSignal & Cancellation**: Pass `AbortController.signal` into `fetchStaffTickets`; silently ignore `AbortError` / `err?.name === "AbortError"` so cancellation does not display an error banner.
 - **Package.json Protection**: Never edit or stage the existing user-owned `client/package.json` change (`"@testing-library/user-egvent": "^14.5.2"`). Exclude it strictly from all commits.
-- **Database Protection**: Never migrate or reset the normal development database; use strictly `postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914` for all tests and development verification.
+- **Database Protection**: Never migrate or reset the normal development database; use strictly `toktickit_lab3_auth_final_20260914` for all tests and development verification.
 - **No New Libraries**: Use existing Zen Green styles, design tokens, and dependencies—no new UI or URL router libraries.
 - **Pagination Metadata**: Explicitly return `pagination: { page, limit, totalItems, totalPages }` with `totalPages: 0` when `totalItems === 0`.
 - **ISO Date Serialization**: `createdAt` and `updatedAt` are strictly serialized as ISO 8601 strings.
@@ -101,7 +101,7 @@ Cover:
 10. Eligible owners endpoint: role auth, active staff/admin only, sorted by case-insensitive name then id, safe fields.
 
 - [ ] **Step 2: Run backend test suite**
-Run: `DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test`
+Run: `DATABASE_URL="<runtime disposable database URL>" npm --prefix server test`
 Expected: PASS all tests.
 
 ---
@@ -196,7 +196,7 @@ Update §2 status for API-07 and UI-04, and update planned file for API-17 to `s
 ### Task 8: Full Verification, Git Hygiene, Commit & Push
 
 - [ ] **Step 1: Run full server test suite with disposable database**
-Run: `DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test`
+Run: `DATABASE_URL="<runtime disposable database URL>" npm --prefix server test`
 Expected: All backend tests pass.
 
 - [ ] **Step 2: Run full client test suite**

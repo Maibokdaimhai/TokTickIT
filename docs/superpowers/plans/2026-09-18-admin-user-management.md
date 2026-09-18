@@ -23,7 +23,7 @@
 - **Git Actions:** Do not commit or push anything. GitHub browser work belongs to the user.
 - **Scope Boundary:** Keep Issue #31 strictly separated from Issue #32 E2E/evidence work.
 - **Database Safety:** Use only the disposable database for integration verification:
-  `postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914`.
+  `toktickit_lab3_auth_final_20260914`.
   Never migrate or reset the normal development database.
 - **Evidence Integrity:** Do not claim tests passed unless they were actually executed successfully with passing outputs.
 - **No User Deletion:** Never create `DELETE` endpoints for users. Users are deactivated (`isActive: false`), never deleted.
@@ -614,7 +614,7 @@ export async function updateOwner(ticketIdParam: unknown, body: unknown, _actor:
 
 - [ ] **Step 2: Run staff ticket detail tests to verify no regressions**
 
-Run: `DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test -- tests/lab-03/staff-ticket-detail.api.test.ts --run`
+Run: `DATABASE_URL="<runtime disposable database URL>" npm --prefix server test -- tests/lab-03/staff-ticket-detail.api.test.ts --run`
 Expected: PASS (22/22 passed).
 
 ---
@@ -1050,12 +1050,12 @@ Cover all ACs, business rules, and concurrency edge cases:
 
 - [ ] **Step 2: Run integration tests against disposable database**
 
-Run: `DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test -- tests/lab-03/users-admin.api.test.ts --run`
+Run: `DATABASE_URL="<runtime disposable database URL>" npm --prefix server test -- tests/lab-03/users-admin.api.test.ts --run`
 Expected: PASS (all tests pass).
 
 - [ ] **Step 3: Run complete backend test suite against disposable database**
 
-Run: `DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test -- --run`
+Run: `DATABASE_URL="<runtime disposable database URL>" npm --prefix server test -- --run`
 Expected: PASS (all test files pass).
 
 ---
@@ -1247,7 +1247,7 @@ Expected: PASS (zero TypeScript errors, successful bundle build under `dist/`).
 
 Run:
 ```bash
-DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914" npm --prefix server test -- --run
+DATABASE_URL="<runtime disposable database URL>" npm --prefix server test -- --run
 ```
 Expected: PASS (all test files pass).
 
