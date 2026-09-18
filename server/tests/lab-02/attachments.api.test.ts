@@ -252,7 +252,7 @@ describe("Attachments Lifecycle & Soft Removal API (Lab 2)", () => {
 
     expect(res.status).toBe(403);
     expect(res.body.error).toBeDefined();
-    expect(res.body.error.code).toBe("FORBIDDEN");
+    expect(res.body.error.code).toBe("ATTACHMENT_REMOVED");
     expect(res.body.error.message).toContain("Cannot download a removed attachment");
   });
 

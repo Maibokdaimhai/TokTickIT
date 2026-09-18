@@ -28,3 +28,13 @@ export function parseAttachmentIds(ticketId: unknown, attachmentId: unknown) {
     attachmentId: requireIntegerId(attachmentId, "Attachment ID parameter must be a valid positive integer"),
   };
 }
+
+export function parseExpectedVersion(value: unknown): number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0 || value > 2_147_483_647) {
+    throw new ApiError(400, {
+      code: "VALIDATION_ERROR",
+      message: "expectedVersion must be a nonnegative integer within 0 and 2147483647",
+    });
+  }
+  return value;
+}

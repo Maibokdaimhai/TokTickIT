@@ -26,43 +26,92 @@ function assertOwnTicket(requesterId: number, actorId: number) {
   }
 }
 
+function formatAttachmentMetadata(attachment: {
+  id: number;
+  ticketId: number;
+  fileName: string;
+  originalName: string;
+  mimeType: string;
+  fileSize: number;
+  isRemoved: boolean;
+  removalReason: string | null;
+  removedAt: Date | null;
+  createdAt: Date;
+}) {
+  return {
+    id: attachment.id,
+    ticketId: attachment.ticketId,
+    fileName: attachment.fileName,
+    originalName: attachment.originalName,
+    mimeType: attachment.mimeType,
+    fileSize: attachment.fileSize,
+    isRemoved: attachment.isRemoved,
+    removalReason: attachment.removalReason,
+    removedAt: attachment.removedAt ? attachment.removedAt.toISOString() : null,
+    createdAt: attachment.createdAt.toISOString(),
+    downloadUrl: attachment.isRemoved ? null : `/api/tickets/${attachment.ticketId}/attachments/${attachment.id}`,
+  };
+}
+
 export async function uploadAttachment(input: { ticketId: unknown }, body: Record<string, unknown>, actorId: number, file: UploadedFile | undefined) {
   try {
     const prisma = getPrisma();
     const ticketId = parseTicketId(input.ticketId);
     validateUploadBody(body);
     validateUpload(file);
-    // Check Ticket Existence
-    const ticket = await prisma.ticket.findUnique({
-      where: { id: ticketId },
-    });
-    if (!ticket) {
-      throw attachmentResourceNotFound();
-    }
-    // BR-05 Ownership isolation check
-    assertOwnTicket(ticket.requesterId, actorId);
-    // BR-08 Enforce max 5 active attachments limit
-    const activeCount = await prisma.attachment.count({
-      where: { ticketId, isRemoved: false },
-    });
-    if (activeCount >= 5) {
-      throw new ApiError(400, {
-        code: "ATTACHMENT_LIMIT_EXCEEDED",
-        message: "Ticket already has the maximum of 5 active attachments",
+
+    const runInTx = typeof prisma.$transaction === "function"
+      ? (fn: (tx: any) => Promise<any>) => prisma.$transaction(fn)
+      : (fn: (tx: any) => Promise<any>) => fn(prisma);
+
+    return await runInTx(async (tx) => {
+      // Row-level lock coordination (BR-24, BR-29)
+      if (typeof tx.$executeRaw === "function") {
+        await tx.$executeRaw`SELECT id FROM "Ticket" WHERE id = ${ticketId} FOR UPDATE`;
+      }
+
+      // Check Ticket Existence
+      const ticket = await tx.ticket.findUnique({
+        where: { id: ticketId },
       });
-    }
-    // Save attachment in database
-    const attachment = await prisma.attachment.create({
-      data: {
-        ticketId,
-        fileName: file.filename,
-        originalName: path.basename(decodeFilename(file.originalname)),
-        mimeType: file.mimetype,
-        fileSize: file.size,
-        filePath: file.path,
-      },
+      if (!ticket) {
+        throw attachmentResourceNotFound();
+      }
+      // BR-05 Ownership isolation check
+      assertOwnTicket(ticket.requesterId, actorId);
+      // BR-08 Enforce max 5 active attachments limit
+      const activeCount = await tx.attachment.count({
+        where: { ticketId, isRemoved: false },
+      });
+      if (activeCount >= 5) {
+        throw new ApiError(400, {
+          code: "ATTACHMENT_LIMIT_EXCEEDED",
+          message: "Ticket already has the maximum of 5 active attachments",
+        });
+      }
+      // Save attachment in database
+      const attachment = await tx.attachment.create({
+        data: {
+          ticketId,
+          fileName: file.filename,
+          originalName: path.basename(decodeFilename(file.originalname)),
+          mimeType: file.mimetype,
+          fileSize: file.size,
+          filePath: file.path,
+        },
+      });
+
+      // Increment ticket version and update updatedAt (BR-29)
+      await tx.ticket.update({
+        where: { id: ticketId },
+        data: {
+          version: { increment: 1 },
+          updatedAt: new Date(),
+        },
+      });
+
+      return formatAttachmentMetadata(attachment);
     });
-    return attachment;
   } catch (error) {
     removeUploadedFile(file?.path);
     throw error;
@@ -87,10 +136,10 @@ export async function downloadAttachment(input: { ticketId: unknown; attachmentI
   if (!attachment) {
     throw attachmentResourceNotFound();
   }
-  // BR-09 / AC-07 Block download of soft-removed attachments
+  // BR-09 / AC-07 Block download of soft-removed attachments with ATTACHMENT_REMOVED code
   if (attachment.isRemoved) {
     throw new ApiError(403, {
-      code: "FORBIDDEN",
+      code: "ATTACHMENT_REMOVED",
       message: "Cannot download a removed attachment",
     });
   }
@@ -117,57 +166,62 @@ export async function getAttachmentMetadata(input: { ticketId: unknown; attachme
   if (!attachment) {
     throw attachmentResourceNotFound();
   }
-  return {
-    id: attachment.id,
-    ticketId: attachment.ticketId,
-    originalName: attachment.originalName,
-    mimeType: attachment.mimeType,
-    fileSize: attachment.fileSize,
-    isRemoved: attachment.isRemoved,
-    removalReason: attachment.removalReason,
-    removedAt: attachment.removedAt ? attachment.removedAt.toISOString() : null,
-    createdAt: attachment.createdAt.toISOString(),
-  };
+  return formatAttachmentMetadata(attachment);
 }
 
 export async function removeAttachment(input: { ticketId: unknown; attachmentId: unknown }, body: Record<string, unknown>, actorId: number) {
   const prisma = getPrisma();
   const { ticketId, attachmentId } = parseAttachmentIds(input.ticketId, input.attachmentId);
   const trimmedReason = parseRemovalReason(body);
-  const ticket = await prisma.ticket.findUnique({
-    where: { id: ticketId },
-  });
-  if (!ticket) {
-    throw attachmentResourceNotFound();
-  }
-  // BR-05 Ownership isolation
-  assertOwnTicket(ticket.requesterId, actorId);
-  const attachment = await prisma.attachment.findFirst({
-    where: { id: attachmentId, ticketId },
-  });
-  if (!attachment) {
-    throw attachmentResourceNotFound();
-  }
-  if (attachment.isRemoved) {
-    throw new ApiError(400, {
-      code: "BAD_REQUEST",
-      message: "Attachment is already removed",
+
+  const runInTx = typeof prisma.$transaction === "function"
+    ? (fn: (tx: any) => Promise<any>) => prisma.$transaction(fn)
+    : (fn: (tx: any) => Promise<any>) => fn(prisma);
+
+  return await runInTx(async (tx) => {
+    // Row-level lock coordination (BR-24, BR-29)
+    if (typeof tx.$executeRaw === "function") {
+      await tx.$executeRaw`SELECT id FROM "Ticket" WHERE id = ${ticketId} FOR UPDATE`;
+    }
+
+    const ticket = await tx.ticket.findUnique({
+      where: { id: ticketId },
     });
-  }
-  const updated = await prisma.attachment.update({
-    where: { id: attachmentId },
-    data: {
-      isRemoved: true,
-      removalReason: trimmedReason,
-      removedAt: new Date(),
-    },
+    if (!ticket) {
+      throw attachmentResourceNotFound();
+    }
+    // BR-05 Ownership isolation
+    assertOwnTicket(ticket.requesterId, actorId);
+    const attachment = await tx.attachment.findFirst({
+      where: { id: attachmentId, ticketId },
+    });
+    if (!attachment) {
+      throw attachmentResourceNotFound();
+    }
+    if (attachment.isRemoved) {
+      throw new ApiError(400, {
+        code: "BAD_REQUEST",
+        message: "Attachment is already removed",
+      });
+    }
+    const updated = await tx.attachment.update({
+      where: { id: attachmentId },
+      data: {
+        isRemoved: true,
+        removalReason: trimmedReason,
+        removedAt: new Date(),
+      },
+    });
+
+    // Increment ticket version and update updatedAt (BR-29)
+    await tx.ticket.update({
+      where: { id: ticketId },
+      data: {
+        version: { increment: 1 },
+        updatedAt: new Date(),
+      },
+    });
+
+    return formatAttachmentMetadata(updated);
   });
-  return {
-    id: updated.id,
-    ticketId: updated.ticketId,
-    originalName: updated.originalName,
-    isRemoved: updated.isRemoved,
-    removalReason: updated.removalReason,
-    removedAt: updated.removedAt ? updated.removedAt.toISOString() : null,
-  };
 }

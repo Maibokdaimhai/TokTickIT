@@ -133,6 +133,8 @@ export async function listTickets(query: Record<string, unknown>, actorId: numbe
   };
 }
 
+import { formatTicketDetail } from "../utils/ticket-formatter.js";
+
 export async function getTicket(input: { ticketId: unknown }, actorId: number, query: Record<string, unknown> = {}) {
   validateLegacyRequesterQuery(query);
   const ticketId = parseTicketId(input.ticketId);
@@ -142,6 +144,9 @@ export async function getTicket(input: { ticketId: unknown }, actorId: number, q
     include: {
       requester: {
         select: { id: true, name: true, email: true, role: true, isActive: true },
+      },
+      owner: {
+        select: { id: true, name: true, email: true, role: true },
       },
       category: {
         select: { id: true, name: true },
@@ -164,6 +169,12 @@ export async function getTicket(input: { ticketId: unknown }, actorId: number, q
           createdAt: true,
         },
       },
+      publicComments: {
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+        include: {
+          author: { select: { id: true, name: true, role: true } },
+        },
+      },
     },
   });
   if (!ticket) {
@@ -173,33 +184,7 @@ export async function getTicket(input: { ticketId: unknown }, actorId: number, q
   if (ticket.requesterId !== actorId) {
     throw new ApiError(404, { code: "NOT_FOUND", message: "Ticket not found" });
   }
-  return {
-    id: ticket.id,
-    ticketNumber: ticket.ticketNumber,
-    requesterId: ticket.requesterId,
-    requester: ticket.requester,
-    category: ticket.category,
-    relatedSystem: ticket.relatedSystem,
-    requestedPriority: ticket.requestedPriority,
-    itPriority: ticket.itPriority,
-    status: ticket.status,
-    summary: ticket.summary,
-    description: ticket.description,
-    createdAt: ticket.createdAt.toISOString(),
-    updatedAt: ticket.updatedAt.toISOString(),
-    attachments: ticket.attachments.map((att) => ({
-      id: att.id,
-      ticketId: att.ticketId,
-      fileName: att.fileName,
-      originalName: att.originalName,
-      mimeType: att.mimeType,
-      fileSize: att.fileSize,
-      isRemoved: att.isRemoved,
-      removalReason: att.removalReason,
-      removedAt: att.removedAt ? att.removedAt.toISOString() : null,
-      createdAt: att.createdAt.toISOString(),
-    })),
-  };
+  return formatTicketDetail(ticket);
 }
 
 export async function rollbackTicket(input: { ticketId: unknown }, actorId: number, query: Record<string, unknown> = {}) {
