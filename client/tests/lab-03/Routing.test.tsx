@@ -165,6 +165,60 @@ describe("Routing & Direct Path Navigation Tests", () => {
     expect(window.location.pathname).toBe("/login");
   });
 
+  it.each([
+    {
+      role: "REQUESTER",
+      initialProtectedPath: "/staff/tickets",
+      session: requesterSession,
+      expectedHome: "/my-tickets",
+      expectedHeading: /My Tickets/i,
+    },
+    {
+      role: "IT_STAFF",
+      initialProtectedPath: "/admin/users",
+      session: staffSession,
+      expectedHome: "/staff/tickets",
+      expectedHeading: /IT Staff Ticket Queue/i,
+    },
+    {
+      role: "ADMINISTRATOR",
+      initialProtectedPath: "/staff/tickets/201",
+      session: adminSession,
+      expectedHome: "/admin/users",
+      expectedHeading: /User Management/i,
+    },
+  ])(
+    "protected URL ($initialProtectedPath) redirect synchronizes route state so login as $role routes to $expectedHome",
+    async ({ initialProtectedPath, session: loginSession, expectedHome, expectedHeading }) => {
+      window.history.pushState(null, "", initialProtectedPath);
+      vi.mocked(api.getSession).mockRejectedValue(new api.AuthError("Unauthorized", 401));
+      vi.mocked(api.login).mockResolvedValue(loginSession);
+
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByRole("heading", { name: /sign in/i })).toBeInTheDocument();
+      });
+      expect(window.location.pathname).toBe("/login");
+
+      // Submit login
+      fireEvent.change(screen.getByLabelText(/Email/i), {
+        target: { value: loginSession.user.email },
+      });
+      fireEvent.change(screen.getByLabelText(/^Password/i), {
+        target: { value: "ValidPassword1!" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /Sign in/i }));
+
+      // Must route to correct role home with synchronized URL and content
+      await waitFor(() => {
+        expect(window.location.pathname).toBe(expectedHome);
+      });
+      expect(screen.getByRole("heading", { name: expectedHeading })).toBeInTheDocument();
+      expect(screen.queryByTestId("route-forbidden")).not.toBeInTheDocument();
+    }
+  );
+
   it("authenticated IT Staff visiting /login routes to permitted home /staff/tickets", async () => {
     window.history.pushState(null, "", "/login");
     vi.mocked(api.getSession).mockResolvedValue(staffSession);

@@ -368,10 +368,10 @@ Executed on 2026-09-17 on `feature/lab3-staff-ticket-operations`, based on commi
 
 | Verification | Result |
 | --- | --- |
-| Complete client test suite | 90/90 passed in 11 files |
+| Complete client test suite | 93/93 passed in 11 files |
 | Focused staff ticket detail UI (`StaffTicketDetail.test.tsx`) | 18/18 passed |
 | Focused requester ticket detail UI (`RequesterTicketDetail.test.tsx`) | 7/7 passed |
-| Focused direct path routing & guards (`Routing.test.tsx`) | 12/12 passed |
+| Focused direct path routing & guards (`Routing.test.tsx`) | 15/15 passed |
 | Staff ticket queue integration & state preservation (`StaffTicketQueue.test.tsx`) | 17/17 passed |
 | Server unit policy & validator tests (`ticket-policy.test.ts`, `backend-services.test.ts`) | 22/22 passed |
 | Server auth unit tests (`password.test.ts`, `session.test.ts`) | 14/14 passed |

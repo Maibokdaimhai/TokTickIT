@@ -356,12 +356,28 @@ function SessionGate() {
   }, []);
 
   useEffect(() => {
-    if (!loading && session && !session.mustChangePassword) {
-      if (pathname === "/" || pathname === "/login") {
-        const home = getHomePath();
-        window.history.replaceState(null, "", home);
-        setPathname(home);
+    if (loading) return;
+
+    if (!session) {
+      if (pathname !== "/login") {
+        window.history.replaceState(null, "", "/login");
+        setPathname("/login");
       }
+      return;
+    }
+
+    if (session.mustChangePassword) {
+      if (pathname !== "/change-password") {
+        window.history.replaceState(null, "", "/change-password");
+        setPathname("/change-password");
+      }
+      return;
+    }
+
+    if (pathname === "/" || pathname === "/login") {
+      const home = getHomePath();
+      window.history.replaceState(null, "", home);
+      setPathname(home);
     }
   }, [loading, session, pathname]);
 
@@ -379,16 +395,10 @@ function SessionGate() {
   }
 
   if (!session) {
-    if (pathname !== "/login") {
-      window.history.replaceState(null, "", "/login");
-    }
     return <AuthPage />;
   }
 
   if (session.mustChangePassword) {
-    if (pathname !== "/change-password") {
-      window.history.replaceState(null, "", "/change-password");
-    }
     return (
       <AuthPage
         change
