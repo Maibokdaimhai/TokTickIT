@@ -107,16 +107,16 @@ Controls: search; category, status, Requested Priority, IT Priority, and owner f
 
 ## 10. Visual Verification Checklist
 
-- [ ] Zen Green tokens and typography match Lab 2.
-- [ ] Authenticated name and role are clear at every breakpoint.
-- [ ] Role navigation exposes no unauthorized destination.
-- [ ] Status, Requested Priority, IT Priority, and role badges include text labels.
-- [ ] Public Comments and Internal Notes cannot be visually confused.
-- [ ] Editable and read-only values are distinct.
-- [ ] Validation is adjacent and programmatically associated.
-- [ ] Loading, success, empty, no-results, forbidden, conflict, and failure states are readable.
-- [ ] Keyboard focus, dialog focus handling, labels, and touch targets pass inspection.
-- [ ] Desktop, tablet, and mobile have no clipping, overlap, or unintended horizontal scrolling.
+- [x] Zen Green tokens and typography match Lab 2.
+- [x] Authenticated name and role are clear at every breakpoint.
+- [x] Role navigation exposes no unauthorized destination.
+- [x] Status, Requested Priority, IT Priority, and role badges include text labels.
+- [x] Public Comments and Internal Notes cannot be visually confused.
+- [x] Editable and read-only values are distinct.
+- [x] Validation is adjacent and programmatically associated.
+- [x] Loading, success, empty, no-results, forbidden, conflict, and failure states are readable.
+- [x] Keyboard focus, dialog focus handling, labels, and touch targets pass inspection.
+- [x] Desktop, tablet, and mobile have no clipping, overlap, or unintended horizontal scrolling.
 
 ## 11. Screen Modes, Navigation, and Failures
 
@@ -144,3 +144,44 @@ Dialogs move focus inside, trap Tab, restore the trigger on close, and support E
 Under artifacts/lab-03/screenshots/, capture authentication/, requester/, staff-queue/, staff-ticket-detail/, and user-management/. For each major screen capture desktop (1440x900), tablet (820x1180), and mobile (390x844). Use descriptive names such as staff-queue/desktop-populated.png and authentication/mobile-password-validation.png.
 
 Additional state evidence includes invalid/inactive/busy login, mandatory change, logout rejection; queue filtered/no-results/empty/failure; claim/reassign/status confirmation/conflict; public/private note distinction and forbidden API response; active/removed attachments; requester resolution indication; user creation/duplicate/reset/self-deactivation/last-admin safeguards and safe failures. Record browser/viewport, tested commit, scenario and result alongside evidence in tests.md. Do not mark the visual checklist complete until the screenshots and keyboard inspection exist.
+
+## 13. Responsive and Visual Evidence Index
+
+All baseline and supplemental state evidence screenshots are stored under `artifacts/lab-03/screenshots/` and verified via automated Playwright tests (`e2e/lab-03/responsive-accessibility.spec.ts`, `authentication.spec.ts`, `staff-ticket-flow.spec.ts`, `user-administration.spec.ts`, and `requester-regression.spec.ts`).
+
+### Baseline Responsive Screenshots (8 Screens × 3 Viewports)
+
+| Screen | Desktop (1440×900) | Tablet (820×1180) | Mobile (390×844) | Verification Status |
+|---|---|---|---|---|
+| **Login** | `authentication/login-desktop-1440.png` | `authentication/login-tablet-820.png` | `authentication/login-mobile-390.png` | Passed (no clipping, touch targets >= 44px) |
+| **Change Password** | `authentication/change-password-desktop-1440.png` | `authentication/change-password-tablet-820.png` | `authentication/change-password-mobile-390.png` | Passed (form centered, rule hints legible) |
+| **Requester Ticket List** | `requester/requester-tickets-desktop-1440.png` | `requester/requester-tickets-tablet-820.png` | `requester/requester-tickets-mobile-390.png` | Passed (responsive table/card layout) |
+| **Create Ticket** | `requester/create-ticket-desktop-1440.png` | `requester/create-ticket-tablet-820.png` | `requester/create-ticket-mobile-390.png` | Passed (field layout adapts, file dropzone fits) |
+| **Requester Ticket Detail** | `requester/requester-detail-desktop-1440.png` | `requester/requester-detail-tablet-820.png` | `requester/requester-detail-mobile-390.png` | Passed (metadata sidebar stacks cleanly) |
+| **Staff Ticket Queue** | `staff-queue/staff-queue-desktop-1440.png` | `staff-queue/staff-queue-tablet-820.png` | `staff-queue/staff-queue-mobile-390.png` | Passed (query bar wraps, mobile card layout) |
+| **Staff Ticket Detail** | `staff-ticket-detail/staff-detail-desktop-1440.png` | `staff-ticket-detail/staff-detail-tablet-820.png` | `staff-ticket-detail/staff-detail-mobile-390.png` | Passed (ops panels stack cleanly, Next Status and Update Status fit within 390px with no clipping, touch targets >= 44px) |
+| **User Management** | `user-management/admin-users-desktop-1440.png` | `user-management/admin-users-tablet-820.png` | `user-management/admin-users-mobile-390.png` | Passed (filters, action modals, table to cards) |
+
+### Supplemental State & Interaction Evidence
+
+| State / Interaction Scenario | Artifact Path | Notes |
+|---|---|---|
+| Invalid login credentials error | `authentication/supplemental-auth-login-invalid.png` | Accessible inline error alert, credentials wiped |
+| Mandatory first-login password change | `authentication/supplemental-auth-mandatory-password.png` | Navigation blocked, password rules indicated |
+| Create ticket validation errors | `requester/supplemental-create-validation-errors.png` | Required field indicators and summary alert |
+| Create ticket API submission failure | `requester/supplemental-create-api-failure.png` | Retained draft content, retry callout |
+| Create ticket success modal | `requester/supplemental-create-success-modal.png` | Ticket number feedback with navigation link |
+| Requester tickets empty state | `requester/supplemental-requester-empty-state.png` | Clear empty callout with Create Ticket CTA |
+| Requester timeline public comment | `requester/supplemental-requester-timeline-comment.png` | Distinct author badge, formatted timestamp |
+| Requester problem appears resolved | `requester/supplemental-requester-problem-resolved.png` | Timestamped indication, one-time action disabled |
+| Active attachment card with download link | `requester/supplemental-ticket-attachment-active.png` | MIME badge, file size, secure download button |
+| Attachment soft-removal confirm modal | `requester/supplemental-ticket-attachment-soft-remove-modal.png` | Focus trapped, destructive button styled |
+| Soft-removed attachment audit record | `requester/supplemental-ticket-attachment-removed-audit.png` | Non-downloadable, remover identity recorded |
+| Staff queue filtered no-results state | `staff-queue/supplemental-staff-filtered-no-results.png` | Friendly zero-match alert with filter reset |
+| Staff ticket claimed/assigned state | `staff-ticket-detail/supplemental-staff-assigned-state.png` | Owner pill updated, eligible owner dropdown |
+| Staff ticket status transition confirm modal | `staff-ticket-detail/supplemental-staff-status-transition-modal.png` | Legal transition options, named confirmation |
+| Staff ticket concurrency conflict banner | `staff-ticket-detail/supplemental-staff-conflict-modal.png` | 409 conflict alert, reload CTA without data loss |
+| Staff ticket internal note distinction | `staff-ticket-detail/supplemental-staff-internal-note.png` | Amber callout styling, private visibility badge |
+| Admin create user dialog | `user-management/supplemental-admin-create-user-modal.png` | Role selection, password requirements displayed |
+| Admin reset initial password dialog | `user-management/supplemental-admin-reset-password-modal.png` | Matched confirmation, forced rotation notice |
+| Admin self-deactivation disabled | `user-management/supplemental-admin-self-deactivation-disabled.png` | Toggle disabled with descriptive helper tooltip |

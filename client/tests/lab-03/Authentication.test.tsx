@@ -9,9 +9,20 @@ vi.mock("../../src/api.js", async original => ({
   getSession: vi.fn(), login: vi.fn(), logout: vi.fn(), changePassword: vi.fn(),
   fetchCategories: vi.fn().mockResolvedValue([]), fetchRelatedSystems: vi.fn().mockResolvedValue([]),
   fetchMyTickets: vi.fn().mockResolvedValue({ tickets: [], pagination: { page: 1, limit: 10, totalItems: 0, totalPages: 0 } }),
+  fetchStaffTickets: vi.fn().mockResolvedValue({ tickets: [], pagination: { page: 1, limit: 10, totalItems: 0, totalPages: 0 } }),
+  fetchAdminUsers: vi.fn().mockResolvedValue({ users: [], pagination: { page: 1, limit: 10, totalItems: 0, totalPages: 0 } }),
+  fetchEligibleOwners: vi.fn().mockResolvedValue({ owners: [] }),
 }));
 const session: AuthResult = { user: { id: 1, name: "Jennifer Anderson", email: "jennifer@example.com", role: "REQUESTER", isActive: true }, mustChangePassword: false };
-beforeEach(() => { vi.clearAllMocks(); localStorage.clear(); vi.mocked(api.getSession).mockRejectedValue(new api.AuthError("Sign in", 401)); vi.mocked(api.login).mockResolvedValue(session); vi.mocked(api.logout).mockResolvedValue(); });
+beforeEach(() => {
+  vi.clearAllMocks();
+  localStorage.clear();
+  window.history.replaceState(null, "", "/");
+  globalThis.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({}), { status: 200 }));
+  vi.mocked(api.getSession).mockRejectedValue(new api.AuthError("Sign in", 401));
+  vi.mocked(api.login).mockResolvedValue(session);
+  vi.mocked(api.logout).mockResolvedValue();
+});
 async function loginForm() {
   render(<App />); await screen.findByRole("heading", { name: "Sign in to TokTickIT" });
   fireEvent.change(screen.getByLabelText("Email"), { target: { value: session.user.email } });

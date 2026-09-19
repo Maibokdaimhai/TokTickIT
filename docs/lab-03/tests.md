@@ -54,14 +54,14 @@ Status: Plan with per-PR implementation evidence. Issue #27 results are recorded
 | UI-09 | Component | AC-10, AC-24 | Eligible-owner loading/empty/failure/retry; stale option; staff attachment actions and removed/missing download feedback | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Planned |
 | UI-10 | Component | AC-05, AC-06, AC-25 | Session bootstrap/reload, direct-path guards, role change, cache clearing, logout failure/retry | `client/tests/lab-03/Authentication.test.tsx` | #27 subset passed; later scope pending (§13) |
 | STYLE-01 | Style | AC-20 | Shared tokens, all status/role labels, public/private distinction, editable/read-only and inline validation styling | `client/tests/lab-03/Theme.test.tsx` | Planned |
-| VIS-01 | Browser/manual | AC-20 | All major screens at three viewports; overflow/overlap/clipping, text contrast, keyboard/dialog focus, labels and 44px touch targets | `e2e/lab-03/responsive-accessibility.spec.ts` plus UI visual checklist | Planned |
+| VIS-01 | Browser/manual | AC-20 | All major screens at three viewports; overflow/overlap/clipping, text contrast, keyboard/dialog focus, labels and 44px touch targets | `e2e/lab-03/responsive-accessibility.spec.ts` plus UI visual checklist | Passed for #32; see §18 |
 | MIG-01 | Integration | AC-21 | Migration preserves ticket/attachment counts and requester ownership | `server/tests/lab-03/migration-seed.test.ts` | Passed for #27; see §13 |
 | SEED-01 | Integration | AC-23 | Repeated seed runs satisfy account counts and representative ticket/comment/note coverage without duplicates or plaintext passwords | `server/tests/lab-03/migration-seed.test.ts` | Passed for #27; see §13 |
 | REG-01 | Regression | AC-08 | Complete Lab 1/Lab 2 server and client suites remain green | Existing `server/tests/lab-01..02` and `client/tests/lab-01..02` | Passed for #27; see §13 |
-| E2E-01 | E2E | AC-01-AC-06 | Login, initial-password change, role shell, logout, blocked direct access | `e2e/lab-03/authentication.spec.ts` | #27 subset passed; later scope pending (§13) |
-| E2E-02 | E2E | AC-09-AC-15 | Staff queue/detail, assignment, priority/status, comments/notes, requester indication | `e2e/lab-03/staff-ticket-flow.spec.ts` | Planned |
-| E2E-03 | E2E | AC-16-AC-19 | Administrator creates/edits/deactivates/resets and safety rules hold | `e2e/lab-03/user-administration.spec.ts` | Planned |
-| E2E-04 | E2E | AC-07, AC-08 | Authenticated requester completes Lab 2 creation/list/detail/attachment journey | `e2e/lab-03/requester-regression.spec.ts` | #27 subset passed; later scope pending (§13) |
+| E2E-01 | E2E | AC-01-AC-06 | Login, initial-password change, role shell, logout, blocked direct access | `e2e/lab-03/authentication.spec.ts` | Passed for #32; see §18 |
+| E2E-02 | E2E | AC-09-AC-15 | Staff queue/detail, assignment, priority/status, comments/notes, requester indication | `e2e/lab-03/staff-ticket-flow.spec.ts` | Passed for #32; see §18 |
+| E2E-03 | E2E | AC-16-AC-19 | Administrator creates/edits/deactivates/resets and safety rules hold | `e2e/lab-03/user-administration.spec.ts` | Passed for #32; see §18 |
+| E2E-04 | E2E | AC-07, AC-08 | Authenticated requester completes Lab 2 creation/list/detail/attachment journey | `e2e/lab-03/requester-regression.spec.ts` | Passed for #32; see §18 |
 | DOC-01 | Manual | AC-27 | Nine PDF headings, 60-point evidence mapping, live repository/PR/test links, actual review and reflection, final main SHA/results | `docs/lab-03/reviewer.md`, `ai-use.md`, final submission PDF | Planned |
 
 ## 3. Security Boundaries
@@ -306,7 +306,7 @@ Executed on 2026-09-17 on `feature/lab3-staff-queue`, based on merged PR #37 / `
 | Client production build | Passed (`npm --prefix client run build`) |
 | `git diff --check` | Passed |
 
-Database safety: All backend tests ran against the disposable test database `postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914`. The normal development database was never migrated or reset. The pre-existing uncommitted change in `client/package.json` was strictly preserved and never staged or committed.
+Database safety: All backend tests ran against the disposable test database `toktickit_lab3_auth_final_20260914`. The normal development database was never migrated or reset. The pre-existing uncommitted change in `client/package.json` was strictly preserved and never staged or committed.
 
 ## 16. Issue #30 Staff Ticket Operations, Public Comments, and Internal Notes Verification
 
@@ -379,7 +379,7 @@ Executed on 2026-09-17 on `feature/lab3-staff-ticket-operations`, based on commi
 | Client production build | Passed (`npm --prefix client run build`) |
 | `git diff --check` | Passed |
 
-Database Integration Execution: Server database integration tests require an active PostgreSQL instance configured via `DATABASE_URL`. When executed against the disposable test database (`postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914`), all 19 server test files (including `staff-ticket-detail.api.test.ts`, `comments-notes.api.test.ts`, and `attachments.api.test.ts`) passed (209/209). In environments where PostgreSQL or local sockets are unprovisioned, database integration tests cannot run and will fail to connect. The ordinary development database was never migrated or reset. The pre-existing uncommitted change in `client/package.json` was strictly preserved and never staged or committed.
+Database Integration Execution: Server database integration tests require an active PostgreSQL instance configured via `DATABASE_URL`. When executed against the disposable test database `toktickit_lab3_auth_final_20260914`, all 19 server test files (including `staff-ticket-detail.api.test.ts`, `comments-notes.api.test.ts`, and `attachments.api.test.ts`) passed (209/209). In environments where PostgreSQL or local sockets are unprovisioned, database integration tests cannot run and will fail to connect. The ordinary development database was never migrated or reset. The pre-existing uncommitted change in `client/package.json` was strictly preserved and never staged or committed.
 
 ## 17. Issue #31 Administrator User Management Verification
 
@@ -426,7 +426,7 @@ Executed on 2026-09-18 on `feature/lab3-admin-users`. This increment implements 
 
 | Verification command | Result |
 | --- | --- |
-| Complete backend suite on disposable database | 269/269 passed in 21 files (`DATABASE_URL=postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914 npm --prefix server test -- --run`) |
+| Complete backend suite on disposable database | 269/269 passed in 21 files (`DATABASE_URL="<runtime disposable database URL>" npm --prefix server test -- --run`) |
 | Complete client test suite | 112/112 passed in 12 files (`npm --prefix client test -- --run`) |
 | Admin user API integration tests (`users-admin.api.test.ts`) | 34/34 passed |
 | Admin input validator unit tests (`validation.test.ts`) | 26/26 passed |
@@ -438,4 +438,87 @@ Executed on 2026-09-18 on `feature/lab3-admin-users`. This increment implements 
 | Client production build | Passed (`npm --prefix client run build`) |
 | Git whitespace check | Passed (`git diff --check`) |
 
-Database safety: All backend integration tests ran against the disposable test database `postgresql://toktickit:toktickit@localhost:5432/toktickit_lab3_auth_final_20260914`. The normal development database was never migrated or reset. The pre-existing uncommitted change in `client/package.json` (`@testing-library/user-egvent`) was strictly preserved and never staged or committed.
+Database safety: All backend integration tests ran against the disposable test database specified by `$DATABASE_URL` (`toktickit_lab3_auth_final_20260914`). The normal development database was never migrated or reset. The pre-existing uncommitted change in `client/package.json` (`@testing-library/user-egvent`) was strictly preserved and never staged or committed.
+
+## 18. Issue #32 E2E Workflows and Responsive Screenshot Evidence Verification
+
+*Feature-branch verification evidence for Issue #32 on branch `test/lab3-e2e-and-evidence` at base commit `54bf902` (PR #40 / Issue #31), recorded prior to peer review and pull request creation.* This increment implements end-to-end user workflows, accessibility and responsive viewport verifications, and visual screenshot evidence according to AC-01 through AC-20 and AC-26 (`E2E-01`, `E2E-02`, `E2E-03`, `E2E-04`, `VIS-01`).
+
+### Test Coverage & Automated Scenarios
+
+- **E2E-01 Authentication Journeys (`e2e/lab-03/authentication.spec.ts`)**: 4/4 passed.
+  - Initial password change enforcement: Users with `mustChangePassword: true` are restricted from standard navigation, forced to `/change-password`, and rotated to a fresh session upon completing password change.
+  - Role-based default landing: Authenticated `REQUESTER` lands on `/my-tickets`, `IT_STAFF` on `/staff/tickets`, and `ADMINISTRATOR` on `/admin/users`.
+  - Blocked direct access: Unauthenticated users attempting to access protected routes are redirected to `/login`; users with unauthorized roles receive a safe 403 Forbidden page.
+  - Logout and cache clearing: Logging out invalidates the session on the server and clears private client-side state.
+- **E2E-02 Staff Operations Workflow (`e2e/lab-03/staff-ticket-flow.spec.ts`)**: 4/4 passed.
+  - Queue search, filtering by status and priority, and navigation.
+  - Edge states: Filtered no-results, clear filters, true-empty queue, route-intercepted safe failure with retry button, and requester forbidden 403 route guard.
+  - Ticket claiming and ownership reassignment with optimistic concurrency protection.
+  - Status and IT Priority transitions conforming to business workflow rules.
+  - Distinct Public Comments vs. Internal Notes composition and visual differentiation.
+  - Concurrency conflict handling: Stale version edits trigger 409 conflict warnings without data loss.
+- **E2E-03 Administrator User Management (`e2e/lab-03/user-administration.spec.ts`)**: 7/7 passed.
+  - User list inspection, responsive tables/cards, search, and filtering.
+  - Creating new user accounts adhering to password complexity policies (boundaries: <10 chars, whitespace as symbol, NUL rejection, >72 UTF-8 bytes) and duplicate email 409 handling.
+  - Editing user details and toggling active status.
+  - Self-deactivation prevention: Active administrators cannot deactivate their own accounts.
+  - Last-active-administrator safeguard: System rejects attempts to demote or deactivate the sole remaining active administrator with 409 `LAST_ACTIVE_ADMIN` with deterministic try/finally restoration.
+  - Initial password reset: Forcing credential rotation on next login with safe failure handling.
+  - Ticket unassignment: Deactivating or demoting a staff owner clears `ownerId` to null and increments ticket version.
+  - Session revocation across secondary browser context.
+  - No user deletion: Verifying no Delete controls exist and safe 404 response on `DELETE /api/admin/users/:id`.
+- **E2E-04 Authenticated Requester Regression (`e2e/lab-03/requester-regression.spec.ts`)**: 4/4 passed.
+  - Creation of support tickets with multi-file attachments and route-intercepted submission failure callouts.
+  - Authenticated ticket listing and filtering.
+  - Ticket detail inspection, additional attachment upload, active attachment download with binary byte check, and soft-removal with reason audit.
+  - Mandatory "Problem Appears Resolved" indication workflow without premature ticket closure (asserting confirmation dialog, success banner with timestamp/actor, and ticket status remaining `NEW`).
+  - Ownership isolation: Comparing unauthorized ticket access with nonexistent ticket access to assert identical safe user-facing error state.
+- **VIS-01 Responsive Layout & Accessibility (`e2e/lab-03/responsive-accessibility.spec.ts`)**: 6/6 passed.
+  - Viewport verification across Desktop (1440×900), Tablet (820×1180), and Mobile (390×844).
+  - Strict absence of unintended horizontal scrollbars, content clipping, or visual overlaps (`scrollWidth <= clientWidth`).
+  - Operational controls bounding box assertion on 390px mobile viewport verifying that every relevant control (Claim, Owner Select & Save, IT Priority Select & Save, Next Status Select & Update Status) fits completely inside the viewport (`x >= 0`, `x + width <= 390`, `width > 0`, `height >= 44px`), guaranteeing no horizontal clipping even within nested containers.
+  - Interactive touch targets satisfy minimum 44×44px hit-box requirements on touch/mobile viewports for buttons, form inputs, selects, and dialog close controls.
+  - Keyboard navigation, focus trapping inside modal dialogs, and Escape key dismissal.
+  - Design system tokens, color contrast compliance, and semantic landmarks.
+- **Safety Guard & Cleanup Deterministic Verification (`e2e/lab-03/safety-cleanup.spec.ts`)**: 2/2 passed.
+  - URL pathname parsing: Dev database rejected, test in password rejected, disposable DB accepted, malformed/missing URL rejected safely.
+  - Complete foreign-key-safe cleanup leaving zero orphaned test records or references across users, sessions, tickets, attachments, comments, and notes.
+
+### Execution Results & Safety Controls
+
+| Verification command | Result |
+| --- | --- |
+| Playwright E2E & Visual Suite | 27/27 passed in 6 spec files (`npx playwright test`) |
+| Complete backend test suite | 269/269 passed in 21 test files (`npm --prefix server test -- --run`) |
+| Complete client test suite | 112/112 passed in 12 test files (`npm --prefix client test -- --run`) |
+| Server production build | Passed (`npm --prefix server run build`) |
+| Client production build | Passed (`npm --prefix client run build`) |
+| Git whitespace check | Passed (`git diff --check`) |
+
+### Environment Isolation and Database Guards
+- **Dedicated Test Database**: Executed against disposable test database `toktickit_lab3_e2e_20260918` via `$DATABASE_URL`.
+- **Database Safety Guard**: `playwright.config.ts` and `e2e/lab-03/db-guard.ts` enforce `E2E_ALLOW_DB_WRITE=1` and parse `DATABASE_URL` pathname to ensure disposable DB naming patterns, failing closed if pointed at development (`toktickit`) or production databases.
+- **Runtime Credential Injection**: Zero plaintext passwords or connection strings in committed source code or documentation. Credentials injected exclusively via environment variables (`DATABASE_URL`, `LAB3_INITIAL_PASSWORD`, `E2E_INITIAL_PASSWORD`, `E2E_CHANGED_PASSWORD`).
+- **File Storage Isolation**: Attachment uploads isolated to temporary artifact storage via `UPLOADS_DIR`.
+- **Network Port Isolation**: Web server run on dedicated ports (server: 3104, client: 5174).
+- **Preserved User State**: The pre-existing uncommitted change in `client/package.json` (`@testing-library/user-egvent`) was strictly preserved and never staged or committed.
+
+### Evidence Artifacts
+- **Test Execution Log**: `artifacts/lab-03/test-results/issue-32-test-summary.txt`
+- **Screenshots (43 total)**: Organized into 5 domain subdirectories under `artifacts/lab-03/screenshots/`:
+  - `authentication/` (8 screenshots):
+    - Baseline viewports: `authentication/login-desktop-1440.png`, `authentication/login-tablet-820.png`, `authentication/login-mobile-390.png`, `authentication/change-password-desktop-1440.png`, `authentication/change-password-tablet-820.png`, `authentication/change-password-mobile-390.png`
+    - Supplemental states: `authentication/supplemental-auth-login-invalid.png`, `authentication/supplemental-auth-mandatory-password.png`
+  - `requester/` (18 screenshots):
+    - Baseline viewports: `requester/requester-tickets-desktop-1440.png`, `requester/requester-tickets-tablet-820.png`, `requester/requester-tickets-mobile-390.png`, `requester/create-ticket-desktop-1440.png`, `requester/create-ticket-tablet-820.png`, `requester/create-ticket-mobile-390.png`, `requester/requester-detail-desktop-1440.png`, `requester/requester-detail-tablet-820.png`, `requester/requester-detail-mobile-390.png`
+    - Supplemental states: `requester/supplemental-create-validation-errors.png`, `requester/supplemental-create-api-failure.png`, `requester/supplemental-create-success-modal.png`, `requester/supplemental-requester-empty-state.png`, `requester/supplemental-ticket-attachment-active.png`, `requester/supplemental-ticket-attachment-soft-remove-modal.png`, `requester/supplemental-ticket-attachment-removed-audit.png`, `requester/supplemental-requester-timeline-comment.png`, `requester/supplemental-requester-problem-resolved.png`
+  - `staff-queue/` (4 screenshots):
+    - Baseline viewports: `staff-queue/staff-queue-desktop-1440.png`, `staff-queue/staff-queue-tablet-820.png`, `staff-queue/staff-queue-mobile-390.png`
+    - Supplemental states: `staff-queue/supplemental-staff-filtered-no-results.png`
+  - `staff-ticket-detail/` (7 screenshots):
+    - Baseline viewports: `staff-ticket-detail/staff-detail-desktop-1440.png`, `staff-ticket-detail/staff-detail-tablet-820.png`, `staff-ticket-detail/staff-detail-mobile-390.png`
+    - Supplemental states: `staff-ticket-detail/supplemental-staff-assigned-state.png`, `staff-ticket-detail/supplemental-staff-status-transition-modal.png`, `staff-ticket-detail/supplemental-staff-conflict-modal.png`, `staff-ticket-detail/supplemental-staff-internal-note.png`
+  - `user-management/` (6 screenshots):
+    - Baseline viewports: `user-management/admin-users-desktop-1440.png`, `user-management/admin-users-tablet-820.png`, `user-management/admin-users-mobile-390.png`
+    - Supplemental states: `user-management/supplemental-admin-create-user-modal.png`, `user-management/supplemental-admin-reset-password-modal.png`, `user-management/supplemental-admin-self-deactivation-disabled.png`
