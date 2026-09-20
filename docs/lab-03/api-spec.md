@@ -1,6 +1,6 @@
 # Lab 3 REST API Specification - TokTickIT
 
-Status: Draft. Base URL: `/api`. JSON is used except attachment upload/download.
+Status: Approved and implemented through Issue #32. Base URL: `/api`. JSON is used except attachment upload/download.
 
 ## 1. Authentication Protocol
 
@@ -94,7 +94,7 @@ Requester owner only. Body: `{ "expectedVersion": number, "comment"?: string }`.
 
 ## 5. IT Staff Queue and Ticket Operations
 
-These endpoints permit `IT_STAFF` and `ADMINISTRATOR` according to the proposed specification matrix, pending peer approval.
+These endpoints permit `IT_STAFF` and `ADMINISTRATOR` according to the approved authorization matrix reviewed in PR #34 and verified by the Lab 3 authorization and staff-operation suites.
 
 ### `GET /staff/tickets`
 

@@ -1,6 +1,6 @@
 # Lab 3 — AI Use and Reflection
 
-**AI Model Used:** GPT-6 Astra(High)/ GPT-5.6 Sol(Medium)
+**AI Models Used:** GPT-6 Astra (High), GPT-5.6 Sol (Medium), and Gemini 3.8 Flash
 
 ---
 
@@ -8,14 +8,22 @@
 
 | Prompt # | Topic / Intent | Prompt Excerpt | Outcome / Applied Value |
 | :-: | :--- | :--- | :--- |
-| **1** | | |
-| **2** | | |
-| **3** | | |
-| **4** | | |
-| **5** | | |
-| **6** | | |
-| **7** | | |
+| **1** | **Understanding Layered Backend Architecture** | *"What do routes, controllers, services, validators, and middleware do, and how can I separate them without breaking Lab 2 behavior?"* | Helped me understand separation of concerns before refactoring. Routes select handlers, controllers translate HTTP input/output, services enforce business rules, validators reject invalid input, and middleware handles shared request concerns. I used this model to review the Lab 3 layered architecture while preserving existing response formats and ownership behavior. |
+| **2** | **Authentication, Sessions, and Password Security** | *"Why use opaque HttpOnly sessions instead of localStorage, and how do session digests, expiry, revocation, and mandatory password changes work?"* | Clarified the complete authentication lifecycle rather than treating login as only a form submission. I learned why only the session digest is stored in the database, why JavaScript must not read the authentication cookie, how session revocation works, and why initial-password users receive restricted access until changing their password. |
+| **3** | **SQL Injection and XSS Protection** | *"Which code protects this project from SQL injection and XSS, and which unsafe patterns should I avoid?"* | Guided a security-focused code inspection. Prisma parameterized operations protect ordinary database queries, while tagged/parameterized raw queries must be used instead of string concatenation. React escapes interpolated text by default, but `dangerouslySetInnerHTML`, unsafe URL handling, and direct HTML insertion would still be dangerous. Server validation, safe projections, filename handling, MIME/signature checks, and security headers provide additional boundaries. |
+| **4** | **Authorization and Non-Disclosing Errors** | *"Where are role and ownership permissions enforced, and why should unauthorized and nonexistent tickets return the same 404 response?"* | Helped me distinguish authentication from authorization and trace role/ownership checks through middleware and services. I learned that identical not-found responses prevent resource-enumeration leaks. This led to full-response regression tests across attachment upload, metadata, download, and removal—not only status-code checks. |
+| **5** | **Transactions, Locks, and Concurrency** | *"Why do concurrent requests need transactions, locks, ticket versions, and 409 conflict recovery?"* | Developed my understanding of concurrent server behavior. I used the explanation to review ticket-number allocation, attachment limits, claiming/reassignment, last-active-administrator protection, and ticket-owner cleanup. The project combines database transactions and locks for consistency with version checks and recoverable 409 responses for stale UI state. |
+| **6** | **React Race Conditions and Route State** | *"Why can an old API response replace newer results, and why must browser history and React pathname state be updated together?"* | Explained two frontend state problems: out-of-order asynchronous responses and duplicated routing state. I learned to use `AbortController` plus stale-response guards, reset pagination only on real filter changes, and update both browser history and React pathname state during redirects. Regression tests cover delayed responses and protected URL → login → role home navigation. |
+| **7** | **Testing Evidence and Independent Verification** | *"How can I verify Lab 3 with unit, API, UI, E2E, and visual tests without risking my development database?"* | Helped me treat test output as evidence that must be independently checked. I separated unit, API, component, and browser responsibilities; required a fail-closed disposable-database guard and deterministic cleanup; checked actual screenshot dimensions and clipping; compared documentation claims with files on disk; and recorded sanitized results rather than copying unverified AI claims. |
 
 ---
 
 ## 2. My Reflection
+
+During Lab 3, I used AI as a pair-programming and review assistant, but I tried not to use it as a replacement for understanding the system. My questions changed from simple instructions such as “implement this issue” into questions about why the architecture and security controls work. For example, I asked how controllers and services divide responsibility, how opaque sessions differ from localStorage authentication, where SQL injection and XSS are prevented, and why authorization failures sometimes need identical 404 responses. These discussions helped me connect individual code changes to larger software-engineering principles.
+
+The most valuable learning involved concurrency and state. Database operations that look correct in one request can fail when two requests run together, so I learned why the project uses transactions, advisory locks, row locks, consistent lock ordering, and optimistic version conflicts. On the client, I learned that asynchronous responses can arrive out of order and that browser history is not automatically the same as React state. Understanding those problems made reviewer feedback about stale queue results, pagination recovery, and post-login routing much easier to evaluate.
+
+I also learned not to accept an AI-generated verification report without evidence. Some reported results were correct, but I still inspected the actual files, reran available tests and builds, checked Git status, verified that unrelated changes were excluded, and visually opened responsive screenshots. A passing overflow assertion did not initially reveal a clipped mobile button, so manual inspection found a real defect and led to a stronger bounding-box regression test. This showed me that automated tests, visual evidence, peer review, and developer judgment complement one another.
+
+Overall, AI accelerated planning, implementation review, test generation, and documentation, while I remained responsible for scope decisions, security reasoning, database safety, Git hygiene, and accepting or rejecting its output. The main lesson from this sprint is that effective AI-assisted development requires asking explanatory and critical questions, checking claims against the repository, and understanding enough of the system to recognize when an answer is incomplete.

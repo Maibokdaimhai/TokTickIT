@@ -1,6 +1,6 @@
 # Lab 3 Sprint Engineering Specification - TokTickIT
 
-Status: Draft for team and peer-review approval before implementation.
+Status: Approved contract with implementation complete through Issue #32. Final Issue #33 release integration, final-main verification, and submission-PDF assembly remain in progress.
 
 ## 1. Sprint Goal
 
@@ -100,9 +100,9 @@ Replace the development requester selector with authenticated users. Requesters 
 | Read active categories/related systems | Yes | Yes | Yes |
 | Current user, password change, logout | Yes | Yes | Yes |
 
-Unauthenticated access is limited to health and login (plus idempotent logout). Password-change-restricted sessions may use only me/change-password/logout. All other endpoints require a full active session. Staff/Admin attachment access is read-only; upload/removal/rollback remain Requester-only. Internal Note role checks run before resource lookup. The proposal deliberately grants Administrator ticket permissions; it remains pending peer approval, not an already approved exception.
+Unauthenticated access is limited to health and login (plus idempotent logout). Password-change-restricted sessions may use only me/change-password/logout. All other endpoints require a full active session. Staff/Admin attachment access is read-only; upload/removal/rollback remain Requester-only. Internal Note role checks run before resource lookup. Administrator ticket permissions were deliberately included in the approved engineering contract and implemented to support the permitted Administrator owner role.
 
-Administrators are proposed to have ticket permissions to support the allowed Administrator owner role. Their default destination is User Management, with a separate Ticket Queue navigation entry. This is a team design choice; the worksheet does not require every Administrator to act as IT Staff.
+Administrators have ticket permissions to support the allowed Administrator owner role. Their default destination is User Management, with a separate Ticket Queue navigation entry. This is a reviewed team design choice; the worksheet does not require every Administrator to act as IT Staff.
 
 ### Status Transition Matrix
 
@@ -217,19 +217,19 @@ The API uses JSON, credentialed cookies, consistent `{ error: { code, message, d
 
 ## 10. Product Definition of Done
 
-- [ ] Specification, API specification, UI specification, and test plan were approved before main implementation PRs completed.
-- [ ] All schema changes use reviewed forward migrations with documented rollback/recovery considerations.
-- [ ] No existing Ticket or Attachment data is discarded and migration assertions pass.
-- [ ] SEED-01 verifies exact minimum accounts, representative data, and reruns that preserve user changes.
-- [ ] Real passwords, hashes, and raw session tokens never appear in source, logs, or JSON responses. Store only password hashes/token digests; transmit the session token only through the protected cookie mechanism. Example credentials are clearly non-production.
-- [ ] Every protected endpoint has authentication, authorization, validation, and safe-error tests.
+- [x] Specification, API specification, UI specification, and test plan were approved before main implementation PRs completed.
+- [x] All schema changes use reviewed forward migrations with documented rollback/recovery considerations.
+- [x] No existing Ticket or Attachment data is discarded and migration assertions pass.
+- [x] SEED-01 verifies exact minimum accounts, representative data, and reruns that preserve user changes.
+- [x] Real passwords, hashes, and raw session tokens never appear in source, logs, or JSON responses. Store only password hashes/token digests; transmit the session token only through the protected cookie mechanism. Example credentials are clearly non-production.
+- [x] Every protected endpoint has authentication, authorization, validation, and safe-error tests.
 - [ ] All Lab 2 and Lab 3 server/client tests and production builds pass from final `main`.
 - [ ] Authentication, staff workflow, administration, and requester regression E2E suites pass from final `main`.
-- [ ] Major screens have readable desktop, tablet, and mobile screenshot evidence.
-- [ ] All acceptance criteria map to passing planned tests in `tests.md`.
+- [x] Major screens have readable desktop, tablet, and mobile screenshot evidence.
+- [x] All acceptance criteria map to implemented passing tests in `tests.md`.
 - [ ] GitHub Issues are Done; feature PRs were peer-reviewed into `lab3-staging`; final integration PR was reviewed into `main`.
 - [ ] README, reviewer record, AI-use reflection, and the nine-part submission PDF are complete with working links.
-- [ ] No implementation test/file, reviewer approval, issue completion, or screenshot is claimed before it exists. GitHub page actions and PR submission/merging are performed by the user.
+- [x] No implementation test/file, reviewer approval, issue completion, or screenshot is claimed before it exists. GitHub page actions and PR submission/merging are performed by the user.
 
 ## 11. Assumptions and Decisions
 
@@ -244,7 +244,7 @@ Security references: bcrypt's limit is 72 **bytes**, not characters ([bcrypt doc
 
 ## 12. Sprint Delivery Issue Map
 
-| Issue | Scope | Planned branch |
+| Issue | Scope | Delivery branch |
 |---|---|---|
 | [#25](https://github.com/Maibokdaimhai/TokTickIT/issues/25) | Sprint 3 engineering contract and test plan | `feature/lab3-spec-and-tests` |
 | [#26](https://github.com/Maibokdaimhai/TokTickIT/issues/26) | Behavior-preserving layered backend refactor | `refactor/lab3-backend-layers` |
@@ -254,13 +254,13 @@ Security references: bcrypt's limit is 72 **bytes**, not characters ([bcrypt doc
 | [#30](https://github.com/Maibokdaimhai/TokTickIT/issues/30) | Staff ticket operations, comments, and Internal Notes | `feature/lab3-staff-ticket-operations` |
 | [#31](https://github.com/Maibokdaimhai/TokTickIT/issues/31) | Minimalist Administrator user management | `feature/lab3-admin-users` |
 | [#32](https://github.com/Maibokdaimhai/TokTickIT/issues/32) | E2E workflows and responsive screenshot evidence | `test/lab3-e2e-and-evidence` |
-| [#33](https://github.com/Maibokdaimhai/TokTickIT/issues/33) | Final evidence and Sprint 3 release integration | `docs/lab3-final-documentation` |
+| [#33](https://github.com/Maibokdaimhai/TokTickIT/issues/33) | Final evidence and Sprint 3 release integration | `docs/lab3-final-evidence-release` |
 
 Each feature branch starts from the latest reviewed `lab3-staging`. Its PR targets `lab3-staging`; only the final reviewed integration PR targets `main`.
 
 Dependencies: #25 → #26 → #27 → #28 → #29 → #30; #31 follows #28; #32 follows #30 and #31; #33 follows #32. The schema and representative seed needed by the queue land in #27 (including owner, version, statuses, priorities, and communication tables); #30 implements operations against that schema. The #27/#28 changes are integrated as a coordinated authentication cutover: interim branches must not claim that all legacy APIs are secured until #28 completes.
 
-Issue #27 implementation boundary: email/password login, forced change, logout, current-user retrieval, cookie/session/Origin controls, migration/bootstrap, seed, and the authenticated shell are implemented on `feature/lab3-authentication`. Existing ticket inputs still carry requesterId until #28; full ownership/role enforcement is not yet claimed. Staff/Admin currently see a role-specific placeholder rather than future queue/admin functionality. The server must remain stopped between migration and explicit local-password bootstrap. Operational setup and recovery instructions are in the root README; per-PR verification is in tests.md §13.
+Implementation status through Issue #32: authentication and migration, session-derived Requester authorization, Staff Queue, Staff Ticket Detail and communication, Administrator User Management, E2E workflows, responsive checks, and durable screenshots are implemented and merged into `lab3-staging`. Operational setup and recovery instructions are in the root README; per-PR and integrated verification evidence is recorded in `tests.md` §§13-18. Issue #33 finalizes documentation, reruns verification from the release state, and prepares the reviewed `main` integration and nine-part submission evidence.
 
 Use the existing Kanban statuses; do not invent a new board workflow. Put the issue in progress during work, in the existing review status for peer review, and Done after its criteria and reviewed staging merge. Record red → green tests during implementation, review comments/responses/approval, and final main verification. User performs GitHub browser actions; agent prepares code, commits when authorized, and copy-ready PR descriptions. Draft contract changes do not count as peer approval.
 
@@ -268,7 +268,7 @@ Use the existing Kanban statuses; do not invent a new board workflow. Put the is
 
 | Worksheet sections | Contract/evidence location |
 |---|---|
-| 1-3 Increment, outcomes, stakeholder | Specification §§1-4; planned implementation tests |
+| 1-3 Increment, outcomes, stakeholder | Specification §§1-4; implemented verification in `tests.md` |
 | 4.1-4.4 Scope, roles, business rules | Specification §§3-5; API authorization inventory |
 | 4.5 Ownership, priority, statuses | BR-14/15/29; transition matrix; API staff operations |
 | 4.6 Comments and notes | BR-16/28; API §6; UI §§5/7 |
@@ -293,4 +293,4 @@ Submit exactly one concise PDF with working links and readable screenshots. The 
 | Answer Part 8 | 5 | User list/search/filter/create/edit/reset, forced change, duplicate/input validation, self/last-admin protections, forbidden access and responsive failure feedback |
 | Answer Part 9 | 5 | Rendered ui-spec.md; desktop/tablet/mobile major screens; completed focus/clipping/overlap/overflow/design checklist |
 
-Total: 60 points. Submission evidence is collected progressively; final output/approval/reflection entries remain pending until performed.
+Total: 60 points. Repository documentation, review records, AI reflection, automated evidence, and screenshots are present. Final `main` output, GitHub board/release evidence, and the nine-part submission PDF remain pending until performed.

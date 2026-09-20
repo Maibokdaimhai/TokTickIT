@@ -1,6 +1,6 @@
 # Lab 3 Test Plan and Traceability - TokTickIT
 
-Status: Plan with per-PR implementation evidence. Issue #27 results are recorded in §13; remaining features and final release validation are still pending. Final release results must come from the final main branch.
+Status: Original Test DD plan plus implementation evidence through Issue #32. All planned feature suites have implementation results; final Issue #33 release and final-main validation remain pending until performed.
 
 ## 1. Strategy
 
@@ -11,49 +11,49 @@ Status: Plan with per-PR implementation evidence. Issue #27 results are recorded
 - Playwright E2E tests cover complete authentication, staff, administration, and requester journeys.
 - Visual inspection records desktop, tablet, and mobile evidence for every major screen.
 
-## 2. Planned Tests and Manual Checks
+## 2. Planned Tests and Final Implementation Status
 
-| ID | Type | AC | Scenario and expected result | Planned file | Status |
+| ID | Type | AC | Scenario and expected result | Planned/actual file | Status |
 |---|---|---|---|---|---|
 | API-01 | API | AC-01, AC-02 | Valid login succeeds; wrong password and unknown email share a safe response | `server/tests/lab-03/auth.api.test.ts` | Passed for #27; see §13 |
 | API-02 | API | AC-03 | Inactive account cannot authenticate | `server/tests/lab-03/auth.api.test.ts` | Passed for #27; see §13 |
 | API-03 | API | AC-04 | Initial-password session is restricted until valid password change | `server/tests/lab-03/auth.api.test.ts` | Passed for #27; see §13 |
 | API-04 | API | AC-05 | Logout revokes cookie access; expired/revoked session is unauthorized | `server/tests/lab-03/auth.api.test.ts` | Passed for #27; see §13 |
-| API-05 | API | AC-22 | Role middleware rejects direct cross-role API access | `server/tests/lab-03/authorization.api.test.ts` | Planned |
-| API-06 | API | AC-07 | Requester identity comes from session; supplied foreign requester ID cannot cross ownership | `server/tests/lab-03/authorization.api.test.ts` | Planned |
+| API-05 | API | AC-22 | Role middleware rejects direct cross-role API access | `server/tests/lab-03/requester-authorization.api.test.ts` | Passed for #28; see §14 |
+| API-06 | API | AC-07 | Requester identity comes from session; supplied foreign requester ID cannot cross ownership | `server/tests/lab-03/requester-authorization.api.test.ts` | Passed for #28; see §14 |
 | API-07 | API | AC-09 | Staff queue search/filter/sort/pagination and invalid query behavior | `server/tests/lab-03/staff-queue.api.test.ts` | Implemented for #29; see §15 |
-| API-08 | API | AC-10 | Claim/reassign accepts eligible owners and rejects invalid, inactive, and stale updates | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
-| API-09 | API | AC-11 | IT Priority initializes correctly and only permitted roles can update it | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
-| API-10 | API | AC-12 | Status transition matrix permits valid and rejects invalid/stale transitions | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
-| API-11 | API | AC-13 | Public Comment validates content and records backend author/time | `server/tests/lab-03/comments-notes.api.test.ts` | Planned |
-| API-12 | API | AC-14 | Requester Internal Note requests return forbidden with no note data | `server/tests/lab-03/comments-notes.api.test.ts` | Planned |
-| API-13 | API | AC-15 | Requester resolution indication is audited without formal status change | `server/tests/lab-03/comments-notes.api.test.ts` | Planned |
-| API-14 | API | AC-16, AC-17 | Administrator list/search/filter/create/edit and duplicate/invalid input | `server/tests/lab-03/users-admin.api.test.ts` | Planned |
-| API-15 | API | AC-18 | Initial-password reset revokes sessions and forces next-login change | `server/tests/lab-03/users-admin.api.test.ts` | Planned |
-| API-16 | API | AC-19 | Self-deactivation and final-active-administrator removal are blocked transactionally | `server/tests/lab-03/users-admin.api.test.ts` | Planned |
+| API-08 | API | AC-10 | Claim/reassign accepts eligible owners and rejects invalid, inactive, and stale updates | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Passed for #30; see §16 |
+| API-09 | API | AC-11 | IT Priority initializes correctly and only permitted roles can update it | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Passed for #30; see §16 |
+| API-10 | API | AC-12 | Status transition matrix permits valid and rejects invalid/stale transitions | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Passed for #30; see §16 |
+| API-11 | API | AC-13 | Public Comment validates content and records backend author/time | `server/tests/lab-03/comments-notes.api.test.ts` | Passed for #30; see §16 |
+| API-12 | API | AC-14 | Requester Internal Note requests return forbidden with no note data | `server/tests/lab-03/comments-notes.api.test.ts` | Passed for #30; see §16 |
+| API-13 | API | AC-15 | Requester resolution indication is audited without formal status change | `server/tests/lab-03/comments-notes.api.test.ts` | Passed for #30; see §16 |
+| API-14 | API | AC-16, AC-17 | Administrator list/search/filter/create/edit and duplicate/invalid input | `server/tests/lab-03/users-admin.api.test.ts` | Passed for #31; see §17 |
+| API-15 | API | AC-18 | Initial-password reset revokes sessions and forces next-login change | `server/tests/lab-03/users-admin.api.test.ts` | Passed for #31; see §17 |
+| API-16 | API | AC-19 | Self-deactivation and final-active-administrator removal are blocked transactionally | `server/tests/lab-03/users-admin.api.test.ts` | Passed for #31; see §17 |
 | API-17 | API | AC-10 | Eligible-owner endpoint returns only active IT Staff/Administrators and rejects Requesters | `server/tests/lab-03/staff-queue.api.test.ts` | Implemented for #29; see §15 |
-| API-18 | API | AC-24 | Staff/Admin can read metadata and download active attachments; Requester ownership and removed-download rules remain enforced | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
+| API-18 | API | AC-24 | Staff/Admin can read metadata and download active attachments; Requester ownership and removed-download rules remain enforced | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Passed for #30; see §16 |
 | UNIT-01 | Unit | AC-04, AC-25 | Password code-point/UTF-8 byte boundaries, exact confirmation, NUL/reuse rejection, fresh salted hashes | `server/tests/lab-03/password.test.ts` | Passed for #27; see §13 |
 | UNIT-02 | Unit | AC-05, AC-25 | Token generation/digest, absolute expiry, clock boundaries, rotation/revocation | `server/tests/lab-03/session.test.ts` | Passed for #27; see §13 |
-| UNIT-03 | Unit | AC-12, AC-22 | Table-driven tests of all status pairs, owner prerequisites, confirmation and role decisions | `server/tests/lab-03/ticket-policy.test.ts` | Planned |
-| UNIT-04 | Unit | AC-17, AC-22 | Safe integer/range, enum, trimmed text, email, boolean, unknown-field validation | `server/tests/lab-03/validation.test.ts` | Planned |
+| UNIT-03 | Unit | AC-12, AC-22 | Table-driven tests of all status pairs, owner prerequisites, confirmation and role decisions | `server/tests/lab-03/ticket-policy.test.ts` | Passed for #30; see §16 |
+| UNIT-04 | Unit | AC-17, AC-22 | Safe integer/range, enum, trimmed text, email, boolean, unknown-field validation | `server/tests/lab-03/validation.test.ts` | Passed for #31; see §17 |
 | API-19 | API | AC-25 | Cookie flags/digest storage/expiry; missing or invalid Origin; allowed preflight; current-user gating; identical unknown/known throttling | `server/tests/lab-03/auth.api.test.ts` | Passed for #27; see §13 |
-| API-20 | API | AC-19, AC-26 | Role/deactivation revokes sessions and unassigns owners; preserves authors/submissions; concurrent last-admin and assignment changes remain valid | `server/tests/lab-03/users-admin.api.test.ts` | Planned |
-| API-21 | API | AC-12, AC-15 | Concurrent claim has one winner; stale version/status rejected; indication repeated/terminal rejected and reopening clears it | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
-| API-22 | API | AC-13, AC-14 | Empty/2000/2001 code-point communication; forged author/time; missing/inaccessible ticket; append-only/no-edit/delete; safe HTML payloads; concurrent appends retain both entries and increment version | `server/tests/lab-03/comments-notes.api.test.ts` | Planned |
-| API-23 | API | AC-08, AC-24 | Shared attachment reads reject mismatched IDs, removed file download and missing storage; preserve Unicode filename; deny staff upload/remove/rollback | `server/tests/lab-03/attachments.api.test.ts` | Planned |
-| API-24 | API | AC-08 | Compensation cannot delete ticket with staff work; simultaneous upload limit holds; filesystem failures report retained ticket | `server/tests/lab-03/attachments.api.test.ts` | Planned |
+| API-20 | API | AC-19, AC-26 | Role/deactivation revokes sessions and unassigns owners; preserves authors/submissions; concurrent last-admin and assignment changes remain valid | `server/tests/lab-03/users-admin.api.test.ts` | Passed for #31; see §17 |
+| API-21 | API | AC-12, AC-15 | Concurrent claim has one winner; stale version/status rejected; indication repeated/terminal rejected and reopening clears it | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Passed for #30; see §16 |
+| API-22 | API | AC-13, AC-14 | Empty/2000/2001 code-point communication; forged author/time; missing/inaccessible ticket; append-only/no-edit/delete; safe HTML payloads; concurrent appends retain both entries and increment version | `server/tests/lab-03/comments-notes.api.test.ts` | Passed for #30; see §16 |
+| API-23 | API | AC-08, AC-24 | Shared attachment reads reject mismatched IDs, removed file download and missing storage; preserve Unicode filename; deny staff upload/remove/rollback | `server/tests/lab-03/attachments.api.test.ts` | Passed for #30; see §16 |
+| API-24 | API | AC-08 | Compensation cannot delete ticket with staff work; simultaneous upload limit holds; filesystem failures report retained ticket | `server/tests/lab-03/attachments.api.test.ts` | Passed for #30; see §16 |
 | UI-01 | Component | AC-01, AC-02, AC-03 | Login validation, busy state, safe errors, success routing | `client/tests/lab-03/Authentication.test.tsx` | Passed for #27; see §13 |
 | UI-02 | Component | AC-04 | Mandatory Change Password validation, checklist, busy/error/success | `client/tests/lab-03/Authentication.test.tsx` | Passed for #27; see §13 |
-| UI-03 | Component | AC-05, AC-06 | Role navigation and logout remove protected access | `client/tests/lab-03/Authentication.test.tsx` | #27 subset passed; later scope pending (§13) |
+| UI-03 | Component | AC-05, AC-06 | Role navigation and logout remove protected access | `client/tests/lab-03/Authentication.test.tsx`, `Routing.test.tsx` | Passed; see §§13, 16, 18 |
 | UI-04 | Component | AC-09, AC-20 | Queue results, queries, pagination, empty/no-results/failure, mobile cards | `client/tests/lab-03/StaffTicketQueue.test.tsx` | Implemented for #29; see §15 |
-| UI-05 | Component | AC-10, AC-11, AC-12 | Claim/reassign, priority/status controls, confirmation and conflict feedback | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Planned |
-| UI-06 | Component | AC-13, AC-14 | Public/private visual distinction, validation, and role restrictions | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Planned |
-| UI-07 | Component | AC-16-AC-19 | User list/search/filter/create/edit/reset and safety feedback | `client/tests/lab-03/UserManagement.test.tsx` | Planned |
-| UI-08 | Component | AC-07, AC-15 | Authenticated requester detail comments and resolution indication | `client/tests/lab-03/RequesterTicketDetail.test.tsx` | Planned |
-| UI-09 | Component | AC-10, AC-24 | Eligible-owner loading/empty/failure/retry; stale option; staff attachment actions and removed/missing download feedback | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Planned |
-| UI-10 | Component | AC-05, AC-06, AC-25 | Session bootstrap/reload, direct-path guards, role change, cache clearing, logout failure/retry | `client/tests/lab-03/Authentication.test.tsx` | #27 subset passed; later scope pending (§13) |
-| STYLE-01 | Style | AC-20 | Shared tokens, all status/role labels, public/private distinction, editable/read-only and inline validation styling | `client/tests/lab-03/Theme.test.tsx` | Planned |
+| UI-05 | Component | AC-10, AC-11, AC-12 | Claim/reassign, priority/status controls, confirmation and conflict feedback | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Passed for #30; see §16 |
+| UI-06 | Component | AC-13, AC-14 | Public/private visual distinction, validation, and role restrictions | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Passed for #30; see §16 |
+| UI-07 | Component | AC-16-AC-19 | User list/search/filter/create/edit/reset and safety feedback | `client/tests/lab-03/UserManagement.test.tsx` | Passed for #31; see §17 |
+| UI-08 | Component | AC-07, AC-15 | Authenticated requester detail comments and resolution indication | `client/tests/lab-03/RequesterTicketDetail.test.tsx` | Passed for #30; see §16 |
+| UI-09 | Component | AC-10, AC-24 | Eligible-owner loading/empty/failure/retry; stale option; staff attachment actions and removed/missing download feedback | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Passed for #30; see §16 |
+| UI-10 | Component | AC-05, AC-06, AC-25 | Session bootstrap/reload, direct-path guards, role change, cache clearing, logout failure/retry | `client/tests/lab-03/Authentication.test.tsx`, `Routing.test.tsx` | Passed; see §§13, 16, 18 |
+| STYLE-01 | Style | AC-20 | Shared tokens, all status/role labels, public/private distinction, editable/read-only and inline validation styling | `client/src/styles/theme.css`, `e2e/lab-03/responsive-accessibility.spec.ts` | Passed for #32; see §18 |
 | VIS-01 | Browser/manual | AC-20 | All major screens at three viewports; overflow/overlap/clipping, text contrast, keyboard/dialog focus, labels and 44px touch targets | `e2e/lab-03/responsive-accessibility.spec.ts` plus UI visual checklist | Passed for #32; see §18 |
 | MIG-01 | Integration | AC-21 | Migration preserves ticket/attachment counts and requester ownership | `server/tests/lab-03/migration-seed.test.ts` | Passed for #27; see §13 |
 | SEED-01 | Integration | AC-23 | Repeated seed runs satisfy account counts and representative ticket/comment/note coverage without duplicates or plaintext passwords | `server/tests/lab-03/migration-seed.test.ts` | Passed for #27; see §13 |
@@ -62,7 +62,7 @@ Status: Plan with per-PR implementation evidence. Issue #27 results are recorded
 | E2E-02 | E2E | AC-09-AC-15 | Staff queue/detail, assignment, priority/status, comments/notes, requester indication | `e2e/lab-03/staff-ticket-flow.spec.ts` | Passed for #32; see §18 |
 | E2E-03 | E2E | AC-16-AC-19 | Administrator creates/edits/deactivates/resets and safety rules hold | `e2e/lab-03/user-administration.spec.ts` | Passed for #32; see §18 |
 | E2E-04 | E2E | AC-07, AC-08 | Authenticated requester completes Lab 2 creation/list/detail/attachment journey | `e2e/lab-03/requester-regression.spec.ts` | Passed for #32; see §18 |
-| DOC-01 | Manual | AC-27 | Nine PDF headings, 60-point evidence mapping, live repository/PR/test links, actual review and reflection, final main SHA/results | `docs/lab-03/reviewer.md`, `ai-use.md`, final submission PDF | Planned |
+| DOC-01 | Manual | AC-27 | Nine PDF headings, 60-point evidence mapping, live repository/PR/test links, actual review and reflection, final main SHA/results | `docs/lab-03/reviewer.md`, `ai-use.md`, final submission PDF | In progress: reviewer/AI records complete; final main/PDF pending |
 
 ## 3. Security Boundaries
 
@@ -150,8 +150,10 @@ For each implementation PR record: issue, branch/commit, test IDs, command, init
 | Issue #27 authentication and migration | 397aa9b | Commands/results in §13 | Server 96/96; client 36/36; browser 6/6; builds passed |
 | Issue #28 requester authorization | 4275095 | Commands/results in §14 | Server 109/109; client 36/36; browser 3/3; builds passed |
 | Issue #29 IT Staff ticket queue | feature/lab3-staff-queue | Commands/results in §15 | Server 146/146; client 53/53; builds passed |
-| Later feature-PR implementation evidence | Pending | Pending | Not run |
-| Final lab3-staging validation | Pending | Pending | Not run |
+| Issue #30 staff operations | `99d4bc5` | Commands/results in §16 | Server 209/209; client 93/93; both builds passed |
+| Issue #31 Administrator management | `5317963` | Commands/results in §17 | Server 269/269; client 112/112; both builds passed |
+| Issue #32 E2E/responsive evidence | `7176137` | `artifacts/lab-03/test-results/issue-32-test-summary.txt`; §18 | Playwright 27/27; server 269/269; client 112/112; both builds passed |
+| Integrated `lab3-staging` after PR #41 | `f5afcce` | PR #41 merge contains tested commit `7176137` unchanged | Integrated; final release rerun belongs to Issue #33 |
 | Final main validation | Pending | Pending | Not run |
 
 Save final logs under artifacts/lab-03/test-results/ as readable .txt files with commit SHA, timestamp, commands, counts, failures, and exit status. Capture directory structure, final board/history and review evidence for the nine-part PDF. The user supplies GitHub evidence; never fabricate a closed issue, merge, reviewer identity/approval, or final passing count.
@@ -256,7 +258,7 @@ An empty migration replay applies passwordHash NOT NULL immediately because no l
 
 Final database URL selected `toktickit_lab3_auth_final_20260914` through DATABASE_URL. From server: `npx prisma migrate deploy`, `npm run prisma:bootstrap`, `npm run prisma:seed`; from root: `npm --prefix server test`, `npm --prefix client test`, `./server/node_modules/.bin/tsc --noEmit --project server/tsconfig.json`, `npm --prefix server run build`, and `npm --prefix client run build`. Bootstrap/seed used explicit test-only initial credentials; no operational password is recorded here.
 
-Browser verification ran from `/private/tmp/toktickit-auth-e2e.6tRyy0` with its temporary Playwright configuration, `reuseExistingServer: false`, frontend 5174 and backend 3103 because the normal frontend port was occupied. DATABASE_URL selected the final disposable copy; E2E_ALLOW_DB_WRITE=1 and the E2E origin variables matched those ports. Screenshots/uploads/results stayed in that temporary directory. These artifacts are local per-PR evidence; #32/#33 still need durable final-commit evidence.
+Browser verification ran from `/private/tmp/toktickit-auth-e2e.6tRyy0` with its temporary Playwright configuration, `reuseExistingServer: false`, frontend 5174 and backend 3103 because the normal frontend port was occupied. DATABASE_URL selected the final disposable copy; E2E_ALLOW_DB_WRITE=1 and the E2E origin variables matched those ports. Screenshots/uploads/results stayed in that temporary directory. These were local Issue #27 artifacts; durable Issue #32 evidence was later committed under `artifacts/lab-03/`, while Issue #33 final-main evidence remains pending until the release merge and rerun.
 
 During implementation, old User-schema fixtures and synchronous pre-auth App tests initially failed and were adapted to the intentional authentication change. Type checking caught unsupported test options; the test glob was expanded to include the new `.test.ts` API-client checks. A development-port collision was resolved by using isolated test ports. The former production start path was corrected to `dist/src/index.js` and smoke-tested. This was iterative implementation/regression verification; no unobserved test-first/red result is claimed. Dependency installation reported eight existing server audit advisories; no unrelated dependency upgrade or audit fix was performed.
 
@@ -522,3 +524,17 @@ Database safety: All backend integration tests ran against the disposable test d
   - `user-management/` (6 screenshots):
     - Baseline viewports: `user-management/admin-users-desktop-1440.png`, `user-management/admin-users-tablet-820.png`, `user-management/admin-users-mobile-390.png`
     - Supplemental states: `user-management/supplemental-admin-create-user-modal.png`, `user-management/supplemental-admin-reset-password-modal.png`, `user-management/supplemental-admin-self-deactivation-disabled.png`
+
+## 19. Issue #33 Documentation and Release Readiness
+
+The six required Lab 3 documentation files are present under `docs/lab-03/`: `specification.md`, `api-spec.md`, `ui-spec.md`, `tests.md`, `reviewer.md`, and `ai-use.md`. The authored and partner-review records are preserved without condensing the recorded conversations. The AI-use record contains selected learner-focused prompts and the required reflection. Durable Issue #32 E2E results and 43 responsive/interaction screenshots are present under `artifacts/lab-03/`.
+
+The current integrated staging baseline is commit `f5afcce` on `lab3-staging`, containing reviewed feature work through Issue #32. This documentation branch records final evidence preparation but does not claim release steps that have not happened.
+
+The following release gates remain open and must be completed after this branch is reviewed:
+
+- Run the complete server, client, build, and Playwright suites from the final integrated `main` commit and record its SHA and results.
+- Complete the Issue #33 pull request, peer review, merge to `main`, and GitHub Issue/board Done state.
+- Assemble and verify the required nine-part submission PDF with working repository, pull-request, test, review, AI-use, and screenshot references.
+
+Until those actions are performed, the final-main rows and release/PDF Definition-of-Done items intentionally remain marked Pending or unchecked rather than being inferred from feature-branch evidence.

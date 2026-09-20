@@ -1,8 +1,8 @@
 # Lab 3 UI Specification - Zen Green Extension
 
-Status: Draft. All Lab 2 tokens, focus behavior, validation placement, and responsive expectations remain in force.
+Status: Implemented and visually verified through Issue #32. All Lab 2 tokens, focus behavior, validation placement, and responsive expectations remain in force.
 
-Issue #27 status: login, password visibility, mandatory/self password change with a live checklist and field feedback, session restoration/expiry, and the account menu are implemented. Requester pages receive identity from the authenticated shell, not browser storage. Staff/Admin workspaces display a role-specific placeholder until #29/#31. Remaining operational screens below are still planned. Authentication component checks are consolidated in `client/tests/lab-03/Authentication.test.tsx`.
+Final implementation status: login and password change, authenticated Requester screens, Staff Queue, Staff Ticket Detail, Public Comments, Internal Notes, Administrator User Management, role navigation, responsive modes, and accessible dialogs are implemented. Component coverage is under `client/tests/lab-03/`; browser and visual coverage is under `e2e/lab-03/` and `artifacts/lab-03/screenshots/`.
 
 ## 1. Application Shell
 
