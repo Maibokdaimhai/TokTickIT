@@ -1,0 +1,213 @@
+================================================================================
+TokTickIT - GitHub Issue #32: E2E Workflows & Responsive Screenshot Evidence
+Test Summary & Verification Execution Record (Feature Branch Evidence)
+================================================================================
+
+Date: 2026-09-18
+Branch: test/lab3-e2e-and-evidence
+Base Commit: 54bf902f73d4be0de9ba8052a817b971c231f8e0
+Environment: macOS (Darwin arm64)
+Database URL: $DATABASE_URL (dedicated disposable database: toktickit_lab3_e2e_20260918)
+Playwright Isolation Ports: Server=3104, Client=5174
+
+NOTE: This document records feature-branch verification evidence for Issue #32 on branch
+test/lab3-e2e-and-evidence prior to peer review and pull request creation.
+
+--------------------------------------------------------------------------------
+1. Server Automated Test Suite (Vitest)
+--------------------------------------------------------------------------------
+Command:
+  DATABASE_URL="$DATABASE_URL" npm --prefix server test -- --run
+
+Result:
+  Test Files: 21 passed (21)
+  Tests:      269 passed (269)
+  Exit Code:  0
+
+Test Suites Included:
+  - tests/lab-01/categories.test.ts (1)
+  - tests/lab-01/health.test.ts (1)
+  - tests/lab-02/attachments.api.test.ts (10)
+  - tests/lab-02/create-ticket.api.test.ts (10)
+  - tests/lab-02/my-tickets.api.test.ts (6)
+  - tests/lab-02/ticket-detail.api.test.ts (5)
+  - tests/lab-03/attachments.api.test.ts (8)
+  - tests/lab-03/auth.api.test.ts (13)
+  - tests/lab-03/backend-compatibility.test.ts (17)
+  - tests/lab-03/backend-services.test.ts (17)
+  - tests/lab-03/comments-notes.api.test.ts (21)
+  - tests/lab-03/error-handling.test.ts (6)
+  - tests/lab-03/migration-seed.test.ts (4)
+  - tests/lab-03/password.test.ts (12)
+  - tests/lab-03/requester-authorization.api.test.ts (12)
+  - tests/lab-03/session.test.ts (2)
+  - tests/lab-03/staff-queue.api.test.ts (37)
+  - tests/lab-03/staff-ticket-detail.api.test.ts (22)
+  - tests/lab-03/ticket-policy.test.ts (5)
+  - tests/lab-03/users-admin.api.test.ts (34)
+  - tests/lab-03/validation.test.ts (26)
+
+--------------------------------------------------------------------------------
+2. Client Automated Test Suite (Vitest / React Testing Library)
+--------------------------------------------------------------------------------
+Command:
+  npm --prefix client test -- --run
+
+Result:
+  Test Files: 12 passed (12)
+  Tests:      112 passed (112)
+  Exit Code:  0
+
+Test Suites Included:
+  - tests/lab-01/App.test.tsx (3)
+  - tests/lab-02/AttachmentSection.test.tsx (4)
+  - tests/lab-02/CreateTicket.test.tsx (7)
+  - tests/lab-02/MyTickets.test.tsx (8)
+  - tests/lab-02/RequesterTicketDetail.test.tsx (2)
+  - tests/lab-03/Authentication.test.tsx (9)
+  - tests/lab-03/RequesterTicketDetail.test.tsx (7)
+  - tests/lab-03/Routing.test.tsx (15)
+  - tests/lab-03/StaffTicketDetail.test.tsx (18)
+  - tests/lab-03/StaffTicketQueue.test.tsx (17)
+  - tests/lab-03/UserManagement.test.tsx (19)
+  - tests/lab-03/auth-api.test.ts (3)
+
+--------------------------------------------------------------------------------
+3. Playwright End-to-End Test Suite
+--------------------------------------------------------------------------------
+Command:
+  E2E_ALLOW_DB_WRITE=1 DATABASE_URL="$DATABASE_URL" LAB3_INITIAL_PASSWORD="$LAB3_INITIAL_PASSWORD" E2E_INITIAL_PASSWORD="$E2E_INITIAL_PASSWORD" E2E_CHANGED_PASSWORD="$E2E_CHANGED_PASSWORD" npx playwright test
+
+Result:
+  Total Tests: 27 passed (27)
+  Spec Files:  6 passed (6)
+  Duration:    1.2m
+  Exit Code:   0
+
+Execution Breakdown by Spec:
+  e2e/lab-03/authentication.spec.ts (E2E-01):
+    [PASS] login page responsive rendering and baseline screenshots
+    [PASS] first-login mandatory password change enforces 403 API block, updates password, and restores full access
+    [PASS] invalid and inactive credentials show safe feedback without exposing protected shell
+    [PASS] role-based shells render role badges and restrict unauthorized actions and routes
+
+  e2e/lab-03/requester-regression.spec.ts (E2E-04):
+    [PASS] authenticated ticket creation workflow, responsive views, validation, and attachment upload
+    [PASS] requester tickets list category/system filter, responsive tables/cards, and pagination navigation
+    [PASS] ticket detail inspection, attachment upload, download, and soft-removal with reason audit
+    [PASS] requester communication, problem-resolved indication, and ownership isolation (comparing unauthorized vs nonexistent tickets)
+
+  e2e/lab-03/staff-ticket-flow.spec.ts (E2E-02):
+    [PASS] staff queue: responsive layout, search, filters, sorting, and preserved pagination
+    [PASS] staff queue edge states: filtered no-results, clear filters, true-empty, route-intercepted retry, and requester forbidden
+    [PASS] ticket operations: claim, eligible owners list, reassignment, IT priority update, and complete status lifecycle
+    [PASS] communication and attachments: public comment, internal note, requester isolation, metadata, download byte check, soft-removal reason audit, and problem resolved display
+
+  e2e/lab-03/user-administration.spec.ts (E2E-03):
+    [PASS] user list inspection, responsive tables/cards, search, and filtering
+    [PASS] create user workflow with password-policy boundaries and duplicate email handling
+    [PASS] edit user attributes, reset initial password with failure handling, and self-deactivation guard
+    [PASS] deterministic last-active-admin protection with try/finally restoration
+    [PASS] ticket unassignment upon staff deactivation or demotion
+    [PASS] session revocation when an administrator deactivates a user account
+    [PASS] no user deletion: verify no Delete controls and safe 404 on DELETE endpoint
+
+  e2e/lab-03/responsive-accessibility.spec.ts (VIS-01):
+    [PASS] Screen 1 & 2: Login and Mandatory Change Password responsive rendering and baseline evidence
+    [PASS] Screen 3, 4 & 5: Requester views responsive table-to-card switching and overflow verification
+    [PASS] Screen 6 & 7: Staff views responsive table-to-card switching and queue filtering
+    [PASS] Screen 8: Administrator User Management responsive table-to-card switching and modals
+    [PASS] Accessibility: Modal dialog focus trapping, keyboard navigation, and escape key restoration
+    [PASS] Design System: Zen Green tokens, color contrasts, and semantic landmark verification
+
+  e2e/lab-03/safety-cleanup.spec.ts:
+    [PASS] Requirement 1: Disposable-database safety guard rejects dev DB and validates correctly
+    [PASS] Requirement 2: Complete fixture cleanup leaves zero orphaned records or references
+
+--------------------------------------------------------------------------------
+4. Production Build Verification
+--------------------------------------------------------------------------------
+Server Build:
+  Command: npm --prefix server run build
+  Result:  tsc exited with code 0.
+
+Client Build:
+  Command: npm --prefix client run build
+  Result:  tsc && vite build exited with code 0.
+
+--------------------------------------------------------------------------------
+5. Screenshot Artifacts Inventory (43 Screenshots Generated & Inspected)
+--------------------------------------------------------------------------------
+Location: artifacts/lab-03/screenshots/
+
+Directory Breakdown:
+  - authentication/      : 8 files
+  - requester/           : 18 files
+  - staff-queue/         : 4 files
+  - staff-ticket-detail/ : 7 files
+  - user-management/     : 6 files
+  Total                  : 43 files
+
+1. authentication/ (8 files):
+  1.  authentication/login-desktop-1440.png
+  2.  authentication/login-tablet-820.png
+  3.  authentication/login-mobile-390.png
+  4.  authentication/change-password-desktop-1440.png
+  5.  authentication/change-password-tablet-820.png
+  6.  authentication/change-password-mobile-390.png
+  7.  authentication/supplemental-auth-login-invalid.png
+  8.  authentication/supplemental-auth-mandatory-password.png
+
+2. requester/ (18 files):
+  1.  requester/requester-tickets-desktop-1440.png
+  2.  requester/requester-tickets-tablet-820.png
+  3.  requester/requester-tickets-mobile-390.png
+  4.  requester/create-ticket-desktop-1440.png
+  5.  requester/create-ticket-tablet-820.png
+  6.  requester/create-ticket-mobile-390.png
+  7.  requester/requester-detail-desktop-1440.png
+  8.  requester/requester-detail-tablet-820.png
+  9.  requester/requester-detail-mobile-390.png
+  10. requester/supplemental-create-validation-errors.png
+  11. requester/supplemental-create-api-failure.png
+  12. requester/supplemental-create-success-modal.png
+  13. requester/supplemental-requester-empty-state.png
+  14. requester/supplemental-ticket-attachment-active.png
+  15. requester/supplemental-ticket-attachment-soft-remove-modal.png
+  16. requester/supplemental-ticket-attachment-removed-audit.png
+  17. requester/supplemental-requester-timeline-comment.png
+  18. requester/supplemental-requester-problem-resolved.png
+
+3. staff-queue/ (4 files):
+  1.  staff-queue/staff-queue-desktop-1440.png
+  2.  staff-queue/staff-queue-tablet-820.png
+  3.  staff-queue/staff-queue-mobile-390.png
+  4.  staff-queue/supplemental-staff-filtered-no-results.png
+
+4. staff-ticket-detail/ (7 files):
+  1.  staff-ticket-detail/staff-detail-desktop-1440.png
+  2.  staff-ticket-detail/staff-detail-tablet-820.png
+  3.  staff-ticket-detail/staff-detail-mobile-390.png
+  4.  staff-ticket-detail/supplemental-staff-assigned-state.png
+  5.  staff-ticket-detail/supplemental-staff-status-transition-modal.png
+  6.  staff-ticket-detail/supplemental-staff-conflict-modal.png
+  7.  staff-ticket-detail/supplemental-staff-internal-note.png
+
+5. user-management/ (6 files):
+  1.  user-management/admin-users-desktop-1440.png
+  2.  user-management/admin-users-tablet-820.png
+  3.  user-management/admin-users-mobile-390.png
+  4.  user-management/supplemental-admin-create-user-modal.png
+  5.  user-management/supplemental-admin-reset-password-modal.png
+  6.  user-management/supplemental-admin-self-deactivation-disabled.png
+
+Visual Inspection Notes:
+  - All 43 images verified for exact viewport dimensions (1440x900, 820x1180, 390x844).
+  - No clipping, no overlapping controls or text, no unexpected scrollbars.
+  - Zero plaintext credentials, session tokens, or sensitive cookies exposed in UI or DOM.
+  - Internal notes are strictly absent from all Requester screenshots.
+  - Simulated failures honestly tested via route-intercepted responses.
+
+================================================================================
+Verification Status: ALL TESTS PASSING (27/27 E2E, 269/269 Server, 112/112 Client)
+================================================================================

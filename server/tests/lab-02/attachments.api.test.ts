@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import supertest from "supertest";
+import supertest, { testPasswordHash, testUserId } from "../authenticated-request.js";
 import fs from "fs";
 import path from "path";
 import app from "../../src/app.js";
@@ -32,29 +32,21 @@ describe("Attachments Lifecycle & Soft Removal API (Lab 2)", () => {
       },
     });
 
-    await prisma.requesterUser.deleteMany({
+    await prisma.user.deleteMany({
       where: {
         email: {
-          in: ["att.userA@example.com", "att.userB@example.com"],
+          in: ["att.userB@example.com"],
         },
       },
     });
 
-    const userA = await prisma.requesterUser.create({
-      data: {
-        name: "Att User A",
-        email: "att.userA@example.com",
-        department: "Engineering",
-        isActive: true,
-      },
-    });
-    userAId = userA.id;
+    userAId = testUserId;
 
-    const userB = await prisma.requesterUser.create({
+    const userB = await prisma.user.create({
       data: {
         name: "Att User B",
         email: "att.userB@example.com",
-        department: "Product",
+        passwordHash: testPasswordHash, mustChangePassword: false,
         isActive: true,
       },
     });
@@ -72,6 +64,7 @@ describe("Attachments Lifecycle & Soft Removal API (Lab 2)", () => {
         categoryId,
         relatedSystemId,
         requestedPriority: "MEDIUM",
+          itPriority: "MEDIUM",
         status: "NEW",
         summary: "[Att Test] Main Ticket",
         description: "[Att Test] Testing attachment uploads and soft removals.",
@@ -86,6 +79,7 @@ describe("Attachments Lifecycle & Soft Removal API (Lab 2)", () => {
         categoryId,
         relatedSystemId,
         requestedPriority: "LOW",
+          itPriority: "MEDIUM",
         status: "NEW",
         summary: "[Att Test] Other User Ticket",
         description: "[Att Test] Belongs to User B.",
@@ -122,10 +116,10 @@ describe("Attachments Lifecycle & Soft Removal API (Lab 2)", () => {
       },
     });
 
-    await prisma.requesterUser.deleteMany({
+    await prisma.user.deleteMany({
       where: {
         email: {
-          in: ["att.userA@example.com", "att.userB@example.com"],
+          in: ["att.userB@example.com"],
         },
       },
     });
@@ -206,20 +200,18 @@ describe("Attachments Lifecycle & Soft Removal API (Lab 2)", () => {
     expect(res3.body.error.code).toBe("BAD_REQUEST");
   });
 
-  it("API-08 / BR-05: rejects soft removal if ticket belongs to another requester", async () => {
+  it("API-08 / BR-05: returns non-disclosing 404 when the ticket belongs to another requester", async () => {
     const prisma = getPrisma();
     const att = await prisma.attachment.findFirst({
       where: { ticketId, isRemoved: false },
     });
 
-    // User B tries to remove User A's attachment
     const res = await supertest(app)
-      .post(`/api/tickets/${ticketId}/attachments/${att!.id}/remove`)
+      .post(`/api/tickets/${otherUserTicketId}/attachments/${att!.id}/remove`)
       .send({ requesterId: userBId, removalReason: "Attempted unauthorized removal" });
 
-    expect(res.status).toBe(403);
-    expect(res.body.error.code).toBe("FORBIDDEN");
-    expect(res.body.error.message).toContain("Access denied");
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe("NOT_FOUND");
   });
 
   it("API-08 / AC-07 / BR-09: successfully soft-removes attachment with valid reason", async () => {
@@ -260,7 +252,7 @@ describe("Attachments Lifecycle & Soft Removal API (Lab 2)", () => {
 
     expect(res.status).toBe(403);
     expect(res.body.error).toBeDefined();
-    expect(res.body.error.code).toBe("FORBIDDEN");
+    expect(res.body.error.code).toBe("ATTACHMENT_REMOVED");
     expect(res.body.error.message).toContain("Cannot download a removed attachment");
   });
 
@@ -306,19 +298,18 @@ describe("Attachments Lifecycle & Soft Removal API (Lab 2)", () => {
     expect(downloadRes.headers["content-disposition"]).toContain(encodeURIComponent(thaiFilename));
   });
 
-  it("returns 403 Forbidden when attempting to download an attachment belonging to another requester", async () => {
+  it("returns non-disclosing 404 when attempting to download from another requester's ticket", async () => {
     const prisma = getPrisma();
     const activeAtt = await prisma.attachment.findFirst({
       where: { ticketId, isRemoved: false },
     });
 
-    // User B tries to download User A's active attachment
     const res = await supertest(app)
-      .get(`/api/tickets/${ticketId}/attachments/${activeAtt!.id}`)
+      .get(`/api/tickets/${otherUserTicketId}/attachments/${activeAtt!.id}`)
       .query({ requesterId: userBId });
 
-    expect(res.status).toBe(403);
-    expect(res.body.error.code).toBe("FORBIDDEN");
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe("NOT_FOUND");
   });
 
   it("retrieves attachment metadata JSON for active and removed attachments", async () => {

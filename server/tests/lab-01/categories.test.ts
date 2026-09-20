@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import request from "supertest";
+import request from "../authenticated-request.js";
 import { app } from "../../src/app.js";
 void request; void app;
 

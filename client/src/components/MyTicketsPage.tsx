@@ -117,7 +117,6 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
     setError(null);
 
     fetchMyTickets({
-      requesterId: selectedRequester.id,
       search: debouncedSearch,
       category: categoryId === "" ? undefined : categoryId,
       priority: priority === "" ? undefined : priority,
@@ -162,15 +161,23 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
   const renderStatusBadge = (s: TicketStatus) => {
     const classMap: Record<TicketStatus, string> = {
       NEW: "badge-status-new",
+      OPEN: "badge-status-open",
       IN_PROGRESS: "badge-status-in_progress",
+      WAITING_FOR_REQUESTER: "badge-status-waiting_for_requester",
       RESOLVED: "badge-status-resolved",
       CLOSED: "badge-status-closed",
+      REOPENED: "badge-status-reopened",
+      CANCELLED: "badge-status-cancelled",
     };
     const labelMap: Record<TicketStatus, string> = {
       NEW: "New",
+      OPEN: "Open",
       IN_PROGRESS: "In Progress",
+      WAITING_FOR_REQUESTER: "Waiting for Requester",
       RESOLVED: "Resolved",
       CLOSED: "Closed",
+      REOPENED: "Reopened",
+      CANCELLED: "Cancelled",
     };
     return <span className={`badge ${classMap[s] || "badge-status-new"}`}>{labelMap[s] || s}</span>;
   };
@@ -211,7 +218,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
           <p style={{ color: "var(--color-text-secondary)", fontSize: "14px" }}>
             Viewing support tickets owned by{" "}
             <strong style={{ color: "var(--color-text-primary)" }}>{selectedRequester ? selectedRequester.name : "No user selected"}</strong>
-            {selectedRequester && ` (${selectedRequester.department})`}.
+            .
           </p>
         </div>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>

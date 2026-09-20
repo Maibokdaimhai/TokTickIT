@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { RequesterProvider } from "../../src/context/RequesterContext.js";
+import { RequesterProvider } from "../requester-fixture.js";
 import { CreateTicketForm } from "../../src/components/CreateTicketForm.js";
 import * as api from "../../src/api.js";
 
@@ -11,7 +11,6 @@ vi.mock("../../src/api.js", () => ({
   createTicket: vi.fn(),
   deleteTicketRollback: vi.fn(),
   uploadAttachment: vi.fn(),
-  fetchRequesters: vi.fn(),
 }));
 
 describe("CreateTicketForm Component (Lab 2)", () => {
@@ -32,10 +31,6 @@ describe("CreateTicketForm Component (Lab 2)", () => {
     (api.fetchRelatedSystems as any).mockResolvedValue([
       { id: 10, name: "Campus Wi-Fi" },
       { id: 20, name: "VPN" },
-    ]);
-
-    (api.fetchRequesters as any).mockResolvedValue([
-      { id: 1, name: "Jennifer Anderson", email: "jennifer@example.com", department: "Engineering" },
     ]);
   });
 
@@ -175,7 +170,7 @@ describe("CreateTicketForm Component (Lab 2)", () => {
 
     await waitFor(() => {
       expect(api.createTicket).toHaveBeenCalledTimes(1);
-      expect(api.uploadAttachment).toHaveBeenCalledWith(202, testFile, 1);
+      expect(api.uploadAttachment).toHaveBeenCalledWith(202, testFile);
       expect(screen.getByText(/Ticket Created Successfully!/i)).toBeInTheDocument();
       expect(screen.getByText(/TKT-2026-000202/i)).toBeInTheDocument();
     });
@@ -214,9 +209,9 @@ describe("CreateTicketForm Component (Lab 2)", () => {
 
     await waitFor(() => {
       expect(api.createTicket).toHaveBeenCalledTimes(1);
-      expect(api.uploadAttachment).toHaveBeenCalledWith(303, testFile, 1);
+      expect(api.uploadAttachment).toHaveBeenCalledWith(303, testFile);
       // Compensation rollback must be called
-      expect(api.deleteTicketRollback).toHaveBeenCalledWith(303, 1);
+      expect(api.deleteTicketRollback).toHaveBeenCalledWith(303);
       // Error banner rendered
       expect(screen.getByText(/Attachment upload failed: File storage write failure/i)).toBeInTheDocument();
       // Form fields must be preserved
@@ -260,8 +255,8 @@ describe("CreateTicketForm Component (Lab 2)", () => {
 
     await waitFor(() => {
       expect(api.createTicket).toHaveBeenCalledTimes(1);
-      expect(api.uploadAttachment).toHaveBeenCalledWith(404, testFile, 1);
-      expect(api.deleteTicketRollback).toHaveBeenCalledWith(404, 1);
+      expect(api.uploadAttachment).toHaveBeenCalledWith(404, testFile);
+      expect(api.deleteTicketRollback).toHaveBeenCalledWith(404);
 
       // Must NOT falsely state that ticket was rolled back
       expect(screen.queryByText(/The draft ticket was rolled back\./i)).toBeNull();
