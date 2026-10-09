@@ -1099,6 +1099,32 @@ textarea.form-control {
 }
 
 /* Staff Ticket Detail Layout & Controls */
+.staff-communication-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+}
+
+.staff-communication-grid > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.staff-communication-row {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.staff-communication-grid textarea {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.staff-communication-grid button {
+  min-height: 44px;
+  max-width: 100%;
+  white-space: normal;
+}
+
 .ticket-detail-back-bar {
   margin-bottom: 20px;
 }

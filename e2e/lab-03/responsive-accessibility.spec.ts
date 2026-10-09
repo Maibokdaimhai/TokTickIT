@@ -250,6 +250,31 @@ test.describe.serial("VIS-01: Responsive Layout & Accessibility Inspection", () 
 
     await captureScreenshot(page, "staff-ticket-detail/staff-detail-mobile-390.png");
 
+    // Body overflow checks miss content clipped by an overflow-hidden ancestor.
+    // Inspect the lower communication panels and every composer control directly.
+    for (const width of [390, 320, 820, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const panelId of ["staff-public-comments-section", "staff-internal-notes-section"]) {
+        const panel = page.getByTestId(panelId);
+        await expect(panel).toBeVisible();
+        const bounds = await panel.boundingBox();
+        expect(bounds).not.toBeNull();
+        expect(bounds!.x).toBeGreaterThanOrEqual(0);
+        expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+        for (const control of await panel.locator("h3, span, textarea, button").all()) {
+          const box = await control.boundingBox();
+          expect(box).not.toBeNull();
+          expect(box!.x).toBeGreaterThanOrEqual(bounds!.x);
+          expect(box!.x + box!.width).toBeLessThanOrEqual(bounds!.x + bounds!.width);
+        }
+        await assertTouchTargets(page, [`[data-testid="${panelId}"] button`]);
+      }
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    const communicationScreenshot = await captureScreenshot(page, "staff-ticket-detail/staff-detail-mobile-communication.png");
+    await page.getByTestId("btn-submit-internal-note").scrollIntoViewIfNeeded();
+    await page.screenshot({ path: communicationScreenshot });
+
     await signOut(page);
   });
 

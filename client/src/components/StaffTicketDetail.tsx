@@ -1325,9 +1325,9 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
 
           {/* Communication Sections: Public Comments & Internal Notes */}
           <div
+            className="staff-communication-grid"
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))",
               gap: "24px",
               borderTop: "1px solid var(--color-border)",
               paddingTop: "24px",
@@ -1343,7 +1343,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
               }}
               data-testid="staff-public-comments-section"
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+              <div className="staff-communication-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
                 <h3 style={{ fontSize: "15px", fontWeight: 700, margin: 0, color: "#166534" }}>
                   Public Comments ({publicComments.length})
                 </h3>
@@ -1369,7 +1369,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                         padding: "10px 12px",
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
+                      <div className="staff-communication-row" style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
                         <strong>{c.author?.name || (c as any).authorName || "User"} {c.author?.role ? `(${c.author.role})` : (c as any).authorRole ? `(${(c as any).authorRole})` : ""}</strong>
                         <span style={{ color: "#64748B" }}>{formatDate(c.createdAt)}</span>
                       </div>
@@ -1403,7 +1403,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                     resize: "vertical",
                   }}
                 />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px" }}>
+                <div className="staff-communication-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px" }}>
                   <span style={{ fontSize: "11.5px", color: "#166534" }}>
                     {Array.from(publicCommentDraft.trim()).length} / 2000
                   </span>
@@ -1444,7 +1444,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
               }}
               data-testid="staff-internal-notes-section"
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+              <div className="staff-communication-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
                 <h3 style={{ fontSize: "15px", fontWeight: 700, margin: 0, color: "#92400E" }}>
                   Internal Notes ({internalNotes.length})
                 </h3>
@@ -1470,7 +1470,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                         padding: "10px 12px",
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
+                      <div className="staff-communication-row" style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
                         <strong>{n.author?.name || (n as any).authorName || "Staff"} {n.author?.role ? `(${n.author.role})` : (n as any).authorRole ? `(${(n as any).authorRole})` : ""}</strong>
                         <span style={{ color: "#64748B" }}>{formatDate(n.createdAt)}</span>
                       </div>
@@ -1504,7 +1504,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                     resize: "vertical",
                   }}
                 />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px" }}>
+                <div className="staff-communication-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px" }}>
                   <span style={{ fontSize: "11.5px", color: "#92400E" }}>
                     {Array.from(internalNoteDraft.trim()).length} / 2000
                   </span>
