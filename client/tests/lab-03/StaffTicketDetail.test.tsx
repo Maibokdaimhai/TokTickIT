@@ -5,6 +5,8 @@ import { StaffTicketDetail } from "../../src/components/StaffTicketDetail.js";
 import * as api from "../../src/api.js";
 import type { StaffTicketDetail as StaffTicketDetailType, EligibleOwner } from "../../src/types.js";
 
+vi.mock("../../src/components/ActionsTaken.js", () => ({ ActionsTaken: () => null }));
+
 vi.mock("../../src/api.js", () => ({
   API_URL: "http://localhost:3000",
   fetchStaffTicketDetail: vi.fn(),

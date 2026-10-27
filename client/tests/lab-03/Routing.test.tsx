@@ -5,6 +5,8 @@ import App from "../../src/App.js";
 import * as api from "../../src/api.js";
 import type { AuthResult, StaffTicketDetail, TicketDetail } from "../../src/types.js";
 
+vi.mock("../../src/components/ActionsTaken.js", () => ({ ActionsTaken: () => null }));
+
 vi.mock("../../src/api.js", async (original) => ({
   ...(await original<typeof import("../../src/api.js")>()),
   getSession: vi.fn(),

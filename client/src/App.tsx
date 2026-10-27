@@ -235,6 +235,7 @@ const MainContent: React.FC<MainContentProps> = ({ pathname, navigate }) => {
               return (
                 <StaffTicketDetail
                   ticketId={ticketId}
+                  actor={session?.user}
                   onBack={() => navigate("/staff/tickets")}
                 />
               );
@@ -338,6 +339,9 @@ export default function App() {
 function SessionGate() {
   const { session, loading } = useAuth();
   const [pathname, setPathname] = useState<string>(() => window.location.pathname || "/");
+  const acceptedLocation = React.useRef(window.location.pathname + window.location.search);
+
+  useEffect(() => { acceptedLocation.current = window.location.pathname + window.location.search; }, [pathname]);
 
   const getHomePath = () => {
     if (session?.user.role === "IT_STAFF") return "/staff/tickets";
@@ -347,10 +351,17 @@ function SessionGate() {
 
   useEffect(() => {
     const onPopState = () => {
+      if (!window.dispatchEvent(new Event("app:before-navigate", { cancelable: true }))) {
+        window.history.pushState(null, "", acceptedLocation.current);
+        return;
+      }
+      acceptedLocation.current = window.location.pathname + window.location.search;
       setPathname(window.location.pathname || "/");
     };
+    const rememberLocation = () => { acceptedLocation.current = window.location.pathname + window.location.search; };
     window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
+    window.addEventListener("app:location-changed", rememberLocation);
+    return () => { window.removeEventListener("popstate", onPopState); window.removeEventListener("app:location-changed", rememberLocation); };
   }, []);
 
   useEffect(() => {
@@ -380,12 +391,14 @@ function SessionGate() {
   }, [loading, session, pathname]);
 
   const navigate = (newPath: string, replace = false) => {
+    if (newPath !== window.location.pathname + window.location.search && !window.dispatchEvent(new Event("app:before-navigate", { cancelable: true }))) return;
     if (replace) {
       window.history.replaceState(null, "", newPath);
     } else {
       window.history.pushState(null, "", newPath);
     }
     setPathname(newPath);
+    acceptedLocation.current = window.location.pathname + window.location.search;
   };
 
   if (loading) {

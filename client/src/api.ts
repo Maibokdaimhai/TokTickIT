@@ -36,7 +36,7 @@ export class ApiClientError extends Error {
   }
 }
 // All browser requests use the HttpOnly session cookie, never localStorage credentials.
-async function apiFetch(url: string, init?: RequestInit) {
+export async function apiFetch(url: string, init?: RequestInit) {
   const response = await fetch(url, { ...init, credentials: "include" });
   if (!url.includes("/api/auth/") && (response.status === 401 || response.status === 403)) {
     if (response.status === 401) window.dispatchEvent(new Event("auth:expired"));

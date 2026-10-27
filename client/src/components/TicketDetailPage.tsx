@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { ActionsTaken } from "./ActionsTaken.js";
 import { useRequester } from "../context/RequesterContext.js";
 import { TicketDetail, Attachment, Entry } from "../types.js";
 import {
@@ -1219,6 +1220,8 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({ ticketId, on
           </div>
         </div>
       </div>
+
+      <ActionsTaken ticketId={ticket.id} ticketStatus={ticket.status} ticketCreatedAt={ticket.createdAt} ticketVersion={ticket.version ?? 0} onTicketChanged={reloadTicket} />
 
       {/* Soft-Removal Reason Modal (UI-06 / AC-07, AC-08) */}
       {targetAttachment && (

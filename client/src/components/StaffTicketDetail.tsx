@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
+import { ActionsTaken } from "./ActionsTaken.js";
 import {
   StaffTicketDetail as StaffTicketDetailType,
   EligibleOwner,
   Priority,
   TicketStatus,
   Entry,
+  AuthUser,
 } from "../types.js";
 import {
   API_URL,
@@ -23,6 +25,7 @@ import {
 interface StaffTicketDetailProps {
   ticketId: number;
   onBack: () => void;
+  actor?: AuthUser;
 }
 
 const STATUS_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
@@ -52,6 +55,7 @@ const OWNER_REQUIRED_STATUSES: TicketStatus[] = [
 export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
   ticketId,
   onBack,
+  actor,
 }) => {
   // Ticket loading state
   const [ticket, setTicket] = useState<StaffTicketDetailType | null>(null);
@@ -1537,6 +1541,8 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
           </div>
         </div>
       </div>
+
+      <ActionsTaken ticketId={ticket.id} ticketStatus={ticket.status} ticketCreatedAt={ticket.createdAt} ticketVersion={ticket.version ?? 0} actor={actor} onTicketChanged={reloadTicket} ticketRefreshFailed={refreshFailed} />
 
       {/* Accessible Status Confirmation Dialog */}
       {statusModalOpen && targetStatus && (

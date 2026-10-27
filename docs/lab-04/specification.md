@@ -176,3 +176,5 @@ Proposed remaining Issues/branches, after merged feature/lab4-lab3-tech-debt:
 This list is a local plan; no GitHub Issues/PRs or pushes are created by this documentation task.
 
 Issue #48 implementation and migration/recovery details: [Actions foundation](actions-foundation.md). Current executed coverage is recorded in tests.md Section 8; the complete product Definition of Done above remains pending.
+
+Issue #49 shared Actions UI is implemented locally from merged PR #54; see [Actions UI notes](actions-ui.md) and tests.md Section 9. Later Ticket workflow, dashboards and full release verification remain pending.
