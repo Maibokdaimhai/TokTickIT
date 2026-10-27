@@ -19,6 +19,7 @@ Error envelope: `{error:{code:string,message:string,details?:{field:string,messa
 | VERSION_CONFLICT / STATUS_CONFLICT | 409 | Expected Ticket/action version or Ticket status stale |
 | ACTION_READ_ONLY / TICKET_READ_ONLY | 409 | Action terminal or parent frozen |
 | IDEMPOTENCY_CONFLICT | 409 | Retry key reused for different canonical create |
+| FOLLOW_UP_NOT_PENDING | 409 | Follow-up completion target is not COMPLETED, has no outstanding follow-up, or completion is already recorded |
 | RESOLUTION_BLOCKED | 409 | Resolution gate unmet; details.field is completedAction, activeActions, or followUp |
 
 409 responses do not leak current resource bodies; the client refreshes authorized GETs and preserves its draft. A failed transaction must not create a revision/event or increment a version.
@@ -38,6 +39,8 @@ type Action = {
   description: string; result: string | null;
   performedBy: Identity; assignee: Identity;
   followUpRequired: boolean; followUpNote: string | null;
+  followUpCompletedAt: string | null; followUpCompletedBy: Identity | null;
+  followUpCompletionNote: string | null;
   attachmentNotes: string | null; status: ActionStatus; version: number;
   createdAt: string; updatedAt: string;
 };
@@ -48,6 +51,8 @@ type Revision = {
     actionAt: string; description: string; result: string | null;
     performedById: number; assigneeId: number; followUpRequired: boolean;
     followUpNote: string | null; attachmentNotes: string | null;
+    followUpCompletedAt: string | null; followUpCompletedById: number | null;
+    followUpCompletionNote: string | null;
     status: ActionStatus;
   };
 };
@@ -97,9 +102,19 @@ Staff/Admin. Required body fields: `clientRequestId` (UUID), `expectedTicketVers
 
 ### PATCH /staff/tickets/:id/actions/:actionId
 
-Staff/Admin. Require `expectedTicketVersion` and `expectedActionVersion`, plus at least one of actionAt/description/result/assigneeId/followUpRequired/followUpNote/attachmentNotes/status. Validate the merged state, not just supplied fields. Changing followUpRequired to false clears followUpNote. If current assignee is ineligible, the patch must choose an eligible assignee. No parent/performer change. Verify parent-action association before writing.
+Staff/Admin. Require `expectedTicketVersion` and `expectedActionVersion`, plus at least one of actionAt/description/result/assigneeId/followUpRequired/followUpNote/attachmentNotes/status. Validate the merged state, not just supplied fields. On nonterminal actions, changing followUpRequired to false clears followUpNote; the previous note remains in earlier revisions. Ordinary PATCH rejects terminal actions and all follow-up completion metadata, which can only be set through the operation below. If current assignee is ineligible, the patch must choose an eligible assignee. No parent/performer change. Verify parent-action association before writing.
 
 200 `{action:Action,ticketVersion:number}` with one new revision and action version+1. A repeated stale PATCH returns 409 VERSION_CONFLICT; the client refreshes and checks whether the intended state already committed. Terminal-parent and terminal-action rules, completion/cancellation result requirements, and assignee validation are enforced on the backend.
+
+### POST /staff/tickets/:id/actions/:actionId/follow-up-completion
+
+Staff/Admin only, regardless of original performer or assignee. Required and only accepted body fields: `{expectedTicketVersion:number, expectedActionVersion:number, completionNote:string}`. completionNote is trimmed, 1-2000 Unicode code points; blank, overlong, wrong-type or spoofed completion-actor/time fields return 400 VALIDATION_ERROR. Verify parent/action association and role exactly as the other action writes.
+
+Under the same User -> Ticket -> action lock ordering, compare both expected versions before business-state checks; stale/repeated requests return 409 VERSION_CONFLICT. With current versions, a frozen parent returns 409 TICKET_READ_ONLY; an action that is not COMPLETED, has no outstanding follow-up, or already has completion metadata returns 409 FOLLOW_UP_NOT_PENDING. Ordinary action immutability is deliberately bypassed only for the fields named in BR-23. Historical assignee ineligibility does not block this operation; the acting user must still be active eligible Staff/Admin.
+
+200 `{action:Action,ticketVersion:number}`. Atomically clear followUpRequired, retain original followUpNote, set followUpCompletedAt from backend time and followUpCompletedById from session actor, save followUpCompletionNote, append one revision, and increment action/Ticket versions and updatedAt. All work fields and earlier revisions remain unchanged. Failure rolls back the entire write. No new create-retry UUID is used: a retry after success conflicts on versions; refresh GET to inspect completion evidence instead of blindly retrying with newer versions. Completion metadata is read-only and visible to the owning Requester in action and revision reads.
+
+This removes that action's follow-up blocker; it does not itself resolve the Ticket. Staff then submits the normal status transition with the refreshed Ticket version, and all BR-12 checks still apply.
 
 ### Eligible assignees
 

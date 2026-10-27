@@ -17,7 +17,7 @@ TDD: add a meaningful failing test for the current Issue, record its failure and
 | UNIT-03 | Unit | FR-07/08; BR-17/20 | AC-09, AC-10 | Fixed clock computes Bangkok midnight window across UTC date/month/year boundaries; no machine-local timezone dependence | server/tests/lab-04/dashboard-window.test.ts |
 | API-01 | API/DB | FR-01/02; BR-01/03 | AC-01 | Create under correct Ticket with server performer and different eligible assignee; returned identities/version and revision 0 match committed DB | server/tests/lab-04/actions-taken.api.test.ts |
 | API-02 | API/DB | FR-02; BR-03/04/05 | AC-02 | Invalid shape/IDs/dates, spoofed performer, missing conditional note, inactive/missing/Requester assignee -> 400, no projection/revision/version changes | server/tests/lab-04/actions-taken.api.test.ts |
-| API-03 | API/DB | FR-01/04; BR-06/07/08 | AC-03 | Edit/reassign and every legal action transition; terminal/frozen parent rejected; immutable earlier revisions unchanged | server/tests/lab-04/actions-taken.api.test.ts |
+| API-03 | API/DB | FR-01/04; BR-06/07/08 | AC-03 | Edit/reassign and every legal action transition; ordinary terminal edits/frozen parent rejected; BR-23 follow-up completion tested separately; immutable earlier revisions unchanged | server/tests/lab-04/actions-taken.api.test.ts |
 | API-04 | API/security | FR-03/09; BR-02/22 | AC-04, AC-13 | Missing/expired/revoked/restricted sessions; Requester writes; foreign/missing Ticket full-response equality; mismatched action/Ticket IDs; correct safe projections on list/single/history | server/tests/lab-04/actions-authorization.api.test.ts |
 | API-05 | API/DB | FR-04; BR-08 | AC-03, AC-04 | Equal createdAt values, backdated actionAt, multiple pages and history order stable; terminal/cancelled records remain visible; no delete APIs | server/tests/lab-04/actions-taken.api.test.ts |
 | API-06 | API/DB race | FR-06; BR-09 | AC-05 | Two action edits with same versions: exactly one succeeds, loser 409, one revision only; concurrent unrelated Ticket change also invalidates draft | server/tests/lab-04/actions-concurrency.api.test.ts |
@@ -33,10 +33,12 @@ TDD: add a meaningful failing test for the current Issue, record its failure and
 | API-16 | API/DB | FR-08; BR-17/19/21 | AC-10 | Staff/Admin exact global/unassigned/mine/status/priority counts; my active actions uses assignee, not performer; terminal parent excluded; all zero enum buckets present | server/tests/lab-04/staff-dashboard.api.test.ts |
 | API-17 | API/DB | FR-07/08; BR-21/22 | AC-09, AC-10, AC-13 | Dashboard role denial, requesterId/assignee spoof queries rejected, no-store headers, safe errors; one snapshot/asOf across concurrent changes | server/tests/lab-04/dashboard-security.api.test.ts |
 | API-18 | API/DB | FR-07/08; BR-18/19/21 | AC-11 | Each card predicate equals drill-down total on unchanged DB; group/status conflicts, partial/invalid date range, array/unknown query rejected; all eight Requester statuses accepted | server/tests/lab-04/dashboard-drilldown.api.test.ts |
+| API-19 | API/DB/security | FR-02/04/05; BR-07/08/23 | AC-02, AC-03, AC-04, AC-07 | Complete an action with pending follow-up; direct resolve is blocked; Staff records completion with note/time/session actor, original work/note/prior revisions unchanged, exactly one revision appended; resolve with fresh version succeeds. Requester reads completion but cannot write it; blank/overlong/spoofed completion data, wrong Ticket, noncompleted/cancelled/no-pending target, frozen parent and repeated requests fail without writes. Historical inactive assignee does not block eligible acting staff | server/tests/lab-04/actions-taken.api.test.ts |
+| API-20 | API/DB race | FR-05/06; BR-09/12/23 | AC-05, AC-07 | Parallel follow-up completions yield one winner/revision; stale loser changes nothing; injected revision failure rolls back completion and parent version; resolve racing completion either remains blocked/stale or succeeds only after committed clearance | server/tests/lab-04/actions-concurrency.api.test.ts |
 | DB-01 | Migration | FR-09; BR-14/20 | AC-08, AC-12 | Migrate Lab 3 snapshot; IDs/values/FKs/files preserved, zero invented actions/events, only specified resolution backfill changes with estimate flag | server/tests/lab-04/migration-regression.test.ts |
 | DB-02 | Seed/recovery | FR-09; BR-16/20 | AC-12 | Seed twice: stable logical records/revisions/events, no user-data overwrite; restore pre-migration backup into second disposable DB and verify Lab 3 read/workflow | server/tests/lab-04/migration-regression.test.ts |
 | UI-01 | Component | FR-01/02/10; BR-03/04/05 | AC-01, AC-02, AC-14 | Create/edit form defaults, independent assignee, readonly performer, Unicode/conditional validation, date conversion and safe private-content warning | client/tests/lab-04/ActionsTaken.test.tsx |
-| UI-02 | Component | FR-01/03/04; BR-06/07/08 | AC-03, AC-04 | Staff permitted controls, terminal/frozen modes, inactive assignee warning, Requester readonly items/revisions, no Internal Note content | client/tests/lab-04/ActionsTaken.test.tsx |
+| UI-02 | Component | FR-01/02/03/04/05; BR-06/07/08/23 | AC-03, AC-04, AC-07 | Staff permitted controls, terminal/frozen modes, inactive assignee warning, Requester readonly items/revisions, no Internal Note content; Record Follow-up Completion appears only for eligible pending completed work, validates/retains its note, shows server completion identity/time and preserves original context | client/tests/lab-04/ActionsTaken.test.tsx |
 | UI-03 | Component | FR-06/10; BR-09/10 | AC-05, AC-14 | Repeated click blocked; uncertain create retry keeps UUID; 400/409/500 retain drafts; refresh reconciles explicitly without silent overwrite | client/tests/lab-04/ActionsTaken.test.tsx |
 | UI-04 | Component | FR-05/10; BR-11/12/13 | AC-06, AC-07, AC-08, AC-14 | Only legal Ticket options, blockers/confirmation, advisory explanation, successful summary/history refresh and stale feedback | client/tests/lab-04/TicketWorkflow.test.tsx |
 | UI-05 | Component | FR-07/10; BR-18/20 | AC-09, AC-11, AC-14 | Requester loading/zero/nonzero/error/refresh states, estimate/range labels, exact encoded links and preview destinations | client/tests/lab-04/RequesterDashboard.test.tsx |
@@ -45,7 +47,7 @@ TDD: add a meaningful failing test for the current Issue, record its failure and
 | UI-08 | Component | FR-08/10; BR-19 | AC-10, AC-11, AC-14 | My Active Actions page pagination, no results, selection to Ticket, errors and latest-response ownership | client/tests/lab-04/MyActiveActions.test.tsx |
 | STYLE-01 | Rendered style | FR-10; BR-22 | AC-15 | Real computed tokens/contrast, text badges, public/private distinction, editable/read-only fields and wrapped rows match UI contract | e2e/lab-04/responsive-accessibility.spec.ts |
 | E2E-01 | Browser/DB | FR-01/03/04/06 | AC-01, AC-02, AC-03, AC-04, AC-05, AC-14 | Staff records multiple differently assigned actions; edit/follow-up/complete/cancel validation and failures; Requester sees full readonly work/history | e2e/lab-04/actions-taken-flow.spec.ts |
-| E2E-02 | Browser/DB | FR-05/09 | AC-06, AC-07, AC-08, AC-13 | Create -> claim -> work -> waiting -> requester indication -> resolved -> closed -> reopened -> new work -> resolved; separate cancellation path and conflict | e2e/lab-04/ticket-resolution.spec.ts |
+| E2E-02 | Browser/DB | FR-05/09 | AC-06, AC-07, AC-08, AC-13 | Create -> claim -> work -> waiting -> requester indication -> resolved -> closed -> reopened -> new work -> resolved; separate cancellation path and conflict. Include COMPLETED action with followUpRequired=true -> Resolve blocked -> Record Follow-up Completion -> original and completion revisions visible to Requester -> refreshed Resolve succeeds | e2e/lab-04/ticket-resolution.spec.ts |
 | E2E-03 | Browser/DB | FR-07/08 | AC-09, AC-10, AC-11, AC-14 | All-role dashboards, zero/nonzero values verified by independent queries, each card drill-down, cross-Requester protection and My Active Actions | e2e/lab-04/dashboards.spec.ts |
 | E2E-04 | Browser/style/a11y | FR-10 | AC-15 | Four widths, long content and 200% zoom: panel/control bounds, target sizes, no clipping/overlap; keyboard/labels/focus/reduced motion/console | e2e/lab-04/responsive-accessibility.spec.ts |
 | REG-01 | API/UI/E2E | FR-09/10; BR-22 | AC-13, AC-15 | Run all earlier suites; verify auth, My Tickets, detail, attachments/rollback, public/private communication, queue, admin safeguards; retain mobile communication regression | e2e/lab-04/earlier-labs-regression.spec.ts plus existing Labs 1-3 suites |
@@ -57,12 +59,12 @@ TDD: add a meaningful failing test for the current Issue, record its failure and
 | AC | Planned tests |
 |---|---|
 | AC-01 | API-01, UI-01, E2E-01 |
-| AC-02 | UNIT-01, API-02, API-08, UI-01, E2E-01 |
-| AC-03 | UNIT-02, API-03, API-05, UI-02, E2E-01 |
-| AC-04 | API-04, API-05, UI-02, E2E-01 |
-| AC-05 | API-06/07/08/09/12, UI-03, E2E-01 |
+| AC-02 | UNIT-01, API-02, API-08, API-19, UI-01, E2E-01 |
+| AC-03 | UNIT-02, API-03, API-05, API-19, UI-02, E2E-01 |
+| AC-04 | API-04, API-05, API-19, UI-02, E2E-01 |
+| AC-05 | API-06/07/08/09/12/20, UI-03, E2E-01 |
 | AC-06 | UNIT-02, API-10, UI-04, E2E-02 |
-| AC-07 | API-11/12, UI-04, E2E-02 |
+| AC-07 | API-11/12/19/20, UI-02/04, E2E-02 |
 | AC-08 | API-13, DB-01, UI-04, E2E-02 |
 | AC-09 | UNIT-03, API-15/17, UI-05, E2E-03 |
 | AC-10 | UNIT-03, API-16/17, UI-06/08, E2E-03 |
@@ -76,7 +78,17 @@ TDD: add a meaningful failing test for the current Issue, record its failure and
 
 ## 4. Fixtures and independent oracles
 
-Use fixed clocks for calculation tests and controlled backend time for date validation. Freeze asOf for window-boundary tests; seed just before, exactly on, and just after each boundary. Include equal timestamps/duplicate names for tie ordering, two Requesters, at least two eligible contributors, an Administrator and inactive/role-changed assignees. Include actions performed by A but assigned to B, terminal parents with unfinished historical actions, cancelled follow-up, zero-action legacy resolved Tickets and a multi-action Ticket. Compute expected metric membership from explicit fixture IDs or independent SQL queries, never by calling the implementation helper under test.
+Follow-up regression walkthrough for API-19 and E2E-02 (planned, not executed): start with an IN_PROGRESS Ticket at version 10 with an eligible owner and one COMPLETED action at version 1, a nonempty result, followUpRequired=true and the original follow-up note. Earlier revision 0 contains initial work; revision 1 contains completed work with pending follow-up. No other blockers exist.
+
+| Step | Expected result |
+|---|---|
+| Attempt Resolve using Ticket version 10 | 409 RESOLUTION_BLOCKED; Ticket version stays 10, action stays version 1, no event/revision added |
+| Record Follow-up Completion with Ticket version 10, action version 1 and a valid completion note | 200; Ticket version 11, action version 2, flag false; original note/work unchanged; backend actor/time/note saved; exactly revision 2 appended |
+| Owning Requester reads item/history | Original pending revisions 0/1 and completion revision 2 remain visible with distinct context; no write controls or Internal Notes |
+| Attempt Resolve with refreshed Ticket version 11 and expectedStatus IN_PROGRESS, confirmed=true | 200; Ticket RESOLVED at version 12, transition event and actual resolution time saved |
+| Replay completion with its old versions | 409 VERSION_CONFLICT; no duplicate completion or revision |
+
+Use fixed clocks for calculation tests and controlled backend time for date validation. Freeze asOf for window-boundary tests; seed just before, exactly on, and just after each boundary. Include equal timestamps/duplicate names for tie ordering, two Requesters, at least two eligible contributors, an Administrator and inactive/role-changed assignees. Include actions performed by A but assigned to B, terminal parents with unfinished historical actions, cancelled follow-up, COMPLETED actions with pending versus recorded-complete follow-up (including original and completion revisions), zero-action legacy resolved Tickets and a multi-action Ticket. Compute expected metric membership from explicit fixture IDs or independent SQL queries, never by calling the implementation helper under test.
 
 Race tests use separate database connections and synchronization barriers, not arbitrary sleeps. Assert persisted rows/revisions/events and parent versions after completion, not only response codes. Test exact retry key races under a unique constraint and resource-access checks before replay. Transaction failure tests need an intentional DB failure/test seam scoped to disposable tests, never a production bypass flag.
 
