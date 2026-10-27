@@ -7,6 +7,7 @@ import { router as attachmentRoutes } from "./routes/attachment.routes.js";
 import { router as staffRoutes } from "./routes/staff.routes.js";
 import { router as communicationRoutes } from "./routes/communication.routes.js";
 import { router as adminRoutes } from "./routes/admin.routes.js";
+import { router as actionRoutes } from "./routes/action.routes.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { router as authRoutes } from "./routes/auth.routes.js";
 import { requireOrigin, requireSession } from "./middleware/auth.js";
@@ -31,6 +32,8 @@ app.use("/api", attachmentRoutes);
 app.use("/api", staffRoutes);
 app.use("/api", communicationRoutes);
 app.use("/api", adminRoutes);
+app.use("/api", actionRoutes);
+app.use("/api", (_req, res) => res.status(404).json({ error: { code: "NOT_FOUND", message: "Resource not found" } }));
 app.use(errorHandler);
 
 export default app;

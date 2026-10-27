@@ -1,6 +1,6 @@
 # Lab 4 Engineering Specification - TokTickIT
 
-Status: Draft for review, 27 October 2026. Documentation only; Lab 4 feature implementation and test execution are not complete. Base: `lab4-staging` at `20581ae`, including the Lab 3 mobile communication correction. IDs in this document are scoped to Lab 4.
+Status: Contract merged through PR #46. Issue #48 backend foundation implemented locally on 27 October 2026; later Lab 4 features and final release verification remain incomplete. Base: `lab4-staging` at `20581ae`, including the Lab 3 mobile communication correction. IDs in this document are scoped to Lab 4.
 
 Source: CPE334 Lab 4 worksheet, Sections 1-14 and grading Parts 1-9. Earlier approved behavior remains governed by [Lab 3](../lab-03/specification.md) unless a change is explicitly stated here. This contract resolves implementation choices; it does not claim instructor or peer approval.
 
@@ -174,3 +174,5 @@ Proposed remaining Issues/branches, after merged feature/lab4-lab3-tech-debt:
 7. docs/lab4-final-evidence-release: actual review/AI records, README, release verification and submission.
 
 This list is a local plan; no GitHub Issues/PRs or pushes are created by this documentation task.
+
+Issue #48 implementation and migration/recovery details: [Actions foundation](actions-foundation.md). Current executed coverage is recorded in tests.md Section 8; the complete product Definition of Done above remains pending.

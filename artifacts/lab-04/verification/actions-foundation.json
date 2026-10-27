@@ -1,0 +1,163 @@
+{
+  "date": "2026-10-27",
+  "branch": "feature/lab4-actions-foundation",
+  "baseCommit": "ecf4c47c3c869b951f8071b0d25d61a41ef3fe49",
+  "workingTree": true,
+  "serverSourceFingerprintSHA256": "1076efd0e73f7d912647e843a302ccfe0df33629e371831d662dbbe8bec44483",
+  "testDatabase": "toktickit_lab4_actions_test",
+  "postgresql": "17 (dedicated disposable Docker container)",
+  "recoveryEnabled": true,
+  "backendTests": {
+    "passed": 317,
+    "failed": 0,
+    "skipped": 0
+  },
+  "checks": {
+    "prismaValidate": "passed",
+    "serverTypecheckNoEmit": "passed",
+    "serverBuild": "passed"
+  },
+  "suites": [
+    {
+      "file": "server/tests/lab-01/categories.test.ts",
+      "status": "passed",
+      "passed": 1
+    },
+    {
+      "file": "server/tests/lab-01/health.test.ts",
+      "status": "passed",
+      "passed": 1
+    },
+    {
+      "file": "server/tests/lab-02/attachments.api.test.ts",
+      "status": "passed",
+      "passed": 10
+    },
+    {
+      "file": "server/tests/lab-02/create-ticket.api.test.ts",
+      "status": "passed",
+      "passed": 10
+    },
+    {
+      "file": "server/tests/lab-02/my-tickets.api.test.ts",
+      "status": "passed",
+      "passed": 6
+    },
+    {
+      "file": "server/tests/lab-02/ticket-detail.api.test.ts",
+      "status": "passed",
+      "passed": 5
+    },
+    {
+      "file": "server/tests/lab-03/attachments.api.test.ts",
+      "status": "passed",
+      "passed": 8
+    },
+    {
+      "file": "server/tests/lab-03/auth.api.test.ts",
+      "status": "passed",
+      "passed": 13
+    },
+    {
+      "file": "server/tests/lab-03/backend-compatibility.test.ts",
+      "status": "passed",
+      "passed": 17
+    },
+    {
+      "file": "server/tests/lab-03/backend-services.test.ts",
+      "status": "passed",
+      "passed": 17
+    },
+    {
+      "file": "server/tests/lab-03/comments-notes.api.test.ts",
+      "status": "passed",
+      "passed": 21
+    },
+    {
+      "file": "server/tests/lab-03/error-handling.test.ts",
+      "status": "passed",
+      "passed": 6
+    },
+    {
+      "file": "server/tests/lab-03/migration-seed.test.ts",
+      "status": "passed",
+      "passed": 4
+    },
+    {
+      "file": "server/tests/lab-03/password.test.ts",
+      "status": "passed",
+      "passed": 12
+    },
+    {
+      "file": "server/tests/lab-03/requester-authorization.api.test.ts",
+      "status": "passed",
+      "passed": 12
+    },
+    {
+      "file": "server/tests/lab-03/session.test.ts",
+      "status": "passed",
+      "passed": 2
+    },
+    {
+      "file": "server/tests/lab-03/staff-queue.api.test.ts",
+      "status": "passed",
+      "passed": 37
+    },
+    {
+      "file": "server/tests/lab-03/staff-ticket-detail.api.test.ts",
+      "status": "passed",
+      "passed": 22
+    },
+    {
+      "file": "server/tests/lab-03/ticket-policy.test.ts",
+      "status": "passed",
+      "passed": 5
+    },
+    {
+      "file": "server/tests/lab-03/users-admin.api.test.ts",
+      "status": "passed",
+      "passed": 34
+    },
+    {
+      "file": "server/tests/lab-03/validation.test.ts",
+      "status": "passed",
+      "passed": 26
+    },
+    {
+      "file": "server/tests/lab-04/action-validation.test.ts",
+      "status": "passed",
+      "passed": 14
+    },
+    {
+      "file": "server/tests/lab-04/actions-authorization.api.test.ts",
+      "status": "passed",
+      "passed": 4
+    },
+    {
+      "file": "server/tests/lab-04/actions-concurrency.api.test.ts",
+      "status": "passed",
+      "passed": 10
+    },
+    {
+      "file": "server/tests/lab-04/actions-taken.api.test.ts",
+      "status": "passed",
+      "passed": 12
+    },
+    {
+      "file": "server/tests/lab-04/database-guard.test.ts",
+      "status": "passed",
+      "passed": 5
+    },
+    {
+      "file": "server/tests/lab-04/migration-regression.test.ts",
+      "status": "passed",
+      "passed": 3
+    }
+  ],
+  "limitations": [
+    "Not final-main evidence; execution used uncommitted sources subsequently committed as 0432b19 with the same server-source fingerprint.",
+    "No UI/browser tests for this backend foundation.",
+    "Ticket resolution gate and its follow-up-to-resolution E2E checks belong to Issue #50."
+  ],
+  "implementationCommit": "0432b19a676db73827a43ad7cc2ea02e92794b26"
+}

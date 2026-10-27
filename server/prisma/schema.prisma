@@ -27,6 +27,13 @@ enum TicketStatus {
   CANCELLED
 }
 
+enum ActionStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
 enum UserRole {
   REQUESTER
   IT_STAFF
@@ -47,22 +54,27 @@ model RequesterUser {
 }
 
 model User {
-  id                 Int             @id @default(autoincrement())
-  name               String          @db.VarChar(100)
-  email              String          @unique @db.VarChar(254)
-  passwordHash       String          @db.VarChar(60)
-  role               UserRole        @default(REQUESTER)
-  isActive           Boolean         @default(true)
-  mustChangePassword Boolean         @default(true)
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-  seedKey            String?         @unique
+  id                 Int                   @id @default(autoincrement())
+  name               String                @db.VarChar(100)
+  email              String                @unique @db.VarChar(254)
+  passwordHash       String                @db.VarChar(60)
+  role               UserRole              @default(REQUESTER)
+  isActive           Boolean               @default(true)
+  mustChangePassword Boolean               @default(true)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  seedKey            String?               @unique
   sessions           Session[]
-  submittedTickets   Ticket[]        @relation("Requester")
-  ownedTickets       Ticket[]        @relation("Owner")
-  resolutionTickets  Ticket[]        @relation("ResolutionRequester")
+  submittedTickets   Ticket[]              @relation("Requester")
+  ownedTickets       Ticket[]              @relation("Owner")
+  resolutionTickets  Ticket[]              @relation("ResolutionRequester")
   publicComments     PublicComment[]
   internalNotes      InternalNote[]
+  performedActions   ActionTaken[]         @relation("ActionPerformer")
+  assignedActions    ActionTaken[]         @relation("ActionAssignee")
+  completedFollowUps ActionTaken[]         @relation("FollowUpCompleter")
+  actionRevisions    ActionTakenRevision[]
+  ticketStatusEvents TicketStatusEvent[]
 }
 
 model Session {
@@ -122,15 +134,19 @@ model Ticket {
   problemAppearsResolvedAt   DateTime?
   problemAppearsResolvedById Int?
   seedKey                    String?   @unique
+  resolvedAt                 DateTime? @db.Timestamptz(3)
+  resolvedAtEstimated        Boolean   @default(false)
 
-  requester           User            @relation("Requester", fields: [requesterId], references: [id])
-  owner               User?           @relation("Owner", fields: [ownerId], references: [id])
-  resolutionRequester User?           @relation("ResolutionRequester", fields: [problemAppearsResolvedById], references: [id])
-  category            Category        @relation(fields: [categoryId], references: [id])
-  relatedSystem       RelatedSystem   @relation(fields: [relatedSystemId], references: [id])
+  requester           User                @relation("Requester", fields: [requesterId], references: [id])
+  owner               User?               @relation("Owner", fields: [ownerId], references: [id])
+  resolutionRequester User?               @relation("ResolutionRequester", fields: [problemAppearsResolvedById], references: [id])
+  category            Category            @relation(fields: [categoryId], references: [id])
+  relatedSystem       RelatedSystem       @relation(fields: [relatedSystemId], references: [id])
   attachments         Attachment[]
   publicComments      PublicComment[]
   internalNotes       InternalNote[]
+  actions             ActionTaken[]
+  statusEvents        TicketStatusEvent[]
 
   @@index([requesterId])
   @@index([status])
@@ -138,6 +154,8 @@ model Ticket {
   @@index([ownerId])
   @@index([itPriority])
   @@index([updatedAt])
+  @@index([requesterId, status, resolvedAt])
+  @@index([status, resolvedAt])
 }
 
 model PublicComment {
@@ -182,4 +200,69 @@ model Attachment {
   ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@index([ticketId])
+}
+
+model ActionTaken {
+  id                     Int                   @id @default(autoincrement())
+  ticketId               Int
+  performedById          Int
+  assigneeId             Int
+  actionAt               DateTime              @db.Timestamptz(3)
+  description            String                @db.VarChar(2000)
+  result                 String?               @db.Text
+  followUpRequired       Boolean
+  followUpNote           String?               @db.Text
+  followUpCompletedAt    DateTime?             @db.Timestamptz(3)
+  followUpCompletedById  Int?
+  followUpCompletionNote String?               @db.Text
+  attachmentNotes        String?               @db.Text
+  status                 ActionStatus
+  version                Int                   @default(0)
+  clientRequestId        String                @db.Uuid
+  canonicalRequest       String                @db.Text
+  seedKey                String?               @unique
+  createdAt              DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt              DateTime              @updatedAt @db.Timestamptz(3)
+  ticket                 Ticket                @relation(fields: [ticketId], references: [id], onDelete: Restrict)
+  performedBy            User                  @relation("ActionPerformer", fields: [performedById], references: [id], onDelete: Restrict)
+  assignee               User                  @relation("ActionAssignee", fields: [assigneeId], references: [id], onDelete: Restrict)
+  followUpCompletedBy    User?                 @relation("FollowUpCompleter", fields: [followUpCompletedById], references: [id], onDelete: Restrict)
+  revisions              ActionTakenRevision[]
+
+  @@unique([performedById, clientRequestId])
+  @@index([ticketId, createdAt, id])
+  @@index([assigneeId, status, updatedAt, id])
+}
+
+model ActionTakenRevision {
+  id        Int         @id @default(autoincrement())
+  actionId  Int
+  version   Int
+  editorId  Int
+  createdAt DateTime    @default(now()) @db.Timestamptz(3)
+  snapshot  Json
+  action    ActionTaken @relation(fields: [actionId], references: [id], onDelete: Restrict)
+  editor    User        @relation(fields: [editorId], references: [id], onDelete: Restrict)
+
+  @@unique([actionId, version])
+}
+
+model TicketStatusEvent {
+  id            Int          @id @default(autoincrement())
+  ticketId      Int
+  actorId       Int
+  fromStatus    TicketStatus
+  toStatus      TicketStatus
+  ticketVersion Int
+  createdAt     DateTime     @default(now()) @db.Timestamptz(3)
+  ticket        Ticket       @relation(fields: [ticketId], references: [id], onDelete: Restrict)
+  actor         User         @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@unique([ticketId, ticketVersion])
+  @@index([ticketId, createdAt, id])
+}
+
+model LabMetadata {
+  key        String   @id
+  recordedAt DateTime @db.Timestamptz(3)
 }

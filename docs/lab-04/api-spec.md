@@ -1,6 +1,6 @@
 # Lab 4 REST API Contract - TokTickIT
 
-Status: Draft, not implemented. Base `/api`. Inherit [Lab 3 authentication, errors, and retained APIs](../lab-03/api-spec.md). [Business rules](specification.md) are normative; identifiers here are Lab 4 scoped.
+Status: Actions Taken endpoints (Section 3) implemented locally under Issue #48. Ticket workflow/history and dashboards in later sections remain planned for Issues #50/#51. Base `/api`. Inherit [Lab 3 authentication, errors, and retained APIs](../lab-03/api-spec.md). [Business rules](specification.md) are normative; identifiers here are Lab 4 scoped.
 
 ## 1. Shared protocol
 
