@@ -9,6 +9,7 @@
     "start": "node dist/src/index.js",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:seed:lab4": "tsx prisma/seed-lab4.ts",
     "prisma:bootstrap": "tsx prisma/bootstrap.ts",
     "test": "vitest run"
   },

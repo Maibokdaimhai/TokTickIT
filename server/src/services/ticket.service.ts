@@ -201,14 +201,15 @@ export async function rollbackTicket(input: { ticketId: unknown }, actorId: numb
         ownerId: true,
         problemAppearsResolvedAt: true,
         attachments: { select: { filePath: true } },
-        _count: { select: { publicComments: true, internalNotes: true } },
+        _count: { select: { publicComments: true, internalNotes: true, actions: true, statusEvents: true } },
       },
     });
     if (!ticket || ticket.requesterId !== actorId) {
       throw new ApiError(404, { code: "NOT_FOUND", message: "Ticket not found" });
     }
     if (ticket.status !== "NEW" || ticket.ownerId !== null || ticket.problemAppearsResolvedAt !== null ||
-        ticket._count.publicComments > 0 || ticket._count.internalNotes > 0) {
+        ticket._count.publicComments > 0 || ticket._count.internalNotes > 0 ||
+        ticket._count.actions > 0 || ticket._count.statusEvents > 0) {
       throw new ApiError(409, {
         code: "ROLLBACK_NOT_ALLOWED",
         message: "Ticket can no longer be rolled back because work has started",
