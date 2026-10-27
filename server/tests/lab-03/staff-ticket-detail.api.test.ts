@@ -1,4 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { unauditedFixtureTickets, removeUnreferencedFixtureUsers } from "../audit-fixture-cleanup.js";
+import { actionSnapshot } from "../../src/services/action.service.js";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
@@ -114,13 +116,14 @@ describe("API-08, API-09, API-10, API-18, API-21: Staff Ticket Detail Operations
     }
     const tickets = await prisma.ticket.findMany({ where: { summary: { contains: marker } }, select: { id: true } });
     const ticketIds = [testTicketId, ...tickets.map((t) => t.id)].filter((id): id is number => typeof id === "number");
-    if (ticketIds.length > 0) {
-      await prisma.publicComment.deleteMany({ where: { ticketId: { in: ticketIds } } });
-      await prisma.internalNote.deleteMany({ where: { ticketId: { in: ticketIds } } });
-      await prisma.attachment.deleteMany({ where: { ticketId: { in: ticketIds } } });
-      await prisma.ticket.deleteMany({ where: { id: { in: ticketIds } } });
+    const removableIds = await unauditedFixtureTickets(prisma, ticketIds);
+    if (removableIds.length > 0) {
+      await prisma.publicComment.deleteMany({ where: { ticketId: { in: removableIds } } });
+      await prisma.internalNote.deleteMany({ where: { ticketId: { in: removableIds } } });
+      await prisma.attachment.deleteMany({ where: { ticketId: { in: removableIds } } });
+      await prisma.ticket.deleteMany({ where: { id: { in: removableIds } } });
     }
-    await prisma.user.deleteMany({ where: { id: { in: [requesterId, staffAId, staffBId, adminId, inactiveStaffId].filter((id): id is number => typeof id === "number") } } });
+    await removeUnreferencedFixtureUsers(prisma, [requesterId, staffAId, staffBId, adminId, inactiveStaffId].filter((id): id is number => typeof id === "number"));
   });
 
   describe("API-08: Staff Ticket Detail GET", () => {
@@ -470,6 +473,15 @@ describe("API-08, API-09, API-10, API-18, API-21: Staff Ticket Detail Operations
       expect(nonBoolRes.status).toBe(400);
 
       // confirmed: true succeeds
+      // Lab 4 requires completed work; this fixture preserves the existing
+      // confirmation/version assertions rather than bypassing the production gate.
+      const evidence = await getPrisma().actionTaken.create({ data: {
+        ticketId: statusTicketId, performedById: staffAId, assigneeId: staffAId,
+        actionAt: new Date(), description: "Confirmation regression fixture",
+        result: "Work completed", status: "COMPLETED", followUpRequired: false,
+        clientRequestId: randomUUID(), canonicalRequest: "{}",
+      } });
+      await getPrisma().actionTakenRevision.create({ data: { actionId: evidence.id, version: 0, editorId: staffAId, snapshot: actionSnapshot(evidence) } });
       const resolvedRes = await staffA
         .patch(`/api/staff/tickets/${statusTicketId}/status`)
         .send({ status: "RESOLVED", expectedStatus: "OPEN", expectedVersion: 1, confirmed: true });

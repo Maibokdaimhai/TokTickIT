@@ -4,8 +4,10 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import App from '../../src/App.js';
 import * as shared from '../../src/api.js';
 import * as api from '../../src/actions-api.js';
+import * as workflow from '../../src/workflow-api.js';
 import type { AuthUser, StaffTicketDetail, TicketAction } from '../../src/types.js';
 
+vi.mock('../../src/workflow-api.js', () => ({ fetchTicketHistory: vi.fn().mockResolvedValue({ events: [], pagination: { page: 1, limit: 10, totalItems: 0, totalPages: 0 }, historyStartsAt: '2026-10-27T00:00:00Z' }) }));
 vi.mock('../../src/api.js', async original => ({ ...await original<typeof shared>(), getSession: vi.fn(), logout: vi.fn(), fetchStaffTicketDetail: vi.fn(), fetchTicketDetail: vi.fn(), fetchEligibleOwners: vi.fn(), fetchCategories: vi.fn(), fetchStaffTickets: vi.fn() }));
 vi.mock('../../src/actions-api.js', () => ({ fetchActions: vi.fn(), fetchAction: vi.fn(), fetchActionRevisions: vi.fn(), createAction: vi.fn(), updateAction: vi.fn(), completeActionFollowUp: vi.fn() }));
 const staff: AuthUser = { id: 7, name: 'Alex Staff', email: 'alex@example.com', role: 'IT_STAFF', isActive: true };
@@ -14,6 +16,7 @@ const ticket: StaffTicketDetail = { id: 1, ticketNumber: 'TKT-2026-000001', requ
 const action: TicketAction = { id: 4, ticketId: 1, actionAt: '2026-01-02T02:00:00Z', description: 'Shared action information', result: null, performedBy: staff, assignee: staff, status: 'IN_PROGRESS', version: 0, followUpRequired: false, followUpNote: null, attachmentNotes: null, followUpCompletedAt: null, followUpCompletedBy: null, followUpCompletionNote: null, createdAt: '2026-01-02T02:00:00Z', updatedAt: '2026-01-02T02:00:00Z' };
 beforeEach(() => {
   vi.resetAllMocks(); window.history.replaceState(null, '', '/staff/tickets/1');
+  vi.mocked(workflow.fetchTicketHistory).mockResolvedValue({ events: [], pagination: { page: 1, limit: 10, totalItems: 0, totalPages: 0 }, historyStartsAt: '2026-10-27T00:00:00Z' });
   vi.mocked(shared.getSession).mockResolvedValue({ user: staff, mustChangePassword: false });
   vi.mocked(shared.fetchStaffTicketDetail).mockResolvedValue(ticket); vi.mocked(shared.fetchTicketDetail).mockResolvedValue(ticket);
   vi.mocked(shared.fetchEligibleOwners).mockResolvedValue({ owners: [{ ...staff, role: 'IT_STAFF' }] });
