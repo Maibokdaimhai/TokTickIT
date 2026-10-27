@@ -136,6 +136,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onChang
         {menuOpen && <div id="account-actions" className="account-actions">
           <button className="btn btn-outline-secondary" type="button" onClick={() => { setMenuOpen(false); onChangePassword(); }}>Change password</button>
           <button className="btn btn-outline-secondary" type="button" disabled={signingOut} onClick={() => {
+            if (!window.dispatchEvent(new Event("app:before-navigate", { cancelable: true }))) return;
             setSigningOut(true); void logout().catch(reason => setError(reason.message)).finally(() => setSigningOut(false));
           }}>{signingOut ? "Signing out…" : "Sign out"}</button>
         </div>}

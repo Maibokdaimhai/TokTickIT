@@ -233,3 +233,31 @@ export interface ResetInitialPasswordPayload {
   initialPassword: string;
   confirmPassword: string;
 }
+
+export type ActionStatus = "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+export interface ActionIdentity { id: number; name: string; role: UserRole; isActive: boolean }
+export interface TicketAction {
+  id: number; ticketId: number; actionAt: string; description: string; result: string | null;
+  performedBy: ActionIdentity; assignee: ActionIdentity; status: ActionStatus; version: number;
+  followUpRequired: boolean; followUpNote: string | null; attachmentNotes: string | null;
+  followUpCompletedAt: string | null; followUpCompletedBy: ActionIdentity | null;
+  followUpCompletionNote: string | null; createdAt: string; updatedAt: string;
+}
+export interface ActionRevision {
+  id: number; actionId: number; version: number; editor: ActionIdentity; createdAt: string;
+  snapshot: {
+    actionAt: string; description: string; result: string | null;
+    performedById: number; assigneeId: number; status: ActionStatus;
+    followUpRequired: boolean; followUpNote: string | null; attachmentNotes: string | null;
+    followUpCompletedAt: string | null; followUpCompletedById: number | null; followUpCompletionNote: string | null;
+  };
+}
+export interface ActionFields {
+  actionAt: string; description: string; assigneeId: number; status: ActionStatus;
+  result: string | null; followUpRequired: boolean; followUpNote: string | null; attachmentNotes: string | null;
+}
+export interface CreateActionPayload extends ActionFields { expectedTicketVersion: number; clientRequestId: string }
+export interface UpdateActionPayload extends ActionFields { expectedTicketVersion: number; expectedActionVersion: number }
+export interface CompleteFollowUpPayload { expectedTicketVersion: number; expectedActionVersion: number; completionNote: string }
+export interface ActionWriteResult { action: TicketAction; ticketVersion: number; replayed?: boolean }
+export interface ActionsPage { actions: TicketAction[]; pagination: PaginationInfo; ticketVersion: number }
