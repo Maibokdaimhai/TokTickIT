@@ -1,12 +1,12 @@
 # Lab 4 Test Plan and Traceability - TokTickIT
 
-Status: Planned, not executed. Created alongside the draft engineering contract on 27 October 2026, before new Lab 4 feature implementation. Existing merged mobile-fix checks are baseline behavior, not proof that these new tests pass. Paths below are planned test files and do not yet exist unless explicitly noted.
+Status: Partial implementation and verified foundation coverage, 27 October 2026. The original contract/test matrix was created before feature implementation. Issue #48 now implements the backend Actions foundation; the six actual Lab 4 suites and run results are listed in Section 8. Remaining UI/workflow/dashboard/release cases are planned. Existing merged mobile-fix checks are baseline behavior, not proof that unimplemented Lab 4 cases pass.
 
 ## 1. Strategy and evidence rules
 
 Use unit tests for pure validation/policy/calculations, real PostgreSQL integration for transactions/migration/races, React component tests for forms/navigation/failure feedback, and Playwright for complete role workflows and rendered layout. Mocks alone cannot prove ownership, locking, migration safety or dashboard query accuracy. Every test asserts observable behavior; do not merely duplicate implementation expressions in a test oracle.
 
-TDD: add a meaningful failing test for the current Issue, record its failure and commit, implement the smallest correct increment, then record the passing run and related regression. Never mark a test Pass before execution. Planned test paths become actual links only when implemented. All matrix rows below start **Planned**; no new feature-test pass counts are asserted by this documentation task.
+TDD: add a meaningful failing test for the current Issue, record its failure and commit, implement the smallest correct increment, then record the passing run and related regression. Never mark a test Pass before execution. Planned test paths become actual links only when implemented. The matrix below remains the complete planned product coverage; it is not a blanket pass list. Section 8 records only the actual foundation execution and its remaining boundaries.
 
 ## 2. Test matrix
 
@@ -135,3 +135,26 @@ Use ui-spec.md Section 8 at 320x900, 390x844, 820x1180, 1440x900 plus 200% zoom.
 | 2026-10-27 | Draft working tree from 20581ae | Contract/traceability checks only | No Lab 4 feature suites executed | Automated file paths above are planned; no feature pass evidence yet |
 
 During implementation append real red/green runs, sanitized output paths, migration/recovery outcomes and visual checklist results. Suggested new storage: artifacts/lab-04/test-results/ and artifacts/lab-04/screenshots/. Build/test outputs must identify actual source SHA and any dirty relevant files. Final release must rerun from main and update every matrix row to the actual Pass/Fail/Blocked state with evidence. Prior branch test results remain labelled with their original context.
+
+## 8. Issue #48 foundation execution
+
+Implementation commit 0432b19 on feature/lab4-actions-foundation, based on ecf4c47. Tests ran on its uncommitted source snapshot; the fingerprint was checked again immediately before commit. The [sanitized verification summary](../../artifacts/lab-04/verification/actions-foundation.json) contains the tested server-source fingerprint and per-suite results; these are not final-main results.
+
+- Full backend regression: **317 passed, 0 failed, 0 skipped**, including 48 new Lab 4 tests across six suites.
+- Passed: Prisma schema validation, server `tsc --noEmit`, server production build and whitespace checks.
+- Real PostgreSQL 17: dedicated disposable DB, isolated suite schemas, explicit write guard, backup restored into a second disposable database; no development DB migration.
+- Parser red: missing validator initially prevented test collection. A later HTTP red/green check demonstrated unexpected write-query parameters incorrectly returning 201 before the strict-query fix; it now returns 400 with no saved Action.
+- Expected fault-injection requests return safe 500 responses to prove transaction rollback; their sanitized error logs do not mean the suites failed.
+
+| Actual file | Tests passed | Verified scope |
+|---|---:|---|
+| server/tests/lab-04/action-validation.test.ts | 14 | Date offsets/calendar validity/bounds, Unicode lengths, types/IDs, conditional notes/results, spoof rejection and completion input |
+| server/tests/lab-04/actions-taken.api.test.ts | 12 | Create/edit/status matrix, independent assignee/performer, public immutable revisions, BR-23 completion and retained context, readonly states, strict queries and page bounds |
+| server/tests/lab-04/actions-authorization.api.test.ts | 4 | Foreign/missing Ticket equality, Requester write denial, active full-session/Origin requirements and compensation guard |
+| server/tests/lab-04/actions-concurrency.api.test.ts | 10 | Concurrent exact replay, changed retry conflict, stale edits, independent Ticket write conflicts, admin eligibility races, sorted cross-assignment locks and revision/completion rollback |
+| server/tests/lab-04/database-guard.test.ts | 5 | Reject absent opt-in and non-disposable/non-PostgreSQL targets |
+| server/tests/lab-04/migration-regression.test.ts | 3 | Legacy values/relations/file preservation, explicit timestamp backfill, idempotent seed and separate-DB backup restore |
+
+Mapped foundation coverage: UNIT-01, API-01 through API-09, DB-01/02 and the action portion of API-14/19/20. These suite results do not imply every future product-matrix scenario is complete. In particular, API-19's successful Ticket resolution and API-20's resolution race await Issue #50; no UI/browser/performance/dashboard or final release checks were executed for this foundation task.
+
+Recovery execution sets LAB4_RECOVERY_CONTAINER to the dedicated test container; without that prerequisite the recovery case is explicitly skipped and must not be counted as passing. The restore rehearsal checked original SQL data/relationships and a Lab 3-compatible status/version write; it did not redeploy an old application binary. See [foundation runbook](actions-foundation.md).

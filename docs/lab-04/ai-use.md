@@ -8,13 +8,16 @@ Status: Initial factual record, 27 October 2026. Tool used: OpenAI Codex. Do not
 |---|---|---|
 | 1 | "After you create `lab4-staging` from `main` you can create `feature/lab4-lab3-tech-debt` to fix it." | Established staging and the first technical-debt feature branch for the deferred mobile communication fix. |
 | 2 | "can you add and commit and push about this PR? And use convention commit syntax like before in lab3." | Authorized the earlier technical-debt commit/push using conventional commit syntax. This is historical authorization for that earlier task, not permission to push this draft. |
-| 3 | "It already merge so you can do spec and tests. Don't push anything" | Authorized the current local engineering-contract and test-plan drafting after the tech-debt merge, with no push. |
+| 3 | "It already merge so you can do spec and tests. Don't push anything" | Authorized the original local engineering-contract and test-plan drafting after the tech-debt merge, with no push at that stage. |
+| 4 | "Ok create Lab 4 Issues now and don't forget about specification-and-tests Issue too. You can edit PR#46 Description to close issue" | Authorized creating the sprint backlog and linking the specification Issue to the PR. |
+| 5 | "Fix this request change and push it again" | Requested correction of PR #46 review feedback; the resulting BR-23 defines an audited path to complete outstanding follow-up. |
+| 6 | "PR46 Already merge so you can do next feature branch" | Started the next feature, Issue #48 Actions foundation, locally from merged staging. |
 
-The final worksheet asks for 6-10 selected key prompts. Append genuine later specification/coding/review prompts as the sprint proceeds; only three are recorded here. Do not reconstruct prompts or count planned tests as actual implementation results.
+The worksheet asks for 6-10 selected key prompts; six genuine excerpts are recorded here. Append or select later prompts as the sprint proceeds. Do not reconstruct prompts or count planned tests as actual implementation results.
 
 ## Specification and coding use
 
-In this drafting task Codex inspected the merged base, existing schema/routes/policies and earlier contracts, then proposed explicit choices for ambiguous Action statuses, assignment, audit history, resolution and dashboards. New code and feature tests have not been implemented by this task. Future coding and independent review should be recorded with actual commits and execution evidence.
+In this drafting task Codex inspected the merged base, existing schema/routes/policies and earlier contracts, then proposed explicit choices for ambiguous Action statuses, assignment, audit history, resolution and dashboards. That original drafting task did not implement new feature code. After PR #46 merged, the Issue #48 task implemented Actions APIs/schema/seeds and 48 new backend tests; full backend verification passed 317 tests on a dedicated disposable PostgreSQL instance, including restore recovery. The verified implementation was committed as 0432b19; publication and PR creation were subsequently authorized by the user. No independent code-review approval is claimed.
 
 ## My Reflection
 
