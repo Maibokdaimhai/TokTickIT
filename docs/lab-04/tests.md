@@ -26,7 +26,7 @@ TDD: add a meaningful failing test for the current Issue, record its failure and
 | API-09 | API/DB | FR-04/06; BR-08/09 | AC-05 | Inject revision/event write failure: projection/status/version roll back completely and retry is recoverable | server/tests/lab-04/actions-concurrency.api.test.ts |
 | API-10 | API/DB | FR-05; BR-11/15 | AC-06 | Every Ticket status pair/role, owner/confirmation/expectedStatus/version checks; successful status/claim event committed once with correct actor/order/version | server/tests/lab-04/ticket-workflow.api.test.ts |
 | API-11 | API/DB | FR-05; BR-12/13 | AC-07 | Direct resolve bypass blocked for zero/completed-without-result/active-work/follow-up cases; cancelled follow-up ignored; valid completed work permits resolve; advisory flag alone insufficient | server/tests/lab-04/ticket-workflow.api.test.ts |
-| API-12 | API/DB race | FR-05/06; BR-09/12 | AC-05, AC-07 | Resolve races action creation/edit: serialize on Ticket; either valid resolution freezes subsequent work or stale resolution loses; never commit inconsistent state | server/tests/lab-04/actions-concurrency.api.test.ts |
+| API-12 | API/DB race | FR-05/06; BR-09/12 | AC-05, AC-07 | Resolve races action creation/edit: serialize on Ticket; either valid resolution freezes subsequent work or stale resolution loses; never commit inconsistent state | server/tests/lab-04/workflow-concurrency.api.test.ts |
 | API-13 | API/DB | FR-05/09; BR-13/14/20 | AC-08 | Legacy RESOLVED -> CLOSED succeeds with zero actions; reopen clears indication/resolvedAt; re-resolve requires gate and writes actual timestamp | server/tests/lab-04/ticket-workflow.api.test.ts |
 | API-14 | API/DB | FR-09; BR-16 | AC-13 | Late draft compensation cannot erase action/history; earlier eligible draft rollback still works; comments/notes/attachments remain intact | server/tests/lab-04/regression.api.test.ts |
 | API-15 | API/DB | FR-07; BR-17/18/20/21 | AC-09 | Requester metrics independently counted from fixture DB; other Requester excluded; zero counts, recently resolved inclusive boundaries/estimates and five-item stable preview | server/tests/lab-04/requester-dashboard.api.test.ts |
@@ -173,3 +173,24 @@ Implementation commit 47451ec, based on staging ce32e77 after merged PR #54. Tes
 | e2e/lab-04/actions-ui.spec.ts using playwright.ui.config.ts | 8 passed, 0 failed/skipped | Controlled-API Chromium frontend checks; four widths, button/bounds checks, create/assign/complete/history, follow-up completion, read-only keyboard history and 200% zoom/focus |
 
 Initial component collection failed before the shared component existed, then passed after implementation. Current UI coverage maps to UI-01/02/03 and the Actions parts of AC-01 through AC-05, AC-11, AC-14 and AC-15. It does not mark future workflow/dashboard or full release-matrix cases as passing. No database or Docker container was touched in this task. Real DB-backed E2E and a complete accessibility/contrast review remain scheduled for Issue #52.
+
+## 10. Issue #50 Ticket workflow execution
+
+Tests ran on an uncommitted snapshot on `feature/lab4-ticket-workflow`, based on merged PR #55 at `f8238e9`; the source fingerprint was matched to implementation commit `ac9ff59e394cca428bb227f4dcda0516ffdacffb` before publication. [Verification summary](../../artifacts/lab-04/verification/ticket-workflow.json) records the source fingerprint; [runbook](ticket-workflow.md) records behavior and reproduction.
+
+| Actual suite/check | Result | Scope |
+|---|---|---|
+| server/tests/lab-04/ticket-workflow.api.test.ts | 20 passed | Resolution blockers, advisory separation, all 64 matrix pairs in eight grouped tests, timestamps/legacy/reopen, strict queries, public history authorization/order/pagination, immutable events and rollback |
+| server/tests/lab-04/workflow-concurrency.api.test.ts | 6 passed | Action creation/completion/follow-up, competing status, ownership and deactivation races against resolution |
+| Full backend regression | 343 passed, 0 failed/skipped | Includes prior API suites and migration/restore checks |
+| client/tests/lab-04/TicketWorkflow.test.tsx | 11 passed | Blockers versus conflicts, history read/retry/stale handling, actual/estimated/unknown metadata, same-second Action dates and status refresh race |
+| Full client regression | 149 passed, 0 failed/skipped | Earlier parent unit tests isolate history; integration and new workflow tests cover actual parent wiring |
+| e2e/lab-04/ticket-resolution.spec.ts | 3 passed, 0 failed/skipped/flaky | Real API/PostgreSQL staff/requester flows, follow-up, resolve/close/reopen, cancellation and legacy resolution; history at four widths |
+| e2e/lab-04/actions-ui.spec.ts | 8 passed, 0 failed/skipped/flaky | Controlled-API Actions UI regression |
+| Server/client typecheck and production builds | Passed | No source JS emission |
+
+Red/green evidence: direct resolution without completed work returned 200 before the gate and now returns 409; a same-second Action default rounded before Ticket creation before preserving milliseconds; a real browser refresh exposed a status selection race, now covered by a regression test and passing real workflows. Fixture login casing and ambiguous loading-status assertions were corrected in test setup.
+
+Used the user's `toktickit-db` container, PostgreSQL 16.14, with only a guarded disposable test database; development data untouched. Backend and real browser suites ran sequentially to isolate fake-clock authentication fixtures. Test cleanup retains audited records until whole disposable database teardown; it does not bypass immutable-history triggers.
+
+This execution supersedes the earlier pending workflow portions of API-19/20 and provides local API-10/11/12/13 workflow, UI workflow and E2E-02 evidence within the stated scenarios. It does not mark dashboards, full product accessibility, the complete earlier browser suite or final-main release verification as passed.

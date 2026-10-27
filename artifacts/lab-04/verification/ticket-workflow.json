@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-27",
+  "branch": "feature/lab4-ticket-workflow",
+  "baseCommit": "f8238e94ce2cee5010c9071982f041061f9207d7",
+  "workingTree": true,
+  "sourceScope": [
+    "server",
+    "client/src",
+    "client/tests",
+    "e2e/lab-04",
+    "playwright.workflow.config.ts",
+    "playwright.ui.config.ts"
+  ],
+  "fingerprintAlgorithm": "SHA-256 of sorted path + NUL + file bytes + NUL for tracked and nonignored untracked source files",
+  "sourceFingerprint": "93c97e71b913d770161931c184ac44c829605853854909870ac8db1a8dd035f8",
+  "sourceFiles": 149,
+  "database": {
+    "container": "toktickit-db",
+    "postgresVersion": "16.14",
+    "disposableDatabase": "toktickit_lab4_workflow_test_20261027_50",
+    "developmentDatabaseModified": false,
+    "cleanup": "Disposable database dropped after explicit user authorization; development database and project container preserved."
+  },
+  "results": {
+    "backend": {
+      "passed": 343,
+      "failed": 0,
+      "skipped": 0,
+      "newWorkflowTests": 26,
+      "statusMatrixPairsWithinEightTests": 64
+    },
+    "client": {
+      "passed": 149,
+      "failed": 0,
+      "skipped": 0,
+      "newWorkflowTests": 11
+    },
+    "realBackendChromium": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "config": "playwright.workflow.config.ts"
+    },
+    "controlledApiChromium": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "config": "playwright.ui.config.ts"
+    },
+    "serverTypecheck": "passed",
+    "serverBuild": "passed",
+    "clientTypecheck": "passed",
+    "clientBuild": "passed"
+  },
+  "screenshots": [
+    "artifacts/lab-04/screenshots/ticket-workflow/all-resolution-blockers-mobile.png",
+    "artifacts/lab-04/screenshots/ticket-workflow/public-history-1440.png",
+    "artifacts/lab-04/screenshots/ticket-workflow/public-history-320.png",
+    "artifacts/lab-04/screenshots/ticket-workflow/public-history-390.png",
+    "artifacts/lab-04/screenshots/ticket-workflow/public-history-820.png",
+    "artifacts/lab-04/screenshots/ticket-workflow/resolution-blocked-mobile.png"
+  ],
+  "limits": [
+    "Tests ran on the uncommitted source snapshot, matched to implementation commit ac9ff59e394cca428bb227f4dcda0516ffdacffb before publication; not final-main verification.",
+    "Dashboard, complete accessibility/contrast inspection and final release verification remain pending.",
+    "Backend and real browser suites ran sequentially to isolate clock-dependent authentication fixtures.",
+    "Existing unrelated client/package.json edit is excluded from source fingerprint and this task."
+  ],
+  "implementationCommit": "ac9ff59e394cca428bb227f4dcda0516ffdacffb"
+}

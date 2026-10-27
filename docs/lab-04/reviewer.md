@@ -32,3 +32,7 @@ PR #54 subsequently merged the Issue #48 foundation into lab4-staging. Reviewer 
 ## Issue #49 implementation awaiting review
 
 Branch: feature/lab4-actions-ui, based on ce32e77; implementation commit 47451ec. Publication authorized; no PR/approval claimed. Review shared Staff/Requester action views, explicit status/follow-up completion, create UUID reuse, draft/version reconciliation, selected-item/history pagination, dirty navigation and safe focus/wrapping. Verification: 138 client tests and 8 controlled-API Chromium UI checks passed; TypeScript and build passed. See tests.md Section 9; no database-backed browser E2E claim is made.
+
+## Issue #50 implementation awaiting review
+
+The user reported PR #55 merged. Current branch `feature/lab4-ticket-workflow` starts from staging `f8238e9`; implementation commit `ac9ff59e394cca428bb227f4dcda0516ffdacffb`. Publication and PR creation authorized; reviewer approval remains pending. Review resolution locking/gates, active owner races, atomic immutable transition events, metadata/legacy behavior, safe public history and actionable UI feedback. Verification: 343 backend, 149 client, 3 real-backend Chromium and 8 fixture Chromium checks passed; both typechecks/builds passed. See tests.md Section 10 and ticket-workflow.md. Dashboard and release verification remain pending.
