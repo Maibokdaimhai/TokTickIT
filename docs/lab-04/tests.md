@@ -158,3 +158,18 @@ Implementation commit 0432b19 on feature/lab4-actions-foundation, based on ecf4c
 Mapped foundation coverage: UNIT-01, API-01 through API-09, DB-01/02 and the action portion of API-14/19/20. These suite results do not imply every future product-matrix scenario is complete. In particular, API-19's successful Ticket resolution and API-20's resolution race await Issue #50; no UI/browser/performance/dashboard or final release checks were executed for this foundation task.
 
 Recovery execution sets LAB4_RECOVERY_CONTAINER to the dedicated test container; without that prerequisite the recovery case is explicitly skipped and must not be counted as passing. The restore rehearsal checked original SQL data/relationships and a Lab 3-compatible status/version write; it did not redeploy an old application binary. See [foundation runbook](actions-foundation.md).
+
+## 9. Issue #49 Actions UI execution
+
+Implementation commit 47451ec, based on staging ce32e77 after merged PR #54. Tests ran on its uncommitted source snapshot; the fingerprint was verified again immediately before commit. [Verification summary](../../artifacts/lab-04/verification/actions-ui.json) records the source fingerprint; [implementation notes](actions-ui.md) describe behavior and remaining boundaries.
+
+| Actual suite/check | Result | Scope |
+|---|---|---|
+| client/tests/lab-04/ActionsTaken.test.tsx | 20 passed | Shared read/write views, conditional validation, explicit status confirmation, uncertain retry identity, repeat-submit guard, conflict reconciliation, terminal/follow-up rules, eligibility failures, selected item/history/page reads, stale-response suppression and recovery |
+| client/tests/lab-04/ActionsIntegration.test.tsx | 3 passed | Actual authenticated App/Staff/Requester wiring, parent-summary refresh, dirty navigation/back/sign-out protection |
+| client/tests/lab-04/actions-api.test.ts | 3 passed | Credentialed abortable reads, mutation payloads and session-expiry/error forwarding |
+| Full client suite | 138 passed, 0 failed/skipped | Includes earlier Lab 1-3 regression; parent-unit tests isolate the new network child while new App tests cover integration |
+| TypeScript / client production build / diff whitespace | Passed | No source JS emission or new dependencies |
+| e2e/lab-04/actions-ui.spec.ts using playwright.ui.config.ts | 8 passed, 0 failed/skipped | Controlled-API Chromium frontend checks; four widths, button/bounds checks, create/assign/complete/history, follow-up completion, read-only keyboard history and 200% zoom/focus |
+
+Initial component collection failed before the shared component existed, then passed after implementation. Current UI coverage maps to UI-01/02/03 and the Actions parts of AC-01 through AC-05, AC-11, AC-14 and AC-15. It does not mark future workflow/dashboard or full release-matrix cases as passing. No database or Docker container was touched in this task. Real DB-backed E2E and a complete accessibility/contrast review remain scheduled for Issue #52.

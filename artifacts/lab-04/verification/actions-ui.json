@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-27",
+  "branch": "feature/lab4-actions-ui",
+  "baseCommit": "ce32e77f789dc57d17783f481ddc869df92a799c",
+  "workingTree": true,
+  "sourceScope": [
+    "client/src",
+    "client/tests",
+    "e2e/lab-04/actions-ui.spec.ts",
+    "playwright.ui.config.ts"
+  ],
+  "sourceFingerprintSHA256": "db2ec83865d9ae3f4ff3d52f7d6cc853829d84260d083473347df39d5b798b08",
+  "clientTests": {
+    "passed": 138,
+    "failed": 0,
+    "skipped": 0,
+    "newLab4UITests": 26
+  },
+  "chromiumUI": {
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "mode": "Controlled API fixtures; no backend or database",
+    "viewports": [
+      320,
+      390,
+      820,
+      1440
+    ],
+    "zoom": "200% CSS zoom with focused-field bounds check"
+  },
+  "checks": {
+    "typecheckNoEmit": "passed",
+    "productionBuild": "passed",
+    "whitespace": "passed"
+  },
+  "screenshots": [
+    "artifacts/lab-04/screenshots/actions-taken/requester-history-mobile.png",
+    "artifacts/lab-04/screenshots/actions-taken/staff-actions-1440.png",
+    "artifacts/lab-04/screenshots/actions-taken/staff-actions-320.png",
+    "artifacts/lab-04/screenshots/actions-taken/staff-actions-390.png",
+    "artifacts/lab-04/screenshots/actions-taken/staff-actions-820.png"
+  ],
+  "limitations": [
+    "Tests ran on uncommitted sources subsequently committed as 47451ec with the same verified source fingerprint; not final-main evidence.",
+    "No real backend/database E2E or new backend regression run for this client-only change.",
+    "Tall section screenshots hide the sticky shell only during image capture; normal interaction/zoom tests leave it visible.",
+    "Complete application accessibility and final regression evidence remain in Issue #52."
+  ],
+  "implementationCommit": "47451ec455d34533788553fa3705861df43b8616"
+}

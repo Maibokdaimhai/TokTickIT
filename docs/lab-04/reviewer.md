@@ -26,3 +26,9 @@ Append separate rows for each real review comment and resolution. Include final-
 ## Issue #48 implementation awaiting review
 
 Branch: feature/lab4-actions-foundation; implementation commit 0432b19. Feature PR publication is authorized; code review is pending. Review scope: migration/backfill and restore, retry serialization, User/Ticket lock ordering, actor/assignee eligibility, public safe projections, immutable history, BR-23 completion and compensation guard. Verification: 317 backend tests, Prisma validation, TypeScript and server build passed locally; see tests.md Section 8. Ticket gate/UI/dashboard integration remains assigned to subsequent Issues.
+
+PR #54 subsequently merged the Issue #48 foundation into lab4-staging. Reviewer identities and any actual feedback must be added from the real review record rather than inferred from the merge.
+
+## Issue #49 implementation awaiting review
+
+Branch: feature/lab4-actions-ui, based on ce32e77; implementation commit 47451ec. Publication authorized; no PR/approval claimed. Review shared Staff/Requester action views, explicit status/follow-up completion, create UUID reuse, draft/version reconciliation, selected-item/history pagination, dirty navigation and safe focus/wrapping. Verification: 138 client tests and 8 controlled-API Chromium UI checks passed; TypeScript and build passed. See tests.md Section 9; no database-backed browser E2E claim is made.

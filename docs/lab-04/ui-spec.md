@@ -1,6 +1,6 @@
 # Lab 4 UI Contract - TokTickIT
 
-Status: Draft; screens/checklist below are planned, not verified. Reuse [Lab 2 tokens](../lab-02/ui-spec.md) and [Lab 3 conventions](../lab-03/ui-spec.md). Behavior and scope follow [specification.md](specification.md); exact filters and responses follow [api-spec.md](api-spec.md).
+Status: Actions Taken implemented and locally verified under Issue #49; dashboards, Ticket transition-history UI and final application inspection remain planned. See [Actions UI verification](actions-ui.md) for exact scope. Reuse [Lab 2 tokens](../lab-02/ui-spec.md) and [Lab 3 conventions](../lab-03/ui-spec.md). Behavior and scope follow [specification.md](specification.md); exact filters and responses follow [api-spec.md](api-spec.md).
 
 ## 1. Shell, navigation, and routes
 
@@ -68,11 +68,11 @@ Test 320x900, 390x844, 820x1180, 1440x900. Cards use an auto-fit grid whose mini
 
 Semantic headings/landmarks, native labelled controls, explicit button types, visible keyboard focus, accessible loading/error/success announcements, text-only status cues, and logical tab order are required. Any existing confirmation modal must trap focus, support Escape where cancellation is allowed, label itself and return focus on close. Respect reduced motion. Focus must not disappear when a saved item changes layout.
 
-## 8. Evidence checklist (all pending)
+## 8. Evidence checklist (product-wide completion still pending)
 
 - [ ] Dashboard/role navigation, login home and deep links for all three roles.
 - [ ] Requester/Staff dashboards: accurate nonzero/zero data, loading, failure, forbidden and drill-down.
-- [ ] Actions: list, create, assign, edit, complete, cancel, record follow-up completion on completed work, public history and Requester read view.
+- [x] Actions: list, create, assign, edit, complete, cancel, record follow-up completion on completed work, public history and Requester read view (component/App checks and controlled-API Chromium coverage; real backend E2E remains pending).
 - [ ] Workflow: permitted/blocked/stale transitions, resolution gate and legacy case.
 - [ ] Existing communication panels and every new screen at all four widths; direct element bounds as well as body overflow.
 - [ ] Long-content/wrapping, keyboard-only flow, modal focus, accessible names, contrast, touch targets, reduced motion and zoom.
