@@ -217,3 +217,17 @@ Tests ran on uncommitted source on `feature/lab4-dashboards`, based on merged PR
 | Server/client typechecks and production builds | Passed | No source JS emission or new dependencies |
 
 This supplies local UNIT-03, API-15/16/17/18, UI-05/06/08, dashboard parts of UI-07 and E2E-03, and PERF-01 evidence within the recorded scenarios. Initial seed/test-mock setup failures and the list-return regression are described in dashboards.md; only successful reruns are counted above. Tests used a new disposable database in `toktickit-db`; development data remained untouched. Full earlier browser inventory, complete visual/accessibility audit and final-main verification remain pending under Issues #52/#53.
+
+## 12. PR #57 requested-change follow-up
+
+Tests ran on an uncommitted follow-up based on `5e13a36`, matched to implementation commit `06aa3e035edef33ea19331449dc82996ef1a52a9` before publication; [review verification](../../artifacts/lab-04/verification/dashboards-review.json) records the exact source fingerprint. Original Issue #51 results in Section 11 remain historical.
+
+- Full client with default parallel-file execution: **191 passed, 0 failed/skipped**; full single-worker run: **191 passed, 0 failed/skipped**.
+- Dashboard component suite: **16 passed**; adds both-role stale metrics/as-of/preview retention and successful retry replacement, original resolution window through network failure/pending retry, 401 clearing and successful-snapshot role-scope isolation. Existing initial-error and 403 clearing tests remain passing.
+- Dashboard App routing suite: **12 passed**; adds both-role filtered list -> Detail -> simulated reload -> Detail Back with exact filters/page. It isolates Detail rendering while exercising the actual App and lists. Remount timing waits now use fresh mock calls and the newly visible view with deferred session restoration.
+- Ticket-list context suite: **11 passed**; exact per-entry state and rejection of malformed, external, duplicate-filter and cross-user/role contexts.
+- Routing suite repetition: **10 runs × 12 passed**, no failures. Repetition alone does not prove absence of every possible flake.
+- `e2e/lab-04/dashboard-review.spec.ts` with `playwright.dashboard-review.config.ts`: **4 passed, 0 failed/skipped/flaky**, using controlled HTTP fixtures and actual Detail components plus real browser reload, stale refresh/retry, 401 and 403. This creates no database and does not claim DB-backed verification.
+- Client `tsc --noEmit`, production build, documentation links and diff whitespace passed. No server code or dependencies changed.
+
+Five new regression cases were red before the fixes and green afterward. [Follow-up notes](dashboards.md) explain behavior, timing limits and fixture correction. The user subsequently authorized pushing the corrections to PR #57; reviewer approval remains pending.
