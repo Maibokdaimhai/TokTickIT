@@ -1,3 +1,7 @@
+export function hasDisposableNameToken(name: string): boolean {
+  return /(?:^|[_-])(?:test|e2e|disposable)(?:$|[_-])/i.test(name);
+}
+
 export interface DbGuardResult {
   valid: boolean;
   dbName: string;
@@ -59,18 +63,15 @@ export function validateDatabaseUrl(databaseUrl?: string, allowDbWrite?: string)
     };
   }
 
-  // Accept only database names containing an approved disposable marker
-  const lowerName = dbName.toLowerCase();
-  const hasDisposableMarker =
-    lowerName.includes("e2e") ||
-    lowerName.includes("test") ||
-    lowerName.includes("disposable");
+  // Only underscore/hyphen-separated marker tokens are approved. A word such
+  // as "contest" or "latest" is not an explicit disposable database name.
+  const hasDisposableMarker = hasDisposableNameToken(dbName);
 
   if (!hasDisposableMarker) {
     return {
       valid: false,
       dbName,
-      error: `Safety check failed: Database name '${dbName}' must contain an approved disposable marker ('e2e', 'test', or 'disposable').`,
+      error: `Safety check failed: Database name '${dbName}' must contain a separated disposable token ('e2e', 'test', or 'disposable') delimited by '_' or '-'.`,
     };
   }
 

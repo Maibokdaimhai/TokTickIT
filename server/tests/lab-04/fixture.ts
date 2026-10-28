@@ -1,4 +1,5 @@
 import "../../src/config.js";
+import { validateDatabaseUrl } from "../../../e2e/lab-03/db-guard.js";
 import { PrismaClient, type Prisma } from "@prisma/client";
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
@@ -13,9 +14,8 @@ import { digest, newSessionToken } from "../../src/utils/session.js";
 export function disposableUrl() {
   const raw = process.env.DATABASE_URL;
   if (!raw || process.env.E2E_ALLOW_DB_WRITE !== "1") throw new Error("Lab 4 DB tests require DATABASE_URL and explicit E2E_ALLOW_DB_WRITE=1");
-  const url = new URL(raw), name = decodeURIComponent(url.pathname.slice(1));
-  if (!["postgresql:", "postgres:"].includes(url.protocol) || name === "toktickit" || !/(test|e2e|disposable)/i.test(name)) throw new Error("Lab 4 DB tests refuse a non-disposable database");
-  return url;
+  if (!validateDatabaseUrl(raw, process.env.E2E_ALLOW_DB_WRITE).valid) throw new Error("Lab 4 DB tests refuse a non-disposable database");
+  return new URL(raw);
 }
 export async function fixture(migrate = true) {
   const base = disposableUrl();

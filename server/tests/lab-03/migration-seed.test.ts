@@ -1,3 +1,4 @@
+import { assertSafeDatabaseUrl } from "../../../e2e/lab-03/db-guard.js";
 import { beforeAll, afterAll, describe, expect, it, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
 import { execFileSync } from "node:child_process";
@@ -14,6 +15,7 @@ import * as database from "../../src/prisma.js";
 
 // Real SQL rehearsal in a unique schema of the configured disposable test database.
 // Every target below is created here; ordinary application schemas are never reset.
+assertSafeDatabaseUrl(process.env.DATABASE_URL, process.env.E2E_ALLOW_DB_WRITE);
 const schema = `migration_test_${randomUUID().replaceAll("-", "")}`;
 const url = new URL(process.env.DATABASE_URL!); url.searchParams.set("schema", schema);
 const prisma = new PrismaClient({ datasources: { db: { url: url.toString() } } });

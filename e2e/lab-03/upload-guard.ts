@@ -1,10 +1,12 @@
 import path from 'node:path';
+import { hasDisposableNameToken } from './db-guard.js';
 import fs from 'node:fs/promises';
 import { existsSync, lstatSync } from 'node:fs';
 
 export function assertSafeUploadsDir(value = process.env.UPLOADS_DIR): string {
   const root = value ?? '/private/tmp/toktickit-lab4-e2e-uploads-20261028-52';
-  if (!path.isAbsolute(root) || !/^toktickit-.*(?:e2e|test|disposable).*uploads/.test(path.basename(root)) || !['/private/tmp','/tmp'].includes(path.dirname(root))) {
+  const name = path.basename(root);
+  if (!path.isAbsolute(root) || !name.startsWith('toktickit-') || !hasDisposableNameToken(name) || !name.split(/[_-]/).includes('uploads') || !['/private/tmp','/tmp'].includes(path.dirname(root))) {
     throw new Error('E2E uploads must use a dedicated absolute toktickit test directory under /private/tmp or /tmp');
   }
   if (existsSync(root) && lstatSync(root).isSymbolicLink()) throw new Error('Refusing a symlinked upload root');

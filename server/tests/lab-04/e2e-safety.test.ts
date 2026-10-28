@@ -1,10 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import fs from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { validateDatabaseUrl } from '../../../e2e/lab-03/db-guard.js';
 import { assertSafeUploadsDir, unlinkTestUpload } from '../../../e2e/lab-03/upload-guard.js';
 
+afterEach(() => vi.unstubAllEnvs());
 describe('Cross-lab E2E safety',()=>{
+ it.each(['production_contest','production_latest','testing','testdb','e2eish','nondisposable','production%5Fcontest'])('rejects substring-only database marker %s',name=>expect(validateDatabaseUrl('postgresql://host/'+name,'1').valid).toBe(false));
+ it.each(['test','e2e','disposable','toktickit_test_20261028','toktickit-e2e-review','toktickit_DISPOSABLE'])('accepts an explicit separated database marker %s',name=>expect(validateDatabaseUrl('postgresql://host/'+name,'1').valid).toBe(true));
+ it.each(['toktickit-contest-uploads','toktickit-latest-uploads','toktickit-testing-uploads','toktickit-e2eish-uploads','toktickit-nondisposable-uploads','toktickit-test-backuploads'])('rejects substring-only upload directory markers %s',name=>expect(()=>assertSafeUploadsDir('/private/tmp/'+name)).toThrow());
+ it.each(['toktickit-test-uploads','toktickit-lab4-e2e-uploads-20261028-52','toktickit-disposable-uploads-review'])('accepts a dedicated tokenized upload directory %s',name=>expect(assertSafeUploadsDir('/private/tmp/'+name)).toBe('/private/tmp/'+name));
  it.each(['mysql://host/test_db','postgresql://host/%ZZ','postgresql://host/toktickit?test=1','postgresql://host/production'])('rejects unsafe or malformed database target %s',url=>expect(validateDatabaseUrl(url,'1').valid).toBe(false));
  it('requires explicit opt-in and accepts only the disposable pathname',()=>{
   expect(validateDatabaseUrl('postgresql://host/toktickit_test','0').valid).toBe(false);
