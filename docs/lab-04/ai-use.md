@@ -33,3 +33,13 @@ Pending the student's own reflection. Explain what you learned from the specific
 Issue #51 publication was subsequently authorized by the actual prompt: "push `feature/lab4-dashboards` และเปิด PR ได้เลย". The implementation and verification evidence are committed separately using Conventional Commits; reviewer approval remains pending.
 
 PR #57 correction publication was subsequently authorized by the actual prompt: "push it because it request change from PR. Give me the comment to reply him too". The reply text is provided to the user for posting; no reviewer comment is posted automatically.
+
+## Issue #52 regression execution
+
+Actual continuation prompt: "PR57 merge แล้ว ทำอันต่อไปได้". Codex verified the merged PR and opened the local regression/evidence branch. It inventoried earlier tests, preserved the archived Lab 2 requirements through authenticated replacements, ran real/controlled browser and database regressions, and fixed measured contrast, labels, long-name/grid bounds, pagination/touch targets and reduced-motion issues. Failures and test-setup corrections are recorded in regression-and-evidence.md; no passing results were substituted for failed attempts.
+
+The user explicitly approved deleting the named disposable Issue #52 database and its temporary uploads after testing. Publication was initially withheld pending the user's instruction. Final motion verification used only controlled browser fixtures after that cleanup; the phase difference is recorded. The student's own reflection remains pending.
+
+Issue #52 publication was subsequently authorized by the actual prompt: "push และเปิด PR เลย". The implementation/tests and documentation/evidence are committed separately using Conventional Commits; approval is not inferred from publication.
+
+PR #58 review follow-up: the user supplied the PR link and "Request change". Codex read Kawi-HBLI's actual review, reproduced 24 substring-guard failures, centralized separated-token checks and verified 56 tests plus startup/collection rejection before DB access. Correction and evidence commits update the existing PR; no new PR or reviewer comment is posted automatically. No database was required for this correction.

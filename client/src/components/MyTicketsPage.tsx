@@ -1,3 +1,4 @@
+import { paginationPages } from "../utils/pagination.js";
 import React, { useState, useEffect, useRef } from "react";
 import { useRequester } from "../context/RequesterContext.js";
 import { fetchCategories, fetchMyTickets } from "../api.js";
@@ -202,7 +203,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ initialParams, onP
   };
 
   return (
-    <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "12px", border: "1px solid var(--color-border)", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+    <div className="my-tickets-page" style={{ backgroundColor: "white", padding: "24px", borderRadius: "12px", border: "1px solid var(--color-border)", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
       {/* Header section */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px", flexWrap: "wrap", gap: "14px" }}>
         <div>
@@ -232,7 +233,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ initialParams, onP
             .
           </p>
         </div>
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", maxWidth: "100%", gap: "10px", alignItems: "center" }}>
           <button
             type="button"
             className="btn-secondary"
@@ -500,7 +501,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ initialParams, onP
           {tickets.length > 0 && (
             <>
               {/* Desktop Table View */}
-              <div className="tickets-table-container">
+              <div className="tickets-table-container" role="region" aria-label="Scrollable Tickets table" tabIndex={0}>
                 <table className="tickets-table">
                   <thead>
                     <tr>
@@ -524,7 +525,10 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ initialParams, onP
                         style={{ cursor: onSelectTicket ? "pointer" : "default" }}
                       >
                         <td>
-                          <strong
+                          <button
+                            type="button" className="ticket-link-button"
+                            onClick={event => { event.stopPropagation(); onSelectTicket?.(t.id); }}
+                            aria-label={`Open ticket ${t.ticketNumber}`}
                             style={{
                               color: "var(--color-primary)",
                               textDecoration: onSelectTicket ? "underline" : "none",
@@ -533,7 +537,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ initialParams, onP
                             data-testid={`ticket-link-${t.id}`}
                           >
                             {t.ticketNumber}
-                          </strong>
+                          </button>
                         </td>
                         <td>{formatDate(t.createdAt)}</td>
                         <td>
@@ -567,6 +571,8 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ initialParams, onP
                   <div
                     key={t.id}
                     className="ticket-card"
+                    role="link" tabIndex={0} aria-label={`Open ticket ${t.ticketNumber}`}
+                    onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onSelectTicket?.(t.id); } }}
                     data-testid={`ticket-card-${t.id}`}
                     onClick={() => onSelectTicket?.(t.id)}
                     style={{ cursor: onSelectTicket ? "pointer" : "default" }}
@@ -614,25 +620,25 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ initialParams, onP
                     <strong>{pagination.totalItems}</strong> tickets
                   </div>
 
-                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", maxWidth: "100%", gap: "6px", alignItems: "center" }}>
                     <button
                       type="button"
                       className="btn-secondary"
                       aria-label="Previous page"
-                      style={{ padding: "6px 12px", minHeight: "32px", fontSize: "13px" }}
+                      style={{ padding: "6px 12px", minHeight: "44px", fontSize: "13px" }}
                       disabled={pagination.page <= 1}
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                     >
                       ◀ Previous
                     </button>
 
-                    {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((pNum) => (
+                    {paginationPages(pagination.page, pagination.totalPages).map((pNum) => (
                       <button
                         key={pNum}
                         type="button"
                         style={{
-                          minWidth: "32px",
-                          height: "32px",
+                          minWidth: "44px",
+                          height: "44px",
                           padding: "0 6px",
                           borderRadius: "6px",
                           border: pNum === pagination.page ? "1px solid var(--color-primary)" : "1px solid var(--color-border)",
@@ -651,7 +657,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ initialParams, onP
                       type="button"
                       className="btn-secondary"
                       aria-label="Next page"
-                      style={{ padding: "6px 12px", minHeight: "32px", fontSize: "13px" }}
+                      style={{ padding: "6px 12px", minHeight: "44px", fontSize: "13px" }}
                       disabled={pagination.page >= pagination.totalPages}
                       onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
                     >

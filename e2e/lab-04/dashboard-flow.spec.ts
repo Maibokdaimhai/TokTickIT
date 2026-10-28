@@ -1,3 +1,4 @@
+import { screenshotDirectory } from "./evidence.js";
 import { test, expect, type Page } from "@playwright/test";
 import { PrismaClient } from "../../server/node_modules/@prisma/client/index.js";
 import bcrypt from "../../server/node_modules/bcrypt/bcrypt.js";
@@ -23,7 +24,7 @@ async function scenario() {
 }
 async function login(page:Page,email:string){await page.goto('/login');await page.getByLabel('Email',{exact:true}).fill(email);await page.getByLabel('Password',{exact:true}).fill(password!);await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page.getByRole('button',{name:'Account menu'})).toBeVisible();}
 async function capture(page:Page,role:string){
-  fs.mkdirSync(`artifacts/lab-04/screenshots/${role}-dashboard`,{recursive:true});
+  fs.mkdirSync(screenshotDirectory(`${role}-dashboard`),{recursive:true});
   for(const width of [320,390,820,1440]){
     await page.setViewportSize({width,height:1000});
     const dashboard=page.getByRole('region',{name:role==='requester'?'Requester Dashboard':'Staff Dashboard'});
@@ -32,7 +33,7 @@ async function capture(page:Page,role:string){
     for(const element of await dashboard.locator('a,button,h1,h2').all()){
       if(!await element.isVisible())continue;const b=(await element.boundingBox())!;expect(b.x).toBeGreaterThanOrEqual(0);expect(b.x+b.width).toBeLessThanOrEqual(width+1);if(await element.evaluate(e=>e.matches('a,button')))expect(b.height).toBeGreaterThanOrEqual(44);
     }
-    await page.screenshot({path:`artifacts/lab-04/screenshots/${role}-dashboard/dashboard-${width}.png`,fullPage:true});
+    await page.screenshot({path:`${screenshotDirectory(`${role}-dashboard`)}/dashboard-${width}.png`,fullPage:true});
   }
 }
 test('Requester dashboard counts and links survive filters, reload and Back without leaking another Requester',async({page})=>{

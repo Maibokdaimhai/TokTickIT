@@ -1,6 +1,6 @@
 # Lab 4 Test Plan and Traceability - TokTickIT
 
-Status: Partial implementation and verified foundation coverage, 27 October 2026. The original contract/test matrix was created before feature implementation. Issue #48 now implements the backend Actions foundation; the six actual Lab 4 suites and run results are listed in Section 8. Remaining UI/workflow/dashboard/release cases are planned. Existing merged mobile-fix checks are baseline behavior, not proof that unimplemented Lab 4 cases pass.
+Status: Issue #52 local regression/accessibility execution completed on 28 October 2026, based on merged staging `5d13a76`. Section 14 records current results and phase limits; earlier sections remain historical. Final-main/release execution remains Issue #53.
 
 ## 1. Strategy and evidence rules
 
@@ -242,3 +242,50 @@ Tests ran on an uncommitted follow-up based on `741447c`, matched to implementat
 - Red/green confirmed before/after in both integration and browser tests. Original bug replaced history state with null; the browser lost the owner/page filters on Back. No backend, database, dependencies or unrelated package.json changes were required.
 
 These are client/controlled-HTTP checks; prior real database/performance evidence remains historical. The user subsequently authorized pushing this correction to PR #57; reviewer approval remains pending.
+
+## 14. Issue #52 regression, accessibility and evidence
+
+Tests ran on working-tree snapshots on `test/lab4-regression-and-evidence`; the final fingerprint was matched to implementation commit `003787cc964dec10b74991de1f7b724dd96ab227`, base `5d13a769f8444ae7757074f26b450a686e3f6393`. [Verification summary](../../artifacts/lab-04/verification/regression.json) records source fingerprints and phases; [runbook](regression-and-evidence.md) explains fixes/reproduction; [discovery inventory](../../artifacts/lab-04/verification/regression-discovery.json) lists every real and controlled case and the explicit archived Lab 2 replacement mapping.
+
+| Check | Executed result |
+|---|---|
+| Complete backend | 384 passed, 0 failed; 1 opt-in skipped |
+| Separately opted-in dashboard performance | 1 passed; 10,000 Tickets / 30,000 Actions; 20 warm reads/role; p95 6.66/12.93/19.75 ms; max 5,131 bytes |
+| Complete client | 195 passed, 0 failed/skipped, including 3 new bounded-pagination tests |
+| Root real PostgreSQL/API Chromium | 38 passed, 0 failed/skipped/flaky, ten files; includes 28 Lab 3 and 10 Lab 4 cases |
+| Combined controlled-HTTP Chromium | 14 passed, 0 failed/skipped/flaky; 9 Actions UI including actual reduced motion, 5 dashboard-review cases |
+| Rendered audit | 65 successful width/reflow scenarios, 21,101 text samples and 5,057 enabled controls; [results](../../artifacts/lab-04/verification/rendered-accessibility.json) |
+| Server/client typechecks and builds | Passed; no source JS emission |
+
+The 38-case real-browser and full backend runs completed before approved test-database cleanup. A final motion-only follow-up corrected fixture/standalone contextOptions and CSS suppression; the 14 controlled browsers, full 195 client tests, client typecheck/build passed afterward. The DB browser run was not repeated for this final motion-only change. Both snapshots are identified, rather than presenting them as a single final-main run.
+
+| AC / planned test IDs | Actual evidence in this execution |
+|---|---|
+| AC-01/02; UNIT-01, API-01/02/08, UI-01, E2E-01 | Full Action validation/authorization/concurrency APIs and client suites; new real multi-contributor Actions flow |
+| AC-03/04; API-03/04/05/19, UI-02 | Immutable public revisions/follow-up APIs, real multi-action completion/cancellation/history, Requester privacy and ownership checks |
+| AC-05; API-06/07/08/09/20, UI-03 | Full database race/rollback/retry suites plus real safe-failure draft/retry identity recovery |
+| AC-06/07/08; UNIT-02, API-10/11/12/13/19/20, UI-04, E2E-02 | Existing 64-pair workflow/gate/race tests; old Staff lifecycle updated to record completed work; three real lifecycle/legacy flows and multi-action resolution |
+| AC-09/10/11; UNIT-03, API-15/16/17/18, UI-05/06/07/08, E2E-03 | Full SQL-oracle/window/security/drill-down APIs, client dashboards/routing, three real dashboard cases and five controlled review regressions |
+| AC-12; DB-01/02 | Migration/seed/recovery tests rerun with the actual project-container restore prerequisite |
+| AC-13; REG-01, API-14 | Full Labs 1–4 backend/client, all authenticated Lab 3 browser cases, representative earlier requirements mapped from archived Lab 2 |
+| AC-14; UI state tests | Full client error/conflict/draft/expiry suites, new real Action 500 recovery, controlled stale/403/401 and reload context regressions |
+| AC-15; STYLE-01, E2E-04, retained mobile regression | New rendered audit, 320/390/820/1440 widths, long names/content, named contained-table keyboard scrolling, dialog focus and 200% equivalent reflow; reduced-motion CSS separately verified |
+| AC-16; PERF-01 | Actual 10k/30k dataset, bounded payload/preview, 20 warm reads per role and EXPLAIN ANALYZE in regression-performance.json |
+| AC-17; RELEASE-01 | Still pending final-main/release/submission work in Issue #53 |
+
+Real failures led to input/header/password-rule contrast, control-label, bounded pagination/target and long-name/grid corrections. Test setup corrections cover Dashboard homes, sign-in completion, complete-work resolution prerequisites, deterministic last-admin fixtures and privacy assertions that inspect actual private content instead of public guidance wording. Root guards were exercised with missing opt-in, development DB and unsafe uploads and rejected all three before server startup. Eleven additional safety tests cover protocol/path/upload/symlink boundaries. Audited fixtures remain intact until whole-database teardown.
+
+The user authorized deletion of `toktickit_lab4_regression_test_20261028_52` and its dedicated temporary uploads after verification. Both were removed; development `toktickit` and container remain intact. No new migration/dependency was needed. The user subsequently authorized pushing and PR creation; reviewer approval remains pending. Rendered checks are scoped automation/visual sample review, not formal accessibility certification or native toolbar zoom. Earlier evidence and review records remain historical.
+
+## 15. PR #58 separated-token safety correction
+
+Feedback: [Kawi-HBLI review](https://github.com/Maibokdaimhai/TokTickIT/pull/58#pullrequestreview-5684111915). [Sanitized results](../../artifacts/lab-04/verification/pr58-safety-review.json) fingerprint the guard-only follow-up.
+
+- `server/tests/lab-04/database-guard.test.ts`: **18 passed**, covering fixture guard denial and separated-token acceptance.
+- `server/tests/lab-04/e2e-safety.test.ts`: **33 passed**, including substring/encoded DB names and whole-token upload naming, existing protocol/path/opt-in/symlink checks.
+- `server/tests/lab-04/cleanup-guard.test.ts`: **5 passed**, proving invalid targets are rejected before read/delete calls and valid scoped cleanup still proceeds.
+- Total: **56 passed, 0 failed/skipped**; before the fix **24 failed / 32 passed**.
+- Four unsafe Playwright config invocations rejected before server startup; tokenized target discovery remains 38 cases. The legacy migration rehearsal rejects `production_contest` during collection before client construction. This expected collection rejection is not counted as a passing migration execution.
+- Server `tsc --noEmit`, production build and diff whitespace passed. No database was needed, created or modified; full DB/browser/performance counts in Section 14 remain historical.
+
+Markers are exact case-insensitive tokens separated by `_` or `-` (or the full name). E2E, fixture and cleanup checks use one shared validator; uploads additionally require their own separated uploads token and preserve root/symlink restrictions.

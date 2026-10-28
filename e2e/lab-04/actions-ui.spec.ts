@@ -1,3 +1,4 @@
+import { screenshotDirectory } from "./evidence.js";
 import { test, expect, type Page } from "@playwright/test";
 import fs from "node:fs";
 import type { ActionRevision, StaffTicketDetail, TicketAction, AuthUser } from "../../client/src/types.js";
@@ -9,7 +10,7 @@ const other = { ...staff, id: 8, name: "Jamie Chen" };
 const initialAction: TicketAction = { id: 4, ticketId: 1, actionAt: "2026-01-02T02:00:00Z", description: "Investigate connectivity and review the router configuration", result: null,
   performedBy: staff, assignee: other, status: "IN_PROGRESS", version: 0, followUpRequired: false, followUpNote: null, attachmentNotes: "See the existing router photograph",
   followUpCompletedAt: null, followUpCompletedBy: null, followUpCompletionNote: null, createdAt: "2026-01-02T02:00:00Z", updatedAt: "2026-01-02T02:00:00Z" };
-const screenshotDir = "artifacts/lab-04/screenshots/actions-taken";
+const screenshotDir = screenshotDirectory("actions-taken");
 async function controlledApp(page: Page, role: "REQUESTER" | "IT_STAFF" = "IT_STAFF", options: { pendingFollowUp?: boolean; longContent?: boolean } = {}) {
   let version = 1;
   const actions: TicketAction[] = [{ ...initialAction, ...(options.longContent ? { description: "LongUnbrokenDiagnosticDescription".repeat(12), attachmentNotes: "router-photo-with-a-long-file-name.png ".repeat(8) } : {}), ...(options.pendingFollowUp ? { status: "COMPLETED" as const, result: "Connectivity restored", followUpRequired: true, followUpNote: "Confirm with Requester" } : {}) }];
@@ -138,4 +139,10 @@ test("Action forms remain usable at 200% zoom and focus errors above the sticky 
   await assertBounds(page);
   const field = (await description.boundingBox())!, shell = (await page.locator(".app-header").boundingBox())!;
   expect(field.y).toBeGreaterThanOrEqual(shell.y + shell.height);
+});
+
+test("Reduced motion disables the shell transition rather than only setting the media preference", async ({ page }) => {
+  await controlledApp(page, "IT_STAFF");
+  expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);
+  await expect(page.locator('.app-brand')).toHaveCSS('transition-duration', '0s');
 });

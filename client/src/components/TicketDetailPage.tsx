@@ -1170,6 +1170,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({ ticketId, on
               <div style={{ marginBottom: "8px" }}>
                 <textarea
                   data-testid="input-public-comment"
+                  aria-label="Public Comment"
                   value={commentDraft}
                   onChange={(e) => {
                     setCommentDraft(e.target.value);

@@ -1,3 +1,4 @@
+import { screenshotDirectory } from "./evidence.js";
 import { test, expect, type Page } from "@playwright/test";
 import { PrismaClient } from "../../server/node_modules/@prisma/client/index.js";
 import bcrypt from "../../server/node_modules/bcrypt/bcrypt.js";
@@ -54,7 +55,7 @@ async function completeWork(page: Page, actionId: number) {
   await page.getByRole("button", { name: "Confirm Action Change", exact: true }).click(); expect((await result).status()).toBe(200);
   await expect(page.getByRole("button", { name: `Edit Action #${actionId}`, exact: true })).toHaveCount(0);
 }
-const screenshots = "artifacts/lab-04/screenshots/ticket-workflow";
+const screenshots = screenshotDirectory("ticket-workflow");
 test("real Staff/Requester lifecycle releases the follow-up gate and retains history", async ({ page, browser }) => {
   const f = await scenario(); await page.setViewportSize({ width: 390, height: 844 });
   await signIn(page, f.staff.email); await page.goto(`/staff/tickets/${f.ticket.id}`);

@@ -1,3 +1,4 @@
+import { screenshotDirectory } from "./evidence.js";
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 
@@ -41,8 +42,8 @@ for (const staff of [false, true]) {
     await expect(page.getByRole('alert')).toContainText('Refresh unavailable'); await expect(card).toBeVisible();
     await expect(page.getByText(/^As of /)).toHaveText(asOf!); await expect(page.getByText(/Stale data/)).toBeVisible();
     await page.setViewportSize({ width: 390, height: 1000 });
-    fs.mkdirSync('artifacts/lab-04/screenshots/dashboard-review', { recursive: true });
-    await page.screenshot({ path: `artifacts/lab-04/screenshots/dashboard-review/${role}-stale-390.png`, fullPage: true });
+    fs.mkdirSync(screenshotDirectory('dashboard-review'), { recursive: true });
+    await page.screenshot({ path: `${screenshotDirectory('dashboard-review')}/${role}-stale-390.png`, fullPage: true });
     f.fail(0); await page.getByRole('button', { name: 'Retry', exact: true }).click();
     await expect(page.getByText(/Stale data/)).toHaveCount(0); await expect(card).toBeVisible();
     f.fail(staff ? 403 : 401); await page.getByRole('button', { name: 'Refresh Dashboard' }).click();

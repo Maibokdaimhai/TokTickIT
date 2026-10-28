@@ -1,3 +1,4 @@
+import { assertSafeUploadsDir } from "./upload-guard.js";
 import { test, expect } from "@playwright/test";
 import {
   createAccount,
@@ -75,12 +76,13 @@ test.describe.serial("E2E-02: Staff Ticket Operations & Queue Workflow", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await signIn(page, staffUser.email);
     await expect(page.getByRole("navigation")).toBeVisible();
+    await page.goto("/staff/tickets");
   });
 
   test("staff queue: responsive layout, search, filters, sorting, and preserved pagination", async ({
     page,
   }) => {
-    await expect(page.getByRole("heading", { name: "Staff Ticket Queue" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "IT Staff Ticket Queue" })).toBeVisible();
 
     // 1. Capture baseline screenshots at 3 viewports
     // Desktop 1440x900
@@ -177,7 +179,7 @@ test.describe.serial("E2E-02: Staff Ticket Operations & Queue Workflow", () => {
 
     // Click Back to Queue and verify page 2 is preserved
     await page.locator('[data-testid="btn-back-to-queue"]').first().click();
-    await expect(page.getByRole("heading", { name: "Staff Ticket Queue" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "IT Staff Ticket Queue" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Page 2" }).first()).toBeVisible();
   });
 
@@ -364,6 +366,20 @@ test.describe.serial("E2E-02: Staff Ticket Operations & Queue Workflow", () => {
     const statusBadge = page.locator('[data-testid="status-badge"]');
     await expect(statusBadge).toContainText("IN_PROGRESS");
 
+    // Lab 4 requires completed recorded work before a real resolution.
+    await page.getByRole("button", { name: "New Action", exact: true }).click();
+    await page.getByLabel("Action Description", { exact: true }).fill("Restore workstation and verify diagnostics");
+    await page.getByRole("button", { name: "Save Action", exact: true }).click();
+    await expect(page.getByText("Action saved.", { exact: true })).toBeVisible();
+    const actionId = Number(new URL(page.url()).searchParams.get("actionId"));
+    await page.getByRole("button", { name: `Edit Action #${actionId}`, exact: true }).click();
+    await page.getByLabel("Result", { exact: true }).fill("Workstation diagnostics now pass");
+    await page.getByLabel("Action Status", { exact: true }).selectOption("COMPLETED");
+    await page.getByRole("button", { name: "Save Action", exact: true }).click();
+    await page.getByRole("button", { name: "Confirm Action Change", exact: true }).click();
+    await expect(page.getByText("Action saved.", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("Next Status", { exact: true })).toBeEnabled();
+
     // 7. Complete IN_PROGRESS -> RESOLVED confirmation (confirmed to completion, do not cancel)
     await statusSelect.selectOption("RESOLVED");
     await page.locator('[data-testid="btn-save-status"]').click();
@@ -427,7 +443,7 @@ test.describe.serial("E2E-02: Staff Ticket Operations & Queue Workflow", () => {
     });
 
     // Create real test upload files
-    const uploadsDir = path.resolve(process.cwd(), "artifacts/lab-03/scratch/uploads");
+    const uploadsDir = assertSafeUploadsDir();
     await fs.mkdir(uploadsDir, { recursive: true });
 
     const activeFilePath = path.join(uploadsDir, `active-${randomUUID()}.txt`);

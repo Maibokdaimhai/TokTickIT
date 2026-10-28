@@ -1,3 +1,4 @@
+import { assertSafeUploadsDir } from "./upload-guard.js";
 import { test, expect } from "@playwright/test";
 import { validateDatabaseUrl } from "./db-guard.js";
 import {
@@ -122,7 +123,7 @@ test.describe("Safety Guard & Cleanup Deterministic Verification", () => {
     });
 
     // Add attachment with mock file on disk
-    const mockUploadPath = path.resolve(process.cwd(), `artifacts/lab-03/scratch/uploads/cleanup-test-${randomUUID()}.txt`);
+    const mockUploadPath = path.join(assertSafeUploadsDir(), `cleanup-test-${randomUUID()}.txt`);
     await fs.mkdir(path.dirname(mockUploadPath), { recursive: true });
     await fs.writeFile(mockUploadPath, "mock upload data");
     await db.attachment.create({
@@ -170,8 +171,22 @@ test.describe("Safety Guard & Cleanup Deterministic Verification", () => {
 
     // - No orphan @e2e.example users remain in the DB
     const leftoverE2eUsers = await db.user.findMany({
-      where: { email: { endsWith: "@e2e.example" } },
+      where: { email: { endsWith: "@e2e.example" }, submittedTickets: { none: {} }, ownedTickets: { none: {} }, resolutionTickets: { none: {} }, publicComments: { none: {} }, internalNotes: { none: {} }, performedActions: { none: {} }, assignedActions: { none: {} }, completedFollowUps: { none: {} }, actionRevisions: { none: {} }, ticketStatusEvents: { none: {} } },
     });
     expect(leftoverE2eUsers).toHaveLength(0);
   });
+  test("Lab 4 cleanup retains audited fixtures and their referenced people without bypassing history triggers", async () => {
+    const user = await createAccount("Audited Cleanup Staff", { role: "IT_STAFF" });
+    const ticket = await createTicketFixture({ requesterId: user.id });
+    const db = database();
+    const action = await db.actionTaken.create({ data: { ticketId: ticket.id, performedById: user.id, assigneeId: user.id, actionAt: new Date(), description: "Retained cleanup audit fixture", followUpRequired: false, status: "COMPLETED", result: "Verified", clientRequestId: randomUUID(), canonicalRequest: "{}" } });
+    await db.actionTakenRevision.create({ data: { actionId: action.id, editorId: user.id, version: 0, snapshot: { description: action.description } } });
+    await cleanAccounts();
+    expect(await db.ticket.findUnique({ where: { id: ticket.id } })).not.toBeNull();
+    expect(await db.actionTaken.findUnique({ where: { id: action.id } })).not.toBeNull();
+    expect(await db.actionTakenRevision.count({ where: { actionId: action.id } })).toBe(1);
+    expect(await db.user.findUnique({ where: { id: user.id } })).not.toBeNull();
+    await db.$disconnect();
+  });
+
 });
