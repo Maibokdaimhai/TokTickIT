@@ -4,6 +4,8 @@ import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { expect, type Page } from "@playwright/test";
+import { assertSafeUploadsDir, unlinkTestUpload } from "./upload-guard.js";
+import { unauditedFixtureTickets, removeUnreferencedFixtureUsers } from "../../server/tests/audit-fixture-cleanup.js";
 import { assertSafeDatabaseUrl } from "./db-guard.js";
 
 export function getInitialPassword(): string {
@@ -107,6 +109,7 @@ export async function createTicketFixture(options: {
 export async function cleanAccounts() {
   if (!prisma) return;
   const db = prisma;
+  assertSafeDatabaseUrl(process.env.DATABASE_URL, process.env.E2E_ALLOW_DB_WRITE);
   try {
     // 1. Discover all test users (tracked IDs + @e2e.example namespace, never seeded users)
     const discoveredUsers = await db.user.findMany({
@@ -136,6 +139,8 @@ export async function cleanAccounts() {
     const e2eCreatedTicketIds = Array.from(
       new Set([...createdTicketIds, ...e2eCreatedTickets.map((t) => t.id)])
     );
+
+    const deletableTicketIds = await unauditedFixtureTickets(db, e2eCreatedTicketIds);
 
     // 3. Clear ownerId and problemAppearsResolved on retained/seeded tickets pointing to test users
     if (allTestUserIds.length > 0) {
@@ -168,63 +173,15 @@ export async function cleanAccounts() {
       });
     }
 
-    // 5. Delete attachments and un-link files on disk
-    const attachments = await db.attachment.findMany({
-      where: {
-        ticketId: { in: e2eCreatedTicketIds },
-      },
-      select: { id: true, filePath: true },
-    });
-
-    if (attachments.length > 0) {
-      await db.attachment.deleteMany({
-        where: { id: { in: attachments.map((a) => a.id) } },
-      });
-
-      for (const att of attachments) {
-        if (att.filePath) {
-          await fs.unlink(att.filePath).catch(() => {});
-        }
-      }
-    }
-
-    // 6. Delete public comments and internal notes on E2E created tickets or authored by test users
-    await db.publicComment.deleteMany({
-      where: {
-        seedKey: null,
-        OR: [
-          { ticketId: { in: e2eCreatedTicketIds } },
-          { authorId: { in: allTestUserIds } },
-        ],
-      },
-    });
-
-    await db.internalNote.deleteMany({
-      where: {
-        seedKey: null,
-        OR: [
-          { ticketId: { in: e2eCreatedTicketIds } },
-          { authorId: { in: allTestUserIds } },
-        ],
-      },
-    });
-
-    // 7. Delete E2E created tickets
-    if (e2eCreatedTicketIds.length > 0) {
-      await db.ticket.deleteMany({
-        where: { id: { in: e2eCreatedTicketIds } },
-      });
-    }
-
-    // 8. Delete E2E created test users
-    if (allTestUserIds.length > 0) {
-      await db.user.deleteMany({
-        where: {
-          seedKey: null,
-          id: { in: allTestUserIds },
-        },
-      });
-    }
+    // Audited Ticket fixtures and their referenced people/files remain until
+    // whole disposable-database teardown. Never disable immutable-history triggers.
+    const attachments = await db.attachment.findMany({ where: { ticketId: { in: deletableTicketIds } }, select: { id: true, filePath: true } });
+    for (const attachment of attachments) if (attachment.filePath) await unlinkTestUpload(attachment.filePath);
+    await db.attachment.deleteMany({ where: { id: { in: attachments.map(a => a.id) } } });
+    await db.publicComment.deleteMany({ where: { seedKey: null, ticketId: { in: deletableTicketIds } } });
+    await db.internalNote.deleteMany({ where: { seedKey: null, ticketId: { in: deletableTicketIds } } });
+    await db.ticket.deleteMany({ where: { id: { in: deletableTicketIds } } });
+    await removeUnreferencedFixtureUsers(db, allTestUserIds);
 
     // Reset tracked arrays only after cleanup handling is complete
     ids.length = 0;
@@ -241,6 +198,9 @@ export async function signIn(page: Page, email: string, password?: string) {
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(pwd);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  // Wait for the login outcome before callers navigate; navigation can otherwise
+  // abort the sign-in request under a slower full regression run.
+  await page.getByRole("navigation").or(page.getByRole("heading", { name: "Change password", exact: true })).or(page.getByRole("alert")).first().waitFor({ state: "visible" });
 }
 
 export async function signOut(page: Page) {
@@ -253,7 +213,7 @@ export async function captureScreenshot(
   filename: string,
   options?: { fullPage?: boolean }
 ): Promise<string> {
-  const screenshotsDir = path.resolve(process.cwd(), "artifacts/lab-03/screenshots");
+  const screenshotsDir = path.resolve(process.env.E2E_SCREENSHOTS_DIR ?? "artifacts/lab-04/screenshots/regression/lab-03");
   const fullPath = path.join(screenshotsDir, filename);
   await fs.mkdir(path.dirname(fullPath), { recursive: true });
 

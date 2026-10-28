@@ -212,6 +212,7 @@ test.describe.serial("E2E-04: Authenticated Requester Regression & Workflows", (
     // 3. Authenticated Requester empty state
     await signOut(page);
     await signIn(page, emptyUser.email);
+    await page.goto("/my-tickets");
     const emptyState = page.getByTestId("empty-ticket-state");
     await expect(emptyState).toBeVisible();
     await captureScreenshot(page, "requester/supplemental-requester-empty-state.png");
@@ -220,7 +221,8 @@ test.describe.serial("E2E-04: Authenticated Requester Regression & Workflows", (
   test("E2E-03: Ticket detail inspection, attachment upload, download, and soft-removal with reason audit", async ({
     page,
   }) => {
-    // Navigate to ticket detail view
+    // Lab 4 sign-in home is Dashboard; explicitly open the retained list.
+    await page.goto("/my-tickets");
     const firstRow = page.locator(".tickets-table tbody tr").first();
     await expect(firstRow).toBeVisible({ timeout: 10000 });
     await firstRow.click();
@@ -318,6 +320,18 @@ test.describe.serial("E2E-04: Authenticated Requester Regression & Workflows", (
     await page.goto(`/tickets/${createdTicketId}`);
     await expect(page.locator('[data-testid="ticket-number-heading"]')).toBeVisible();
 
+    // Verify actual private content is omitted, rather than rejecting the public
+    // guidance that tells staff where private information belongs.
+    const privateStaff = await createAccount("Private Note Author", { role: "IT_STAFF" });
+    const privateText = "E2E private diagnostic detail must remain hidden";
+    await database().internalNote.create({ data: { ticketId: createdTicketId!, authorId: privateStaff.id, content: privateText } });
+    const publicDetail = await page.request.get(`${apiOrigin}/api/tickets/${createdTicketId}`);
+    expect(publicDetail.status()).toBe(200);
+    const publicData = await publicDetail.json();
+    expect(publicData).not.toHaveProperty("internalNotes");
+    expect(JSON.stringify(publicData)).not.toContain(privateText);
+    await expect(page.getByText(privateText, { exact: true })).toHaveCount(0);
+
     // 1. Post a public comment as Requester
     const commentInput = page.locator('[data-testid="input-public-comment"]');
     await expect(commentInput).toBeVisible();
@@ -333,7 +347,7 @@ test.describe.serial("E2E-04: Authenticated Requester Regression & Workflows", (
     await expect(commentsList).toContainText("Requester");
 
     // Verify internal notes are NOT visible to the requester
-    await expect(page.locator("text=Internal Notes")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Internal Notes", exact: true })).toHaveCount(0);
     await expect(page.locator('[data-testid="internal-notes-list"]')).toHaveCount(0);
 
     await captureScreenshot(page, "requester/supplemental-requester-timeline-comment.png");

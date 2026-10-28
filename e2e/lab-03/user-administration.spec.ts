@@ -261,14 +261,17 @@ test.describe.serial("E2E-03: Administrator User Management Workflow", () => {
     await expect(page.getByRole("heading", { name: "User Management" })).toBeVisible();
 
     const db = database();
-    const seededAdminEmail = "morgan.davis@example.com";
+    const otherAdmins = await db.user.findMany({ where: { role: "ADMINISTRATOR", isActive: true, id: { not: tempAdmin.id } }, select: { id: true } });
+    const otherAdminIds = otherAdmins.map(user => user.id);
 
     try {
       // 2. Temporarily deactivate all other administrators in the DB
       await db.user.updateMany({
-        where: { email: { in: [seededAdminEmail, adminUser.email] } },
+        where: { id: { in: otherAdminIds } },
         data: { isActive: false },
       });
+
+      expect(await db.user.count({ where: { role: "ADMINISTRATOR", isActive: true } })).toBe(1);
 
       // Reload admin users list so UI sees other administrators are now inactive
       await page.reload();
@@ -307,11 +310,10 @@ test.describe.serial("E2E-03: Administrator User Management Workflow", () => {
     } finally {
       // 4. Guaranteed restoration of all administrators even if test assertions fail
       await db.user.updateMany({
-        where: { email: { in: [seededAdminEmail, adminUser.email] } },
+        where: { id: { in: otherAdminIds } },
         data: { isActive: true },
       });
-      const restored = await db.user.findUnique({ where: { email: seededAdminEmail } });
-      expect(restored?.isActive).toBe(true);
+      expect(await db.user.count({ where: { id: { in: otherAdminIds }, isActive: true } })).toBe(otherAdminIds.length);
     }
   });
 

@@ -1,3 +1,4 @@
+import { paginationPages } from "../utils/pagination.js";
 import React, { useState, useEffect } from "react";
 import { fetchCategories, fetchEligibleOwners, fetchStaffTickets } from "../api.js";
 import {
@@ -675,7 +676,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
           {tickets.length > 0 && (
             <>
               {/* Desktop Table View */}
-              <div className="tickets-table-container">
+              <div className="tickets-table-container" role="region" aria-label="Scrollable Tickets table" tabIndex={0}>
                 <table className="tickets-table" aria-label="IT Staff Ticket Queue">
                   <thead>
                     <tr>
@@ -727,7 +728,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                           <button
                             type="button"
                             className="btn-secondary"
-                            style={{ padding: "5px 12px", minHeight: "32px", fontSize: "12.5px" }}
+                            style={{ padding: "5px 12px", minHeight: "44px", fontSize: "12.5px" }}
                             onClick={() => onOpenTicket(t.id)}
                             aria-label={`Open ticket ${t.ticketNumber}`}
                           >
@@ -822,26 +823,26 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                 )}
               </div>
 
-              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", maxWidth: "100%", gap: "6px", alignItems: "center" }}>
                 <button
                   type="button"
                   className="btn-secondary"
                   aria-label="Previous page"
-                  style={{ padding: "6px 12px", minHeight: "32px", fontSize: "13px" }}
+                  style={{ padding: "6px 12px", minHeight: "44px", fontSize: "13px" }}
                   disabled={pagination.page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
                   ◀ Previous
                 </button>
 
-                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((pNum) => (
+                {paginationPages(pagination.page, pagination.totalPages).map((pNum) => (
                   <button
                     key={pNum}
                     type="button"
                     aria-label={`Page ${pNum}`}
                     style={{
-                      minWidth: "32px",
-                      height: "32px",
+                      minWidth: "44px",
+                      height: "44px",
                       padding: "0 6px",
                       borderRadius: "6px",
                       border:
@@ -863,7 +864,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                   type="button"
                   className="btn-secondary"
                   aria-label="Next page"
-                  style={{ padding: "6px 12px", minHeight: "32px", fontSize: "13px" }}
+                  style={{ padding: "6px 12px", minHeight: "44px", fontSize: "13px" }}
                   disabled={pagination.page >= pagination.totalPages}
                   onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
                 >

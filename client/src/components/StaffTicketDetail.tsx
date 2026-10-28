@@ -814,7 +814,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
           data-testid="staff-refresh-failed-banner"
           style={{
             backgroundColor: "#FFFBEB",
-            border: "1px solid #FCD34D",
+            border: "1px solid #B45309",
             borderRadius: "8px",
             padding: "16px 20px",
             marginBottom: "20px",
@@ -997,6 +997,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                 <div className="op-control-row">
                   <select
                     data-testid="select-owner"
+                    aria-label="Ticket Owner"
                     className="op-control-select"
                     value={selectedOwnerId}
                     disabled={ownersLoading || isSavingOwner || refreshFailed}
@@ -1052,6 +1053,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                 <div className="op-control-row">
                   <select
                     data-testid="select-it-priority"
+                    aria-label="IT Priority"
                     className="op-control-select"
                     value={selectedItPriority}
                     disabled={isSavingItPriority || refreshFailed}
@@ -1414,6 +1416,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
               <form onSubmit={handleSubmitPublicComment}>
                 <textarea
                   data-testid="input-staff-public-comment"
+                  aria-label="Public Comment"
                   value={publicCommentDraft}
                   onChange={(e) => {
                     setPublicCommentDraft(e.target.value);
@@ -1426,7 +1429,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                     width: "100%",
                     padding: "8px 10px",
                     borderRadius: "6px",
-                    border: publicCommentError ? "1px solid var(--color-error)" : "1px solid #86EFAC",
+                    border: publicCommentError ? "1px solid var(--color-error)" : "1px solid #15803D",
                     fontSize: "13px",
                     fontFamily: "inherit",
                     resize: "vertical",
@@ -1515,6 +1518,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
               <form onSubmit={handleSubmitInternalNote}>
                 <textarea
                   data-testid="input-internal-note"
+                  aria-label="Internal Note"
                   value={internalNoteDraft}
                   onChange={(e) => {
                     setInternalNoteDraft(e.target.value);
@@ -1527,7 +1531,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                     width: "100%",
                     padding: "8px 10px",
                     borderRadius: "6px",
-                    border: internalNoteError ? "1px solid var(--color-error)" : "1px solid #FCD34D",
+                    border: internalNoteError ? "1px solid var(--color-error)" : "1px solid #B45309",
                     fontSize: "13px",
                     fontFamily: "inherit",
                     resize: "vertical",

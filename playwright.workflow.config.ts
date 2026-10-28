@@ -7,7 +7,7 @@ const databaseUrl = process.env.DATABASE_URL ?? "";
 assertSafeDatabaseUrl(databaseUrl, process.env.E2E_ALLOW_DB_WRITE);
 export default defineConfig({
   testDir: "./e2e/lab-04", testMatch: "ticket-resolution.spec.ts", workers: 1, timeout: 90000,
-  reporter: "list", use: { baseURL: "http://localhost:5174", reducedMotion: "reduce", trace: "retain-on-failure" },
+  reporter: "list", use: { baseURL: "http://localhost:5174", contextOptions: { reducedMotion: "reduce" }, trace: "retain-on-failure" },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: [
     { command: "npm run dev", cwd: "server", port: 3104, reuseExistingServer: false, timeout: 60000,

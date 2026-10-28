@@ -32,6 +32,8 @@ export function validateDatabaseUrl(databaseUrl?: string, allowDbWrite?: string)
     };
   }
 
+  if (!["postgresql:", "postgres:"].includes(parsed.protocol)) return { valid: false, dbName: "", error: "Safety check failed: PostgreSQL URL required." };
+
   // Extract and decode only the database pathname
   const rawPathname = parsed.pathname;
   if (!rawPathname || rawPathname === "/") {
@@ -42,7 +44,8 @@ export function validateDatabaseUrl(databaseUrl?: string, allowDbWrite?: string)
     };
   }
 
-  let dbName = decodeURIComponent(rawPathname);
+  let dbName: string;
+  try { dbName = decodeURIComponent(rawPathname); } catch { return { valid: false, dbName: "", error: "Safety check failed: Invalid database pathname encoding." }; }
   if (dbName.startsWith("/")) {
     dbName = dbName.slice(1);
   }

@@ -64,8 +64,8 @@ test.describe("E2E-01: Authentication Workflows & Session Management", () => {
     await page.getByLabel("Confirm new password", { exact: true }).fill(newPass);
     await page.getByRole("button", { name: "Save new password" }).click();
 
-    // Redirection to permitted home (Requester lands on /my-tickets)
-    await expect(page.getByRole("heading", { name: "My Tickets" })).toBeVisible();
+    // Redirection to permitted home (Requester lands on /dashboard)
+    await expect(page.getByRole("heading", { name: "Requester Dashboard" })).toBeVisible();
 
     // Now protected API call succeeds
     const allowedRes = await page.request.get(`${apiOrigin}/api/categories`);
@@ -80,7 +80,7 @@ test.describe("E2E-01: Authentication Workflows & Session Management", () => {
 
     // Verify session persistence across full page reload
     await page.reload();
-    await expect(page.getByRole("heading", { name: "My Tickets" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Requester Dashboard" })).toBeVisible();
 
     // Test Account Menu keyboard navigation and Escape dismissal
     const accountMenu = page.getByRole("button", { name: "Account menu" });
@@ -120,7 +120,7 @@ test.describe("E2E-01: Authentication Workflows & Session Management", () => {
     // 1. Requester
     const requester = await createAccount("Role Test Requester", { role: "REQUESTER" });
     await signIn(page, requester.email);
-    await expect(page.getByRole("heading", { name: "My Tickets" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Requester Dashboard" })).toBeVisible();
     await expect(page.getByLabel("Main Navigation").getByRole("button", { name: /Create Ticket/ })).toBeVisible();
 
     // Requester attempting to access /staff/tickets directly sees 403 ForbiddenView
@@ -136,7 +136,7 @@ test.describe("E2E-01: Authentication Workflows & Session Management", () => {
     // 2. IT Staff
     const staff = await createAccount("Role Test IT Staff", { role: "IT_STAFF" });
     await signIn(page, staff.email);
-    await expect(page.getByRole("heading", { name: "Staff Ticket Queue" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Staff Dashboard" })).toBeVisible();
     // Prohibited from seeing Create Ticket button
     await expect(page.getByRole("button", { name: "Create Ticket" })).toHaveCount(0);
     // IT Staff cannot access /admin/users
@@ -147,12 +147,12 @@ test.describe("E2E-01: Authentication Workflows & Session Management", () => {
     // 3. Administrator
     const admin = await createAccount("Role Test Administrator", { role: "ADMINISTRATOR" });
     await signIn(page, admin.email);
-    await expect(page.getByRole("heading", { name: "User Management" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Staff Dashboard" })).toBeVisible();
     // Prohibited from seeing Create Ticket button
     await expect(page.getByRole("button", { name: "Create Ticket" })).toHaveCount(0);
     // Admin CAN access staff queue
     await page.goto("/staff/tickets");
-    await expect(page.getByRole("heading", { name: "Staff Ticket Queue" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "IT Staff Ticket Queue" })).toBeVisible();
     await signOut(page);
   });
 });

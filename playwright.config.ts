@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { assertSafeUploadsDir } from "./e2e/lab-03/upload-guard.js";
 import { assertSafeDatabaseUrl } from "./e2e/lab-03/db-guard.js";
 
 // Fail-closed safety checks: prevent accidental writes or execution against development databases
@@ -7,11 +8,16 @@ assertSafeDatabaseUrl(dbUrl, process.env.E2E_ALLOW_DB_WRITE);
 
 const serverPort = 3104;
 const clientPort = 5174;
-const uploadsDir = process.env.UPLOADS_DIR || "/private/tmp/toktickit-e2e-uploads-20260918";
+const uploadsDir = assertSafeUploadsDir(process.env.UPLOADS_DIR);
+
+process.env.E2E_LAB4_SCREENSHOTS_DIR ??= "artifacts/lab-04/screenshots/regression/features";
 
 export default defineConfig({
-  testDir: "./e2e/lab-03",
-  timeout: 45000,
+  testDir: "./e2e",
+  // Lab 2 selector-based journeys are explicitly superseded by the authenticated
+  // Lab 3 requester suite; see the Issue #52 discovery inventory.
+  testMatch: ["lab-03/**/*.spec.ts", "lab-04/ticket-resolution.spec.ts", "lab-04/dashboard-flow.spec.ts", "lab-04/actions-taken-flow.spec.ts", "lab-04/responsive-accessibility.spec.ts"],
+  timeout: 90000,
   expect: {
     timeout: 10000,
   },
@@ -20,7 +26,7 @@ export default defineConfig({
   reporter: "list",
   use: {
     baseURL: `http://localhost:${clientPort}`,
-    trace: "on-first-retry",
+    trace: "retain-on-failure",
     contextOptions: {
       reducedMotion: "reduce",
     },
@@ -47,7 +53,7 @@ export default defineConfig({
       timeout: 120000,
     },
     {
-      command: `npm run dev -- --port ${clientPort}`,
+      command: `npm run dev -- --host localhost --port ${clientPort} --strictPort`,
       cwd: "client",
       port: clientPort,
       env: {

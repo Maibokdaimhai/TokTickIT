@@ -172,7 +172,7 @@ test.describe.serial("VIS-01: Responsive Layout & Accessibility Inspection", () 
 
     // --- Screen 6: Staff Queue ---
     await page.goto("/staff/tickets");
-    await expect(page.getByRole("heading", { name: "Staff Ticket Queue" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "IT Staff Ticket Queue" })).toBeVisible();
 
     // Desktop 1440x900: table visible, mobile list hidden
     await page.setViewportSize({ width: 1440, height: 900 });

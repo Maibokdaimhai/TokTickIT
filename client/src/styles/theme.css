@@ -8,7 +8,7 @@
   --color-text-primary: #1A2E26;
   --color-text-secondary: #4A5568;
   --color-border: #E2E8F0;
-  --color-input-border: #CBD5E1;
+  --color-input-border: #748194;
   --color-read-only-bg: #F1F5F9;
   --color-error: #DC2626;
   --color-warning-bg: #FEF3C7;
@@ -743,7 +743,7 @@ textarea.form-control {
 }
 
 .users-table tbody tr.row-inactive {
-  opacity: 0.7;
+  opacity: 1;
   background-color: #FAFAFA;
 }
 
@@ -835,7 +835,7 @@ textarea.form-control {
 }
 
 .pwd-must-change {
-  color: #D97706;
+  color: #92400E;
 }
 
 .pwd-active {
@@ -862,7 +862,7 @@ textarea.form-control {
 }
 
 .user-card.card-inactive {
-  opacity: 0.75;
+  opacity: 1;
   background-color: #FAFAFA;
 }
 
@@ -1022,7 +1022,7 @@ textarea.form-control {
 }
 
 .rule-unmet {
-  color: #94A3B8;
+  color: #475569;
 }
 
 .rule-icon {
@@ -1347,3 +1347,43 @@ textarea.form-control {
 @media(max-width:640px) { .dashboard-cards,.dashboard-distributions { grid-template-columns:minmax(0,1fr); } }
 
 .dashboard a { color:var(--color-primary); }
+
+/* Lab 4 rendered accessibility regression: controls remain identifiable and usable. */
+main :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea):not(:disabled) { border-color:var(--color-input-border); }
+button { min-height:44px !important; min-width:44px; }
+.ticket-link-button { border:0; padding:4px 0; background:transparent; color:var(--color-primary); text-align:left; text-decoration:underline; font-weight:700; overflow-wrap:anywhere; }
+.ticket-link-button:focus-visible { outline:3px solid var(--color-primary); outline-offset:2px; }
+
+.users-table-container { overflow-x:auto; }
+.app-brand { min-height:44px; }
+.app-header .brand-tagline, .app-header .requester-dept { color:#FFFFFF; }
+.app-header .nav-item { color:#FFFFFF; background-color:transparent; }
+.app-header .nav-item:hover { background-color:rgba(0,0,0,.12); }
+.app-header .nav-item.active { color:#004D2C; background-color:#FFFFFF; }
+main :is(button,a,[role="link"]):focus-visible { outline:3px solid var(--color-primary); outline-offset:3px; }
+.app-header :is(button,[role="button"]):focus-visible { outline:3px solid #FFFFFF; outline-offset:3px; }
+
+.checkbox-label { min-height:44px; }
+
+.tickets-table-container:focus-visible, .users-table-container:focus-visible { outline:3px solid var(--color-primary); outline-offset:3px; }
+
+.account-menu, .requester-info-block { min-width:0; max-width:100%; }
+.requester-badge-btn { max-width:100%; }
+.requester-name { overflow-wrap:anywhere; white-space:normal; }
+.user-card-header > div { min-width:0; flex:1; }
+.user-card-name { overflow-wrap:anywhere; }
+.user-card-header .status-pill { flex-shrink:0; }
+
+.operational-controls-grid { min-width:0; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); }
+.op-control-section { min-width:0; }
+@media(max-width:767px) { .operational-controls-grid { grid-template-columns:minmax(0,1fr); } }
+
+.my-tickets-page { overflow-wrap:anywhere; }
+.my-tickets-page > div:first-child > div { min-width:0; max-width:100%; }
+
+.requester-badge-btn { background:rgba(0,0,0,.08); }
+.requester-badge-btn:hover { background:rgba(0,0,0,.16); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration:0s !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; }
+  .app-brand:hover, .nav-item:hover, .requester-badge-btn:hover { transform:none; }
+}
