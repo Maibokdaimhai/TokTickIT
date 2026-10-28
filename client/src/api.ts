@@ -30,7 +30,7 @@ export class AuthError extends Error {
 }
 
 export class ApiClientError extends Error {
-  constructor(message: string, public status: number, public code?: string) {
+  constructor(message: string, public status: number, public code?: string, public details?: { field: string; message: string }[]) {
     super(message);
     this.name = "ApiClientError";
   }
@@ -376,7 +376,8 @@ export async function updateStaffTicketStatus(
   });
   const data = await res.json().catch(() => null);
   if (!res.ok) {
-    throw new ApiClientError(data?.error?.message || "Failed to update ticket status", res.status, data?.error?.code);
+    const details = Array.isArray(data?.error?.details) ? data.error.details.filter((detail: any) => typeof detail?.field === "string" && typeof detail?.message === "string") : undefined;
+    throw new ApiClientError(data?.error?.message || "Failed to update ticket status", res.status, data?.error?.code, details);
   }
   return data;
 }

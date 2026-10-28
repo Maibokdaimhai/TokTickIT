@@ -56,6 +56,8 @@ export interface TicketRow {
   version: number;
   attachmentCount: number;
   publicCommentCount: number;
+  resolvedAt: string | null;
+  resolvedAtEstimated: boolean;
 }
 
 export interface TicketDetail extends TicketRow {
@@ -160,6 +162,8 @@ export function formatTicketDetail(ticket: any): TicketDetail {
     createdAt: ticket.createdAt instanceof Date ? ticket.createdAt.toISOString() : ticket.createdAt,
     updatedAt: ticket.updatedAt instanceof Date ? ticket.updatedAt.toISOString() : ticket.updatedAt,
     version: ticket.version ?? 0,
+    resolvedAt: ticket.resolvedAt instanceof Date ? ticket.resolvedAt.toISOString() : ticket.resolvedAt ?? null,
+    resolvedAtEstimated: ticket.resolvedAtEstimated ?? false,
     attachmentCount: activeAttachments.length,
     publicCommentCount: publicComments.length,
     attachments: attachments.map(formatAttachmentMetadata),

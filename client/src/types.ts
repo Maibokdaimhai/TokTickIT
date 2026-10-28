@@ -55,6 +55,8 @@ export interface StaffTicketRow {
   version: number;
   attachmentCount: number;
   publicCommentCount: number;
+  resolvedAt?: string | null;
+  resolvedAtEstimated?: boolean;
 }
 
 export interface StaffTicketsResponse {
@@ -130,6 +132,8 @@ export interface Ticket {
   updatedAt: string;
   attachments?: Attachment[];
   attachmentCount?: number;
+  resolvedAt?: string | null;
+  resolvedAtEstimated?: boolean;
 }
 
 export interface TicketDetail {
@@ -156,6 +160,8 @@ export interface TicketDetail {
   publicComments?: PublicComment[];
   problemAppearsResolvedAt?: string | null;
   problemAppearsResolvedById?: number | null;
+  resolvedAt?: string | null;
+  resolvedAtEstimated?: boolean;
 }
 
 export interface StaffTicketDetail extends TicketDetail {
@@ -261,3 +267,8 @@ export interface UpdateActionPayload extends ActionFields { expectedTicketVersio
 export interface CompleteFollowUpPayload { expectedTicketVersion: number; expectedActionVersion: number; completionNote: string }
 export interface ActionWriteResult { action: TicketAction; ticketVersion: number; replayed?: boolean }
 export interface ActionsPage { actions: TicketAction[]; pagination: PaginationInfo; ticketVersion: number }
+export interface TicketStatusEvent {
+  id: number; ticketId: number; fromStatus: TicketStatus; toStatus: TicketStatus;
+  actor: ActionIdentity; createdAt: string; ticketVersion: number;
+}
+export interface TicketHistoryPage { events: TicketStatusEvent[]; pagination: PaginationInfo; historyStartsAt: string }

@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { resolutionBlockers } from "./workflow.service.js";
 import { getPrisma } from "../prisma.js";
 import {
   parseStaffTicketFilters,
@@ -130,6 +131,8 @@ export async function listStaffTickets(query: Record<string, unknown>, actorId: 
         itPriority: true,
         status: true,
         version: true,
+        resolvedAt: true,
+        resolvedAtEstimated: true,
         owner: {
           select: { id: true, name: true, email: true, role: true },
         },
@@ -164,6 +167,8 @@ export async function listStaffTickets(query: Record<string, unknown>, actorId: 
         }
       : null,
     version: t.version,
+    resolvedAt: t.resolvedAt?.toISOString() ?? null,
+    resolvedAtEstimated: t.resolvedAtEstimated,
     attachmentCount: t.attachments.length,
     publicCommentCount: t._count.publicComments,
   }));
@@ -277,9 +282,10 @@ export async function claimTicket(ticketIdParam: unknown, body: unknown, actor: 
       include: STAFF_TICKET_DETAIL_INCLUDE,
     });
 
-    return {
-      ticket: formatStaffTicketDetail(updated),
-    };
+    if (newStatus !== ticket.status) {
+      await tx.ticketStatusEvent.create({ data: { ticketId, actorId: actor.id, fromStatus: ticket.status, toStatus: newStatus, ticketVersion: updated.version } });
+    }
+    return { ticket: formatStaffTicketDetail(updated) };
   });
 }
 
@@ -370,80 +376,45 @@ export async function updateItPriority(ticketIdParam: unknown, body: unknown, _a
   });
 }
 
-export async function updateStatus(ticketIdParam: unknown, body: unknown, _actor: AuthenticatedActor) {
+export async function updateStatus(ticketIdParam: unknown, body: unknown, actor: AuthenticatedActor) {
   const ticketId = parseTicketId(ticketIdParam);
   const { status: targetStatus, expectedStatus, expectedVersion, confirmed } = parseUpdateStatus(body);
   const prisma = getPrisma();
-
-  return await runInTransaction(prisma, async (tx) => {
-    if (typeof tx.$executeRaw === "function") {
-      await tx.$executeRaw`SELECT id FROM "Ticket" WHERE id = ${ticketId} FOR UPDATE`;
+  // Discover the owner before taking locks: never acquire a User lock after a
+  // Ticket lock, which would deadlock with administration/assignment operations.
+  const observed = await prisma.ticket.findUnique({ where: { id: ticketId }, select: { ownerId: true } });
+  return prisma.$transaction(async tx => {
+    const ownerNeeded = requiresEligibleOwner(targetStatus);
+    const userIds = [...new Set([actor.id, ...(ownerNeeded && observed?.ownerId ? [observed.ownerId] : [])])].sort((a, b) => a - b);
+    for (const id of userIds) await tx.$executeRaw`SELECT id FROM "User" WHERE id = ${id} FOR UPDATE`;
+    const currentActor = await tx.user.findUnique({ where: { id: actor.id } });
+    if (!currentActor?.isActive) throw new ApiError(401, { code: "UNAUTHORIZED", message: "Please sign in" });
+    if (currentActor.mustChangePassword) throw new ApiError(403, { code: "PASSWORD_CHANGE_REQUIRED", message: "Change your initial password to continue" });
+    if (!["IT_STAFF", "ADMINISTRATOR"].includes(currentActor.role) || currentActor.role !== actor.role) throw new ApiError(403, { code: "FORBIDDEN", message: "Access denied" });
+    await tx.$executeRaw`SELECT id FROM "Ticket" WHERE id = ${ticketId} FOR UPDATE`;
+    const ticket = await tx.ticket.findUnique({ where: { id: ticketId }, select: { id: true, status: true, version: true, ownerId: true } });
+    if (!ticket) throw new ApiError(404, { code: "NOT_FOUND", message: "Ticket not found" });
+    if (ticket.status !== expectedStatus) throw new ApiError(409, { code: "STATUS_CONFLICT", message: "Ticket status has changed" });
+    if (ticket.version !== expectedVersion || (ownerNeeded && ticket.ownerId !== observed?.ownerId)) throw new ApiError(409, { code: "VERSION_CONFLICT", message: "Ticket has changed; refresh before retrying" });
+    if (!isValidStatusTransition(ticket.status, targetStatus)) throw new ApiError(400, { code: "INVALID_STATUS_TRANSITION", message: `Cannot transition status from ${ticket.status} to ${targetStatus}` });
+    if (requiresConfirmation(targetStatus) && confirmed !== true) throw new ApiError(400, { code: "CONFIRMATION_REQUIRED", message: `Transition to ${targetStatus} requires confirmation` });
+    if (ownerNeeded) {
+      const owner = ticket.ownerId ? await tx.user.findUnique({ where: { id: ticket.ownerId } }) : null;
+      if (!owner?.isActive || !["IT_STAFF", "ADMINISTRATOR"].includes(owner.role)) throw new ApiError(400, { code: "OWNER_REQUIRED", message: "Transition requires an active eligible owner" });
     }
-    const ticket = await tx.ticket.findUnique({
-      where: { id: ticketId },
-      select: { id: true, status: true, version: true, ownerId: true },
-    });
-    if (!ticket) {
-      throw new ApiError(404, { code: "NOT_FOUND", message: "Ticket not found" });
+    if (targetStatus === "RESOLVED") {
+      const details = await resolutionBlockers(tx, ticketId);
+      if (details.length) throw new ApiError(409, { code: "RESOLUTION_BLOCKED", message: "Finish the required work before resolving this Ticket", details });
     }
-    if (ticket.status !== expectedStatus) {
-      throw new ApiError(409, { code: "STATUS_CONFLICT", message: "Ticket status has changed" });
-    }
-    if (ticket.version !== expectedVersion) {
-      throw new ApiError(409, { code: "VERSION_CONFLICT", message: "Ticket version mismatch" });
-    }
-
-    if (!isValidStatusTransition(ticket.status, targetStatus)) {
-      throw new ApiError(400, {
-        code: "INVALID_STATUS_TRANSITION",
-        message: `Cannot transition status from ${ticket.status} to ${targetStatus}`,
-      });
-    }
-
-    if (requiresConfirmation(targetStatus) && confirmed !== true) {
-      throw new ApiError(400, {
-        code: "CONFIRMATION_REQUIRED",
-        message: `Transition to ${targetStatus} requires confirmation`,
-      });
-    }
-
-    if (requiresEligibleOwner(targetStatus)) {
-      if (ticket.ownerId === null) {
-        throw new ApiError(400, {
-          code: "OWNER_REQUIRED",
-          message: `Transition to ${targetStatus} requires an assigned owner`,
-        });
-      }
-      const currentOwner = await tx.user.findUnique({
-        where: { id: ticket.ownerId },
-        select: { id: true, isActive: true, role: true },
-      });
-      if (!currentOwner || !currentOwner.isActive || !["IT_STAFF", "ADMINISTRATOR"].includes(currentOwner.role)) {
-        throw new ApiError(400, {
-          code: "OWNER_REQUIRED",
-          message: `Transition to ${targetStatus} requires an active eligible owner`,
-        });
-      }
-    }
-
-    const data: any = {
-      status: targetStatus,
-      version: { increment: 1 },
-      updatedAt: new Date(),
-    };
+    const now = new Date();
+    const data: Prisma.TicketUncheckedUpdateInput = { status: targetStatus, version: { increment: 1 }, updatedAt: now };
+    if (targetStatus === "RESOLVED") { data.resolvedAt = now; data.resolvedAtEstimated = false; }
     if (targetStatus === "REOPENED") {
-      data.problemAppearsResolvedAt = null;
-      data.problemAppearsResolvedById = null;
+      data.problemAppearsResolvedAt = null; data.problemAppearsResolvedById = null;
+      data.resolvedAt = null; data.resolvedAtEstimated = false;
     }
-
-    const updated = await tx.ticket.update({
-      where: { id: ticketId },
-      data,
-      include: STAFF_TICKET_DETAIL_INCLUDE,
-    });
-
-    return {
-      ticket: formatStaffTicketDetail(updated),
-    };
-  });
+    const updated = await tx.ticket.update({ where: { id: ticketId }, data, include: STAFF_TICKET_DETAIL_INCLUDE });
+    await tx.ticketStatusEvent.create({ data: { ticketId, actorId: actor.id, fromStatus: ticket.status, toStatus: targetStatus, ticketVersion: updated.version, createdAt: now } });
+    return { ticket: formatStaffTicketDetail(updated) };
+  }, { timeout: 10000 });
 }

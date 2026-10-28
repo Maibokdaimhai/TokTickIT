@@ -31,6 +31,7 @@ async function controlledApp(page: Page, role: "REQUESTER" | "IT_STAFF" = "IT_ST
       createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-02T00:00:00Z", attachments: [], publicComments: [], internalNotes: [] };
     if (path === "/auth/me") return json({ user: role === "REQUESTER" ? requester : staff, mustChangePassword: false });
     if (path === "/staff/eligible-owners") return json({ owners: [staff, other] });
+    if (path === "/tickets/1/status-history") return json({ events: [], pagination: { page: 1, limit: 10, totalItems: 0, totalPages: 0 }, historyStartsAt: "2026-10-27T00:00:00Z" });
     if (path === "/staff/tickets/1") return json(ticket);
     if (path === "/tickets/1") { const { internalNotes, ...publicTicket } = ticket; return json(publicTicket); }
     if (path === "/tickets/1/actions") return json({ actions, ticketVersion: version, pagination: { page: 1, limit: 10, totalItems: actions.length, totalPages: actions.length ? 1 : 0 } });
@@ -95,7 +96,7 @@ test("Staff creates, assigns, completes and inspects work history", async ({ pag
   await page.getByLabel("Action Description", { exact: true }).fill("Inspect replacement router");
   await page.getByLabel("Assigned to", { exact: true }).selectOption("8");
   await page.getByRole("button", { name: "Save Action", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("Action saved");
+  await expect(page.getByRole("region", { name: "Actions Taken", exact: true }).getByRole("status")).toContainText("Action saved");
   expect(writes[0].body.assigneeId).toBe(8); expect(writes[0].body).not.toHaveProperty("performedById");
   await page.getByRole("button", { name: "Edit Action #5", exact: true }).click();
   await page.getByLabel("Action Status", { exact: true }).selectOption("COMPLETED");
@@ -112,7 +113,7 @@ test("Completed follow-up is recorded without editing the original work", async 
   await page.getByRole("button", { name: "Record Follow-up Completion for Action #4", exact: true }).click();
   await page.getByLabel("Completion Note", { exact: true }).fill("Requester confirmed connectivity");
   await page.getByRole("button", { name: "Record Completion", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("Follow-up completion recorded");
+  await expect(page.getByRole("region", { name: "Actions Taken", exact: true }).getByRole("status")).toContainText("Follow-up completion recorded");
   expect(writes[0].path).toMatch(/follow-up-completion$/); expect(writes[0].body).not.toHaveProperty("result");
   await expect(page.getByRole("article", { name: "Action #4", exact: true })).toContainText("Confirm with Requester");
 });

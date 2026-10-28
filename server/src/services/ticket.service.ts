@@ -101,6 +101,8 @@ export async function listTickets(query: Record<string, unknown>, actorId: numbe
         itPriority: true,
         status: true,
         updatedAt: true,
+        resolvedAt: true,
+        resolvedAtEstimated: true,
         attachments: {
           where: { isRemoved: false },
           select: { id: true },
@@ -119,6 +121,8 @@ export async function listTickets(query: Record<string, unknown>, actorId: numbe
     itPriority: t.itPriority,
     status: t.status,
     updatedAt: t.updatedAt.toISOString(),
+    resolvedAt: t.resolvedAt?.toISOString() ?? null,
+    resolvedAtEstimated: t.resolvedAtEstimated,
     attachmentCount: t.attachments.length,
   }));
   const totalPages = totalItems === 0 ? 0 : Math.ceil(totalItems / limit);

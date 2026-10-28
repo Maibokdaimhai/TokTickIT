@@ -38,7 +38,7 @@ export function ActionEditor(props: Props) {
       <p className="action-meta">Action Date/Time, Action Description and Assigned to are required. Result is required when completing or cancelling; Follow-up Note is required when follow-up is needed.</p>
       <div className="action-form-grid">
         <div className="action-field"><label htmlFor="action-date">Action Date/Time (Asia/Bangkok)</label>
-          <input id="action-date" type="datetime-local" required step="1" min={bangkokInput(props.createdAt)} max={bangkokInput(new Date())} value={draft.actionAt} disabled={disabled} onChange={e => change("actionAt", e.target.value)} {...inputProps("actionAt")} />{error("actionAt")}</div>
+          <input id="action-date" type="datetime-local" required step="0.001" min={bangkokInput(props.createdAt)} max={bangkokInput(new Date())} value={draft.actionAt} disabled={disabled} onChange={e => change("actionAt", e.target.value)} {...inputProps("actionAt")} />{error("actionAt")}</div>
         <div className="action-field"><label htmlFor="action-assignee">Assigned to</label>
           <select id="action-assignee" required value={draft.assigneeId} disabled={disabled || props.ownersLoading || Boolean(props.ownersError)} onChange={e => change("assigneeId", e.target.value)} {...inputProps("assigneeId")}>
             <option value="">Choose active staff</option>
