@@ -95,3 +95,13 @@ npm run test:e2e:fixtures
 ```
 
 Use LAB4_RECOVERY_CONTAINER=toktickit-db for the recovery test, E2E_INITIAL_PASSWORD/E2E_CHANGED_PASSWORD for browser accounts, E2E_AUDIT_OUTPUT for a local JSONL audit and LAB4_PERF_OUTPUT for local performance output. Sanitize results before committing; raw configs/traces can contain operational data. Final-main, release approval, README/submission and the student's personal reflection remain Issue #53.
+
+## PR #58 safety review correction
+
+[Kawi-HBLI requested changes](https://github.com/Maibokdaimhai/TokTickIT/pull/58#pullrequestreview-5684111915) because substring matching accepted `production_contest`, including the analogous upload-directory case. The shared predicate now requires case-insensitive `test`, `e2e` or `disposable` as a complete token delimited by start/end or `_`/`-`. Examples: `toktickit_lab4_test` and `toktickit-e2e-review` are valid; `production_contest`, `production_latest`, `testdb`, `e2eish` and `nondisposable` are rejected, including encoded equivalents after URL pathname decoding. Marker-like text in credentials/query parameters still does not select scope.
+
+E2E configuration, Lab 4 fixture provisioning and audit-fixture cleanup now share the URL validator. The earlier Lab 3 migration rehearsal also checks it before constructing its scoped client. Upload roots keep their dedicated /tmp constraints, symlink protections and toktickit- prefix; they additionally require separate disposable and uploads tokens, so `toktickit-contest-uploads` and `toktickit-test-backuploads` fail closed.
+
+[Review verification](../../artifacts/lab-04/verification/pr58-safety-review.json): **56 focused tests passed**, zero failed/skipped, after **24 regression failures** before the fix. Negative cleanup tests prove no read/delete method is invoked on unsafe names. Four unsafe root-config invocations were rejected before server startup, an explicit tokenized target still discovered 38 real-browser cases, and the legacy migration rehearsal rejected the unsafe name during collection before client construction. Server typecheck/build passed. These checks required no database; no database was created, contacted for test operations or modified. Earlier full DB/browser/performance results remain historical rather than being counted as rerun for this correction.
+
+Safety correction implementation commit: `bb6665c648b431bb2974c76d157f5211406704cb`; focused evidence matches that source. The existing PR #58 is updated for re-review; no new PR or review approval is inferred.

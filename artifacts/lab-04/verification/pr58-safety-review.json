@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-28",
+  "pullRequest": "https://github.com/Maibokdaimhai/TokTickIT/pull/58",
+  "review": "https://github.com/Maibokdaimhai/TokTickIT/pull/58#pullrequestreview-5684111915",
+  "reviewer": "Kawi-HBLI",
+  "baseCommit": "5837fb3283e6eeee13e178456c41212a38e2c95a",
+  "workingTree": true,
+  "sourceScope": [
+    "e2e/lab-03/db-guard.ts",
+    "e2e/lab-03/upload-guard.ts",
+    "server/tests/audit-fixture-cleanup.ts",
+    "server/tests/lab-03/migration-seed.test.ts",
+    "server/tests/lab-04/fixture.ts",
+    "server/tests/lab-04/database-guard.test.ts",
+    "server/tests/lab-04/e2e-safety.test.ts",
+    "server/tests/lab-04/cleanup-guard.test.ts"
+  ],
+  "fingerprintAlgorithm": "SHA-256 of sorted path + NUL + file bytes + NUL",
+  "sourceFingerprint": "053d9c378a5fb2337b9723814bb272e459933f3400100a7046549ca3cc33f7ee",
+  "results": {
+    "focusedGuardTests": {
+      "passed": 56,
+      "failed": 0,
+      "skipped": 0
+    },
+    "beforeFix": {
+      "passed": 32,
+      "failed": 24
+    },
+    "entryChecks": [
+      {
+        "case": "substring database",
+        "rejectedBeforeServerStartup": true
+      },
+      {
+        "case": "encoded substring database",
+        "rejectedBeforeServerStartup": true
+      },
+      {
+        "case": "substring uploads",
+        "rejectedBeforeServerStartup": true
+      },
+      {
+        "case": "unseparated uploads suffix",
+        "rejectedBeforeServerStartup": true
+      },
+      {
+        "case": "explicit test target",
+        "discovery": "Total: 38 tests in 10 files"
+      },
+      {
+        "case": "legacy migration rehearsal",
+        "unsafeTargetRejectedDuringCollectionBeforeClientConstruction": true
+      }
+    ],
+    "serverTypecheck": "passed",
+    "serverBuild": "passed"
+  },
+  "policy": "Case-insensitive test/e2e/disposable tokens delimited by start/end or underscore/hyphen. Upload roots also require the toktickit- prefix and a separate uploads token.",
+  "limits": [
+    "Guard/cleanup operations tested without a database; invalid targets never queried. No database created or modified.",
+    "The full DB/browser/performance results in regression.json are historical and were not rerun for this guard-only correction.",
+    "Existing unrelated client/package.json edit preserved and excluded."
+  ],
+  "implementationCommit": "bb6665c648b431bb2974c76d157f5211406704cb"
+}

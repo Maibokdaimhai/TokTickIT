@@ -41,3 +41,5 @@ Actual continuation prompt: "PR57 merge แล้ว ทำอันต่อไ
 The user explicitly approved deleting the named disposable Issue #52 database and its temporary uploads after testing. Publication was initially withheld pending the user's instruction. Final motion verification used only controlled browser fixtures after that cleanup; the phase difference is recorded. The student's own reflection remains pending.
 
 Issue #52 publication was subsequently authorized by the actual prompt: "push และเปิด PR เลย". The implementation/tests and documentation/evidence are committed separately using Conventional Commits; approval is not inferred from publication.
+
+PR #58 review follow-up: the user supplied the PR link and "Request change". Codex read Kawi-HBLI's actual review, reproduced 24 substring-guard failures, centralized separated-token checks and verified 56 tests plus startup/collection rejection before DB access. Correction and evidence commits update the existing PR; no new PR or reviewer comment is posted automatically. No database was required for this correction.

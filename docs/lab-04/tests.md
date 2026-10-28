@@ -276,3 +276,16 @@ The 38-case real-browser and full backend runs completed before approved test-da
 Real failures led to input/header/password-rule contrast, control-label, bounded pagination/target and long-name/grid corrections. Test setup corrections cover Dashboard homes, sign-in completion, complete-work resolution prerequisites, deterministic last-admin fixtures and privacy assertions that inspect actual private content instead of public guidance wording. Root guards were exercised with missing opt-in, development DB and unsafe uploads and rejected all three before server startup. Eleven additional safety tests cover protocol/path/upload/symlink boundaries. Audited fixtures remain intact until whole-database teardown.
 
 The user authorized deletion of `toktickit_lab4_regression_test_20261028_52` and its dedicated temporary uploads after verification. Both were removed; development `toktickit` and container remain intact. No new migration/dependency was needed. The user subsequently authorized pushing and PR creation; reviewer approval remains pending. Rendered checks are scoped automation/visual sample review, not formal accessibility certification or native toolbar zoom. Earlier evidence and review records remain historical.
+
+## 15. PR #58 separated-token safety correction
+
+Feedback: [Kawi-HBLI review](https://github.com/Maibokdaimhai/TokTickIT/pull/58#pullrequestreview-5684111915). [Sanitized results](../../artifacts/lab-04/verification/pr58-safety-review.json) fingerprint the guard-only follow-up.
+
+- `server/tests/lab-04/database-guard.test.ts`: **18 passed**, covering fixture guard denial and separated-token acceptance.
+- `server/tests/lab-04/e2e-safety.test.ts`: **33 passed**, including substring/encoded DB names and whole-token upload naming, existing protocol/path/opt-in/symlink checks.
+- `server/tests/lab-04/cleanup-guard.test.ts`: **5 passed**, proving invalid targets are rejected before read/delete calls and valid scoped cleanup still proceeds.
+- Total: **56 passed, 0 failed/skipped**; before the fix **24 failed / 32 passed**.
+- Four unsafe Playwright config invocations rejected before server startup; tokenized target discovery remains 38 cases. The legacy migration rehearsal rejects `production_contest` during collection before client construction. This expected collection rejection is not counted as a passing migration execution.
+- Server `tsc --noEmit`, production build and diff whitespace passed. No database was needed, created or modified; full DB/browser/performance counts in Section 14 remain historical.
+
+Markers are exact case-insensitive tokens separated by `_` or `-` (or the full name). E2E, fixture and cleanup checks use one shared validator; uploads additionally require their own separated uploads token and preserve root/symlink restrictions.
