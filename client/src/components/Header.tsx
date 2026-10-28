@@ -3,8 +3,8 @@ import { useAuth } from "../context/AuthContext.js";
 import { TokTickLogo } from "./TokTickLogo.js";
 
 interface HeaderProps {
-  activeTab: "my-tickets" | "create-ticket" | "ticket-queue" | "user-management";
-  setActiveTab: (tab: "my-tickets" | "create-ticket" | "ticket-queue" | "user-management") => void;
+  activeTab: "dashboard" | "my-tickets" | "create-ticket" | "ticket-queue" | "user-management";
+  setActiveTab: (tab: "dashboard" | "my-tickets" | "create-ticket" | "ticket-queue" | "user-management") => void;
   onChangePassword: () => void;
 }
 
@@ -26,13 +26,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onChang
   };
 
   const handleBrandClick = () => {
-    if (session?.user.role === "IT_STAFF") {
-      setActiveTab("ticket-queue");
-    } else if (session?.user.role === "ADMINISTRATOR") {
-      setActiveTab("user-management");
-    } else {
-      setActiveTab("my-tickets");
-    }
+    setActiveTab("dashboard");
   };
 
   return (
@@ -57,11 +51,13 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onChang
       </div>
 
       <nav className="app-nav" aria-label="Main Navigation">
+        <button type="button" className={`nav-item ${activeTab === "dashboard" ? "active" : ""}`} aria-current={activeTab === "dashboard" ? "page" : undefined} onClick={() => setActiveTab("dashboard")}>Dashboard</button>
         {session?.user.role === "REQUESTER" && (
           <>
             <button
               type="button"
               className={`nav-item ${activeTab === "my-tickets" ? "active" : ""}`}
+              aria-current={activeTab === "my-tickets" ? "page" : undefined}
               onClick={() => setActiveTab("my-tickets")}
             >
               📋 My Tickets
@@ -70,6 +66,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onChang
             <button
               type="button"
               className={`nav-item ${activeTab === "create-ticket" ? "active" : ""}`}
+              aria-current={activeTab === "create-ticket" ? "page" : undefined}
               onClick={() => setActiveTab("create-ticket")}
             >
               ➕ Create Ticket
@@ -82,6 +79,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onChang
             type="button"
             data-testid="nav-ticket-queue"
             className={`nav-item ${activeTab === "ticket-queue" ? "active" : ""}`}
+              aria-current={activeTab === "ticket-queue" ? "page" : undefined}
             onClick={() => setActiveTab("ticket-queue")}
           >
             🎫 Ticket Queue
@@ -94,6 +92,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onChang
               type="button"
               data-testid="nav-user-management"
               className={`nav-item ${activeTab === "user-management" ? "active" : ""}`}
+              aria-current={activeTab === "user-management" ? "page" : undefined}
               onClick={() => setActiveTab("user-management")}
             >
               👥 User Management
@@ -102,6 +101,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onChang
               type="button"
               data-testid="nav-ticket-queue"
               className={`nav-item ${activeTab === "ticket-queue" ? "active" : ""}`}
+              aria-current={activeTab === "ticket-queue" ? "page" : undefined}
               onClick={() => setActiveTab("ticket-queue")}
             >
               🎫 Ticket Queue

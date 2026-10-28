@@ -9,6 +9,7 @@ import { router as communicationRoutes } from "./routes/communication.routes.js"
 import { router as adminRoutes } from "./routes/admin.routes.js";
 import { router as actionRoutes } from "./routes/action.routes.js";
 import { router as workflowRoutes } from "./routes/workflow.routes.js";
+import { router as dashboardRoutes } from "./routes/dashboard.routes.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { router as authRoutes } from "./routes/auth.routes.js";
 import { requireOrigin, requireSession } from "./middleware/auth.js";
@@ -35,6 +36,7 @@ app.use("/api", communicationRoutes);
 app.use("/api", adminRoutes);
 app.use("/api", actionRoutes);
 app.use("/api", workflowRoutes);
+app.use("/api", dashboardRoutes);
 app.use("/api", (_req, res) => res.status(404).json({ error: { code: "NOT_FOUND", message: "Resource not found" } }));
 app.use(errorHandler);
 

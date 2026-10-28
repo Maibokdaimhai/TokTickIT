@@ -1,3 +1,4 @@
+import { dashboardTicketFilters } from "./dashboard.validator.js";
 import type { Prisma } from "@prisma/client";
 import { Priority, TicketStatus } from "@prisma/client";
 import { ApiError } from "../errors/api-error.js";
@@ -48,7 +49,7 @@ export function parseCreateTicket(body: Record<string, unknown>) {
 }
 
 export function parseTicketFilters(query: Record<string, unknown>, requesterId: number) {
-  const permitted = new Set(["requesterId", "search", "category", "priority", "status", "sort", "page", "limit"]);
+  const permitted = new Set(["requesterId", "search", "category", "priority", "status", "sort", "page", "limit", "statusGroup", "resolvedFrom", "resolvedTo"]);
   if (Object.keys(query).some(key => !permitted.has(key)) ||
       Object.entries(query).some(([key, value]) => key !== "requesterId" && Array.isArray(value))) {
     throw new ApiError(400, { code: "BAD_REQUEST", message: "Invalid query parameters" });
@@ -67,13 +68,14 @@ export function parseTicketFilters(query: Record<string, unknown>, requesterId: 
     throw new ApiError(400, { code: "BAD_REQUEST", message: "limit parameter cannot exceed 50" });
   }
   // Validate sort
-  const validSorts = ["createdAt_desc", "createdAt_asc", "ticketNumber_asc", "ticketNumber_desc"];
+  const validSorts = ["createdAt_desc", "createdAt_asc", "ticketNumber_asc", "ticketNumber_desc", "updatedAt_desc"];
   if (typeof sort !== "string" || !validSorts.includes(sort)) {
     throw new ApiError(400, { code: "BAD_REQUEST", message: `sort parameter must be one of: ${validSorts.join(", ")}` });
   }
   // Build WHERE clause
   const where: Prisma.TicketWhereInput = {
     requesterId,
+    ...dashboardTicketFilters(query),
   };
   // Category filter
   if (categoryParam !== undefined && categoryParam !== "") {
@@ -92,8 +94,8 @@ export function parseTicketFilters(query: Record<string, unknown>, requesterId: 
   }
   // Status filter
   if (status !== undefined && status !== "") {
-    const validStatuses = ["NEW", "IN_PROGRESS", "RESOLVED", "CLOSED"];
-    if (typeof status !== "string" || !validStatuses.includes(status)) {
+    const validStatuses = Object.values(TicketStatus);
+    if (typeof status !== "string" || !validStatuses.includes(status as TicketStatus)) {
       throw new ApiError(400, { code: "BAD_REQUEST", message: `status parameter must be one of: ${validStatuses.join(", ")}` });
     }
     where.status = status as TicketStatus;
@@ -114,5 +116,6 @@ export function parseTicketFilters(query: Record<string, unknown>, requesterId: 
     orderBy = { ticketNumber: "asc" };
   else if (sort === "ticketNumber_desc")
     orderBy = { ticketNumber: "desc" };
+  if (sort === "updatedAt_desc") return { page, limit, where, orderBy: [{ updatedAt: "desc" as const }, { id: "asc" as const }] };
   return { page, limit, where, orderBy };
 }

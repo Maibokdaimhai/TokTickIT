@@ -14,6 +14,8 @@ import type {
 } from "../../src/types.js";
 
 // Mock the API module
+vi.mock("../../src/components/Dashboard.js", () => ({ Dashboard: ({ staff }: { staff: boolean }) => <h1>{staff ? "Staff Dashboard" : "Requester Dashboard"}</h1>, MyActiveActions: () => null }));
+
 vi.mock("../../src/api.js", async (original) => ({
   ...(await original<typeof import("../../src/api.js")>()),
   fetchCategories: vi.fn(),
@@ -573,24 +575,24 @@ describe("Role Navigation & Queue State Preservation Integration", () => {
     });
   });
 
-  it("IT_STAFF session defaults to Ticket Queue and shows nav button", async () => {
+  it("IT_STAFF session defaults to Dashboard and retains Queue navigation", async () => {
     vi.mocked(api.getSession).mockResolvedValue(staffSession);
     render(<App />);
 
     await waitFor(() => {
       expect(screen.getByTestId("nav-ticket-queue")).toBeInTheDocument();
     });
-    expect(screen.getByRole("heading", { name: /IT Staff Ticket Queue/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Staff Dashboard/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /My Tickets/ })).not.toBeInTheDocument();
   });
 
-  it("ADMINISTRATOR session defaults to User Management and can navigate to Ticket Queue", async () => {
+  it("ADMINISTRATOR session defaults to Dashboard and retains management/queue navigation", async () => {
     vi.mocked(api.getSession).mockResolvedValue(adminSession);
     render(<App />);
 
-    // Defaults to User Management
+    // Lab 4 defaults to Dashboard
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "User Management" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Staff Dashboard" })).toBeInTheDocument();
     });
 
     // Both User Management and Ticket Queue buttons exist
@@ -606,7 +608,7 @@ describe("Role Navigation & Queue State Preservation Integration", () => {
     });
   });
 
-  it("REQUESTER session defaults to My Tickets and has no staff queue navigation", async () => {
+  it("REQUESTER session defaults to Dashboard and has no staff queue navigation", async () => {
     vi.mocked(api.getSession).mockResolvedValue(requesterSession);
     render(<App />);
 
@@ -618,6 +620,7 @@ describe("Role Navigation & Queue State Preservation Integration", () => {
   });
 
   it("preserves lifted filter criteria when navigating to ticket detail placeholder and back", async () => {
+    window.history.replaceState(null, "", "/staff/tickets");
     vi.mocked(api.getSession).mockResolvedValue(staffSession);
     render(<App />);
 
@@ -657,6 +660,7 @@ describe("Role Navigation & Queue State Preservation Integration", () => {
   });
 
   it("preserves both filters and a non-first page across detail navigation without resetting after 300ms", async () => {
+    window.history.replaceState(null, "", "/staff/tickets");
     vi.mocked(api.getSession).mockResolvedValue(staffSession);
     vi.mocked(api.fetchStaffTickets).mockResolvedValue({
       tickets: [

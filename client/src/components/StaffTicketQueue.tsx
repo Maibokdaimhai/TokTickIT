@@ -41,6 +41,10 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
   const [page, setPage] = useState<number>(initialParams?.page ?? 1);
   const [limit, setLimit] = useState<number>(initialParams?.limit ?? 10);
 
+  const [statusGroup, setStatusGroup] = useState(initialParams?.statusGroup);
+  const [resolvedFrom, setResolvedFrom] = useState(initialParams?.resolvedFrom);
+  const [resolvedTo, setResolvedTo] = useState(initialParams?.resolvedTo);
+
   // Tickets & fetch status
   const [tickets, setTickets] = useState<StaffTicketRow[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
@@ -81,7 +85,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
 
   // Check if any non-default filter is active
   const hasActiveFilters = Boolean(
-    debouncedSearch.trim() ||
+    statusGroup || resolvedFrom || resolvedTo || debouncedSearch.trim() ||
       categoryId !== "" ||
       requestedPriority !== "" ||
       itPriority !== "" ||
@@ -91,6 +95,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
   );
 
   const clearFilters = () => {
+    setStatusGroup(undefined); setResolvedFrom(undefined); setResolvedTo(undefined);
     setSearch("");
     setDebouncedSearch("");
     prevSearchRef.current = "";
@@ -112,6 +117,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
     setIsForbidden(false);
 
     const currentParams: FetchStaffTicketsParams = {
+      statusGroup, resolvedFrom, resolvedTo,
       search: debouncedSearch.trim() || undefined,
       category: categoryId === "" ? undefined : Number(categoryId),
       requestedPriority: requestedPriority === "" ? undefined : requestedPriority,
@@ -124,23 +130,14 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
       signal: controller.signal,
     };
 
+    onParamsChange?.(currentParams);
     fetchStaffTickets(currentParams)
       .then((res) => {
         if (isCancelled || controller.signal.aborted) return;
         setTickets(res.tickets);
         setPagination(res.pagination);
         setLoading(false);
-        onParamsChange?.({
-          search: debouncedSearch,
-          category: categoryId === "" ? undefined : Number(categoryId),
-          requestedPriority: requestedPriority === "" ? undefined : requestedPriority,
-          itPriority: itPriority === "" ? undefined : itPriority,
-          status: status === "" ? undefined : status,
-          owner: owner === "" ? undefined : owner,
-          sort,
-          page,
-          limit,
-        });
+
       })
       .catch((err: any) => {
         if (isCancelled || controller.signal.aborted || err?.name === "AbortError") return;
@@ -156,7 +153,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
       isCancelled = true;
       controller.abort();
     };
-  }, [debouncedSearch, categoryId, requestedPriority, itPriority, status, owner, sort, page, limit, retryKey]);
+  }, [debouncedSearch, categoryId, requestedPriority, itPriority, status, owner, sort, page, limit, retryKey, statusGroup, resolvedFrom, resolvedTo]);
 
   // Badge renderers
   const renderPriorityBadge = (p: Priority) => {
@@ -218,6 +215,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
         boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
       }}
     >
+      {(statusGroup || resolvedFrom) && <p className="workflow-feedback">{statusGroup ? "Active Tickets only. " : ""}{resolvedFrom ? `Resolved or Closed from ${resolvedFrom} to ${resolvedTo}. ` : ""}<button type="button" className="btn-secondary" onClick={clearFilters}>Clear All Filters</button></p>}
       {/* Header section */}
       <div
         style={{
@@ -411,7 +409,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
               aria-label="Filter by status"
               value={status}
               onChange={(e) => {
-                setStatus(e.target.value as TicketStatus | "");
+                setStatusGroup(undefined); setStatus(e.target.value as TicketStatus | "");
                 setPage(1);
               }}
             >

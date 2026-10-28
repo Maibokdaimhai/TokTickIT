@@ -73,6 +73,9 @@ export type StaffSortOption =
   | "itPriority_desc";
 
 export interface FetchStaffTicketsParams {
+  statusGroup?: "active";
+  resolvedFrom?: string;
+  resolvedTo?: string;
   search?: string;
   category?: number;
   requestedPriority?: Priority;
@@ -193,11 +196,14 @@ export interface TicketsResponse {
 }
 
 export interface FetchTicketsParams {
+  statusGroup?: "active";
+  resolvedFrom?: string;
+  resolvedTo?: string;
   search?: string;
   category?: number;
   priority?: Priority;
   status?: TicketStatus;
-  sort?: "createdAt_desc" | "createdAt_asc" | "ticketNumber_asc" | "ticketNumber_desc";
+  sort?: "createdAt_desc" | "createdAt_asc" | "ticketNumber_asc" | "ticketNumber_desc" | "updatedAt_desc";
   page?: number;
   limit?: number;
   signal?: AbortSignal;
@@ -272,3 +278,20 @@ export interface TicketStatusEvent {
   actor: ActionIdentity; createdAt: string; ticketVersion: number;
 }
 export interface TicketHistoryPage { events: TicketStatusEvent[]; pagination: PaginationInfo; historyStartsAt: string }
+
+export interface TicketPreview {
+  id: number; ticketNumber: string; summary: string; status: TicketStatus; itPriority: Priority;
+  owner: { id: number; name: string } | null; updatedAt: string;
+}
+export type ActionPreview = TicketAction & { ticket: TicketPreview };
+interface DashboardWindow { asOf: string; timeZone: "Asia/Bangkok"; windowStart: string }
+export interface RequesterDashboard extends DashboardWindow {
+  metrics: { activeTickets: number; waitingForRequester: number; recentlyResolved: number };
+  recentlyResolvedIncludesEstimates: boolean; recentTickets: TicketPreview[];
+}
+export interface StaffDashboard extends DashboardWindow {
+  metrics: { unassignedTickets: number; myTickets: number; myActiveActions: number };
+  byStatus: Record<TicketStatus, number>; byItPriority: Record<Priority, number>;
+  recentTickets: TicketPreview[]; myActions: ActionPreview[];
+}
+export interface MyActionsPage { actions: ActionPreview[]; pagination: PaginationInfo }

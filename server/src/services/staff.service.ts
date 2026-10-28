@@ -59,7 +59,7 @@ export async function listStaffTickets(query: Record<string, unknown>, actorId: 
   const prisma = getPrisma();
   const filters = parseStaffTicketFilters(query, actorId);
 
-  const where: Prisma.TicketWhereInput = {};
+  const where: Prisma.TicketWhereInput = { ...filters.dashboardWhere };
 
   if (filters.categoryId !== undefined) {
     where.categoryId = filters.categoryId;
