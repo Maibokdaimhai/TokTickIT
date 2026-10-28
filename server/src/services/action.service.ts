@@ -6,7 +6,8 @@ import { parseTicketId, requireIntegerId } from "../validators/id.validator.js";
 import { parseActionCreate, parseActionPatch, parseActionPage, parseCompletion, validateActionState, type ActionFields } from "../validators/action.validator.js";
 
 const identity = { id: true, name: true, role: true, isActive: true } as const;
-const include = { performedBy: { select: identity }, assignee: { select: identity }, followUpCompletedBy: { select: identity } } as const;
+export const actionPeople = { performedBy: { select: identity }, assignee: { select: identity }, followUpCompletedBy: { select: identity } } as const;
+const include = actionPeople;
 type ActionWithPeople = Prisma.ActionTakenGetPayload<{ include: typeof include }>;
 const writable = new Set(["NEW", "OPEN", "IN_PROGRESS", "WAITING_FOR_REQUESTER", "REOPENED"]);
 const transitions: Record<ActionStatus, readonly ActionStatus[]> = { PLANNED: ["IN_PROGRESS", "COMPLETED", "CANCELLED"], IN_PROGRESS: ["COMPLETED", "CANCELLED"], COMPLETED: [], CANCELLED: [] };
@@ -21,7 +22,7 @@ export function actionSnapshot(action: ActionTaken): Prisma.InputJsonObject {
     followUpCompletedById: action.followUpCompletedById, followUpCompletionNote: action.followUpCompletionNote,
   };
 }
-function format(action: ActionWithPeople) {
+export function formatAction(action: ActionWithPeople) {
   return {
     id: action.id, ticketId: action.ticketId, actionAt: action.actionAt.toISOString(),
     description: action.description, result: action.result, performedBy: action.performedBy, assignee: action.assignee,
@@ -48,7 +49,7 @@ export async function listActions(idParam: unknown, query: Record<string, unknow
     const total = await tx.actionTaken.count({ where: { ticketId: id } });
     const offset = (page - 1) * limit;
     const actions = offset >= total ? [] : await tx.actionTaken.findMany({ where: { ticketId: id }, orderBy: [{ createdAt: "asc" }, { id: "asc" }], skip: offset, take: limit, include });
-    return { actions: actions.map(format), pagination: pageInfo(page, limit, total), ticketVersion: ticket.version };
+    return { actions: actions.map(formatAction), pagination: pageInfo(page, limit, total), ticketVersion: ticket.version };
   }, { isolationLevel: "RepeatableRead" });
 }
 function actionId(value: unknown) { return requireIntegerId(value, "Action ID must be a positive integer"); }
@@ -59,7 +60,7 @@ export async function getAction(idParam: unknown, actionParam: unknown, query: R
     const ticket = await ticketForRead(tx, id, actor);
     const action = await tx.actionTaken.findFirst({ where: { id: aid, ticketId: id }, include });
     if (!action) fail(404, "NOT_FOUND", "Action not found");
-    return { action: format(action!), ticketVersion: ticket.version };
+    return { action: formatAction(action!), ticketVersion: ticket.version };
   }, { isolationLevel: "RepeatableRead" });
 }
 export async function listRevisions(idParam: unknown, actionParam: unknown, query: Record<string, unknown>, actor: AuthenticatedActor) {
@@ -114,7 +115,7 @@ export async function createAction(idParam: unknown, body: unknown, actor: Authe
     const replay = await tx.actionTaken.findUnique({ where: { performedById_clientRequestId: { performedById: actor.id, clientRequestId } }, include });
     if (replay) {
       if (replay.canonicalRequest !== canonicalRequest) fail(409, "IDEMPOTENCY_CONFLICT", "Retry key already used for different work");
-      return { action: format(replay), ticketVersion: ticket.version, replayed: true };
+      return { action: formatAction(replay), ticketVersion: ticket.version, replayed: true };
     }
     version(ticket.version, expectedTicketVersion); writableTicket(ticket.status);
     eligible(await tx.user.findUnique({ where: { id: data.assigneeId } }));
@@ -122,7 +123,7 @@ export async function createAction(idParam: unknown, body: unknown, actor: Authe
     const action = await tx.actionTaken.create({ data: { ...data, ticketId: id, performedById: actor.id, clientRequestId, canonicalRequest }, include });
     await revision(tx, action, actor.id);
     const updated = await tx.ticket.update({ where: { id }, data: { version: { increment: 1 }, updatedAt: new Date() } });
-    return { action: format(action), ticketVersion: updated.version, replayed: false };
+    return { action: formatAction(action), ticketVersion: updated.version, replayed: false };
   }, { timeout: 10000 });
 }
 export async function updateAction(idParam: unknown, actionParam: unknown, body: unknown, actor: AuthenticatedActor) {
@@ -150,7 +151,7 @@ export async function updateAction(idParam: unknown, actionParam: unknown, body:
     const updated = await tx.actionTaken.update({ where: { id: aid }, data: { ...input.patch, followUpNote: merged.followUpNote, version: { increment: 1 } }, include });
     await revision(tx, updated, actor.id);
     const parent = await tx.ticket.update({ where: { id }, data: { version: { increment: 1 }, updatedAt: new Date() } });
-    return { action: format(updated), ticketVersion: parent.version };
+    return { action: formatAction(updated), ticketVersion: parent.version };
   }, { timeout: 10000 });
 }
 export async function completeFollowUp(idParam: unknown, actionParam: unknown, body: unknown, actor: AuthenticatedActor) {
@@ -167,6 +168,6 @@ export async function completeFollowUp(idParam: unknown, actionParam: unknown, b
     const updated = await tx.actionTaken.update({ where: { id: aid }, data: { followUpRequired: false, followUpCompletedAt: new Date(), followUpCompletedById: actor.id, followUpCompletionNote: input.completionNote, version: { increment: 1 } }, include });
     await revision(tx, updated, actor.id);
     const parent = await tx.ticket.update({ where: { id }, data: { version: { increment: 1 }, updatedAt: new Date() } });
-    return { action: format(updated), ticketVersion: parent.version };
+    return { action: formatAction(updated), ticketVersion: parent.version };
   }, { timeout: 10000 });
 }

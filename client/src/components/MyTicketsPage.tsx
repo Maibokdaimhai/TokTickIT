@@ -1,28 +1,33 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRequester } from "../context/RequesterContext.js";
 import { fetchCategories, fetchMyTickets } from "../api.js";
-import { Category, Priority, TicketStatus, Ticket, PaginationInfo } from "../types.js";
+import { Category, Priority, TicketStatus, Ticket, PaginationInfo, FetchTicketsParams } from "../types.js";
 
 interface MyTicketsPageProps {
+  initialParams?: FetchTicketsParams;
+  onParamsChange?: (params: FetchTicketsParams) => void;
   onNavigateToCreate?: () => void;
   onSelectTicket?: (ticketId: number) => void;
 }
 
-export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate, onSelectTicket }) => {
+export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ initialParams, onParamsChange, onNavigateToCreate, onSelectTicket }) => {
   const { selectedRequester, openSelector } = useRequester();
 
   // Reference data
   const [categories, setCategories] = useState<Category[]>([]);
 
   // Filter and pagination state
-  const [search, setSearch] = useState<string>("");
-  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
-  const [categoryId, setCategoryId] = useState<number | "">("");
-  const [priority, setPriority] = useState<Priority | "">("");
-  const [status, setStatus] = useState<TicketStatus | "">("");
-  const [sort, setSort] = useState<"createdAt_desc" | "createdAt_asc" | "ticketNumber_asc" | "ticketNumber_desc">("createdAt_desc");
-  const [page, setPage] = useState<number>(1);
-  const limit = 10;
+  const [search, setSearch] = useState<string>(initialParams?.search ?? "");
+  const [debouncedSearch, setDebouncedSearch] = useState<string>(initialParams?.search ?? "");
+  const [categoryId, setCategoryId] = useState<number | "">(initialParams?.category ?? "");
+  const [priority, setPriority] = useState<Priority | "">(initialParams?.priority ?? "");
+  const [status, setStatus] = useState<TicketStatus | "">(initialParams?.status ?? "");
+  const [sort, setSort] = useState<NonNullable<FetchTicketsParams["sort"]>>(initialParams?.sort ?? "createdAt_desc");
+  const [page, setPage] = useState<number>(initialParams?.page ?? 1);
+  const limit = initialParams?.limit ?? 10;
+  const [statusGroup, setStatusGroup] = useState(initialParams?.statusGroup);
+  const [resolvedFrom, setResolvedFrom] = useState(initialParams?.resolvedFrom);
+  const [resolvedTo, setResolvedTo] = useState(initialParams?.resolvedTo);
 
   // Track previous requester ID to reset page when requester changes
   const prevRequesterIdRef = useRef<number | undefined>(selectedRequester?.id);
@@ -46,6 +51,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
 
   // Debounce search input
   useEffect(() => {
+    if (search === debouncedSearch) return;
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
       setPage(1);
@@ -65,6 +71,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
   };
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatusGroup(undefined);
     setStatus(e.target.value ? (e.target.value as TicketStatus) : "");
     setPage(1);
   };
@@ -75,6 +82,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
   };
 
   const clearFilters = () => {
+    setStatusGroup(undefined); setResolvedFrom(undefined); setResolvedTo(undefined);
     setSearch("");
     setDebouncedSearch("");
     setCategoryId("");
@@ -85,7 +93,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
   };
 
   const hasActiveFilters = Boolean(
-    debouncedSearch.trim() ||
+    statusGroup || resolvedFrom || resolvedTo || debouncedSearch.trim() ||
     categoryId !== "" ||
     priority !== "" ||
     status !== "" ||
@@ -116,7 +124,8 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
     setLoading(true);
     setError(null);
 
-    fetchMyTickets({
+    const params: FetchTicketsParams = {
+      statusGroup, resolvedFrom, resolvedTo,
       search: debouncedSearch,
       category: categoryId === "" ? undefined : categoryId,
       priority: priority === "" ? undefined : priority,
@@ -125,7 +134,9 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
       page,
       limit,
       signal: controller.signal,
-    })
+    };
+    onParamsChange?.(params);
+    fetchMyTickets(params)
       .then((res) => {
         if (!isCancelled) {
           setTickets(res.tickets);
@@ -145,7 +156,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
       isCancelled = true;
       controller.abort();
     };
-  }, [selectedRequester?.id, debouncedSearch, categoryId, priority, status, sort, page, retryKey]);
+  }, [selectedRequester?.id, debouncedSearch, categoryId, priority, status, sort, page, retryKey, statusGroup, resolvedFrom, resolvedTo]);
 
   // Helper badge formatters
   const renderPriorityBadge = (p: Priority) => {
@@ -368,6 +379,10 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
               >
                 <option value="">All Statuses</option>
                 <option value="NEW">New</option>
+                <option value="OPEN">Open</option>
+                <option value="WAITING_FOR_REQUESTER">Waiting for Requester</option>
+                <option value="REOPENED">Reopened</option>
+                <option value="CANCELLED">Cancelled</option>
                 <option value="IN_PROGRESS">In Progress</option>
                 <option value="RESOLVED">Resolved</option>
                 <option value="CLOSED">Closed</option>
@@ -389,6 +404,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
                 value={sort}
                 onChange={handleSortChange}
               >
+                <option value="updatedAt_desc">Last Updated</option>
                 <option value="createdAt_desc">Newest First</option>
                 <option value="createdAt_asc">Oldest First</option>
                 <option value="ticketNumber_asc">Ticket Number (Asc)</option>
@@ -399,6 +415,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
         </div>
       )}
 
+      {(statusGroup || resolvedFrom) && <p className="workflow-feedback">{statusGroup ? "Active Tickets only. " : ""}{resolvedFrom ? `Resolved or Closed from ${resolvedFrom} to ${resolvedTo}. ` : ""}<button type="button" className="btn-secondary" onClick={clearFilters}>Clear All Filters</button></p>}
       {/* Error Callout */}
       {error && (
         <div style={{ padding: "12px 16px", backgroundColor: "#FEE2E2", border: "1px solid #FCA5A5", borderRadius: "8px", marginBottom: "20px", color: "#991B1B" }}>

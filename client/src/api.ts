@@ -155,6 +155,7 @@ export async function uploadAttachment(ticketId: number, file: File): Promise<an
 
 export async function fetchMyTickets(params: FetchTicketsParams): Promise<TicketsResponse> {
   const query = new URLSearchParams();
+  for (const key of ["statusGroup", "resolvedFrom", "resolvedTo"] as const) if (params[key] !== undefined) query.set(key, params[key]!);
   if (params.search && params.search.trim()) {
     query.append("search", params.search.trim());
   }
@@ -180,7 +181,7 @@ export async function fetchMyTickets(params: FetchTicketsParams): Promise<Ticket
   const res = await apiFetch(`${API_URL}/api/tickets?${query.toString()}`, { signal: params.signal });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data?.error?.message || "Failed to fetch tickets");
+    throw new ApiClientError(data?.error?.message || "Failed to fetch tickets", res.status, data?.error?.code);
   }
 
   return data;
@@ -227,6 +228,7 @@ export async function downloadAttachmentByUrl(url: string): Promise<Response> {
 
 export async function fetchStaffTickets(params: FetchStaffTicketsParams = {}): Promise<StaffTicketsResponse> {
   const query = new URLSearchParams();
+  for (const key of ["statusGroup", "resolvedFrom", "resolvedTo"] as const) if (params[key] !== undefined) query.set(key, params[key]!);
   if (params.search && params.search.trim()) {
     query.append("search", params.search.trim());
   }

@@ -1,4 +1,5 @@
-import type { Priority, TicketStatus } from "@prisma/client";
+import { dashboardTicketFilters } from "./dashboard.validator.js";
+import type { Prisma, Priority, TicketStatus } from "@prisma/client";
 import { ApiError } from "../errors/api-error.js";
 import { isValidIntegerId, parseExpectedVersion } from "./id.validator.js";
 
@@ -24,6 +25,7 @@ const VALID_SORTS = new Set([
 const ALLOWED_LIMITS = new Set([10, 20, 50]);
 
 export interface ParsedStaffTicketFilters {
+  dashboardWhere: Prisma.TicketWhereInput;
   page: number;
   limit: number;
   search?: string;
@@ -36,7 +38,7 @@ export interface ParsedStaffTicketFilters {
 }
 
 export function parseStaffTicketFilters(query: Record<string, unknown>, actorId: number): ParsedStaffTicketFilters {
-  const permitted = new Set(["search", "category", "requestedPriority", "itPriority", "status", "owner", "sort", "page", "limit"]);
+  const permitted = new Set(["search", "category", "requestedPriority", "itPriority", "status", "owner", "sort", "page", "limit", "statusGroup", "resolvedFrom", "resolvedTo"]);
 
   if (Object.keys(query).some((key) => !permitted.has(key)) ||
       Object.values(query).some((val) => Array.isArray(val))) {
@@ -78,6 +80,7 @@ export function parseStaffTicketFilters(query: Record<string, unknown>, actorId:
   }
 
   const result: ParsedStaffTicketFilters = {
+    dashboardWhere: dashboardTicketFilters(query),
     page,
     limit,
     sort,

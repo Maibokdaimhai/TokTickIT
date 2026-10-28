@@ -194,3 +194,51 @@ Red/green evidence: direct resolution without completed work returned 200 before
 Used the user's `toktickit-db` container, PostgreSQL 16.14, with only a guarded disposable test database; development data untouched. Backend and real browser suites ran sequentially to isolate fake-clock authentication fixtures. Test cleanup retains audited records until whole disposable database teardown; it does not bypass immutable-history triggers.
 
 This execution supersedes the earlier pending workflow portions of API-19/20 and provides local API-10/11/12/13 workflow, UI workflow and E2E-02 evidence within the stated scenarios. It does not mark dashboards, full product accessibility, the complete earlier browser suite or final-main release verification as passed.
+
+## 11. Issue #51 dashboard execution
+
+Tests ran on uncommitted source on `feature/lab4-dashboards`, based on merged PR #56 at `90c4c01`; its fingerprint was matched to implementation commit `d98de9ef06bc78a8daaf748f223addd2d5cff2ad` before publication. [Sanitized verification](../../artifacts/lab-04/verification/dashboards.json) fingerprints the source; [runbook](dashboards.md) describes setup and limits.
+
+| Actual suite/check | Result | Verified scope |
+|---|---|---|
+| server/tests/lab-04/dashboard-window.test.ts | 4 passed | Fixed Bangkok midnight, month/year and leap-year boundaries |
+| server/tests/lab-04/requester-dashboard.api.test.ts | 2 passed | Independent SQL membership/order, ownership, inclusive bounds/estimates, zeros and safe previews |
+| server/tests/lab-04/staff-dashboard.api.test.ts | 2 passed | Independent SQL metrics/buckets, assignee versus performer, active parent, actor-scoped Administrator and zero buckets |
+| server/tests/lab-04/dashboard-security.api.test.ts | 3 passed | Sessions/roles/password/deactivation, no-store/spoof/failure safety and real concurrent-commit snapshot consistency |
+| server/tests/lab-04/dashboard-drilldown.api.test.ts | 19 passed | Every card/bucket total, all eight Requester statuses, strict dates/group/query validation, AND filters and stable bounded Action pagination |
+| Full backend | 373 passed, 0 failed; 1 opt-in skipped | Earlier regression including migration/restore; performance case separately passed below |
+| server/tests/lab-04/dashboard-performance.test.ts | 1 passed with opt-in | 10,000 Tickets/30,000 Actions; 20 warm reads per role; p95 5.48/18.55/22.16 ms, max 5,131 bytes, five-item previews; [host/plans](../../artifacts/lab-04/verification/dashboard-performance.json) |
+| client/tests/lab-04/Dashboard.test.tsx | 11 passed | Role metrics/routes, windows/estimates, zeros, explicit refresh/error/forbidden, stale response suppression, Actions and invalid query feedback |
+| client/tests/lab-04/DashboardRouting.test.tsx | 10 passed | Actual App role home/password/forbidden/deep links, exact URL filters, reload/Back and clearing/combining filters |
+| client/tests/lab-04/dashboard-api.test.ts | 3 passed | Credentialed abortable reads, exact Action query, role errors and session expiry |
+| Full client | 173 passed, 0 failed/skipped | Earlier auth/home expectations updated for Lab 4; permissions and list-return preservation retained |
+| e2e/lab-04/dashboard-flow.spec.ts | 3 real API/DB Chromium passed | All three roles, independent assignments, keyboard card activation, filters/reload/Back, Action pagination/anchor; four-width screenshots/bounds/touch targets |
+| Prior browser regression | 3 real workflow + 8 controlled-API Actions UI passed | Workflow/fixture configs kept separate; no earlier full-browser release claim |
+| Server/client typechecks and production builds | Passed | No source JS emission or new dependencies |
+
+This supplies local UNIT-03, API-15/16/17/18, UI-05/06/08, dashboard parts of UI-07 and E2E-03, and PERF-01 evidence within the recorded scenarios. Initial seed/test-mock setup failures and the list-return regression are described in dashboards.md; only successful reruns are counted above. Tests used a new disposable database in `toktickit-db`; development data remained untouched. Full earlier browser inventory, complete visual/accessibility audit and final-main verification remain pending under Issues #52/#53.
+
+## 12. PR #57 requested-change follow-up
+
+Tests ran on an uncommitted follow-up based on `5e13a36`, matched to implementation commit `06aa3e035edef33ea19331449dc82996ef1a52a9` before publication; [review verification](../../artifacts/lab-04/verification/dashboards-review.json) records the exact source fingerprint. Original Issue #51 results in Section 11 remain historical.
+
+- Full client with default parallel-file execution: **191 passed, 0 failed/skipped**; full single-worker run: **191 passed, 0 failed/skipped**.
+- Dashboard component suite: **16 passed**; adds both-role stale metrics/as-of/preview retention and successful retry replacement, original resolution window through network failure/pending retry, 401 clearing and successful-snapshot role-scope isolation. Existing initial-error and 403 clearing tests remain passing.
+- Dashboard App routing suite: **12 passed**; adds both-role filtered list -> Detail -> simulated reload -> Detail Back with exact filters/page. It isolates Detail rendering while exercising the actual App and lists. Remount timing waits now use fresh mock calls and the newly visible view with deferred session restoration.
+- Ticket-list context suite: **11 passed**; exact per-entry state and rejection of malformed, external, duplicate-filter and cross-user/role contexts.
+- Routing suite repetition: **10 runs × 12 passed**, no failures. Repetition alone does not prove absence of every possible flake.
+- `e2e/lab-04/dashboard-review.spec.ts` with `playwright.dashboard-review.config.ts`: **4 passed, 0 failed/skipped/flaky**, using controlled HTTP fixtures and actual Detail components plus real browser reload, stale refresh/retry, 401 and 403. This creates no database and does not claim DB-backed verification.
+- Client `tsc --noEmit`, production build, documentation links and diff whitespace passed. No server code or dependencies changed.
+
+Five new regression cases were red before the fixes and green afterward. [Follow-up notes](dashboards.md) explain behavior, timing limits and fixture correction. The user subsequently authorized pushing the corrections to PR #57; reviewer approval remains pending.
+
+## 13. PR #57 Action-save history-state regression
+
+Tests ran on an uncommitted follow-up based on `741447c`, matched to implementation commit `414f3f18c62c2b1fc343758e151c6d4cea5f9bcb` before publication; [verification](../../artifacts/lab-04/verification/action-list-context.json) records the source fingerprint. Saving an Action updates its selected actionId while preserving the existing Detail history state.
+
+- Actual App/Actions integration: new filtered Staff page-2 -> Detail -> save -> simulated reload -> Back case verifies exact filters/page, selected actionId and unrelated history-entry data. The ActionsIntegration suite now has **4 passing tests**.
+- Controlled Chromium review suite: **5 passed, 0 failed/skipped/flaky**, including a new real Detail reload after Action creation and assertions against both restored list URL and request parameters.
+- Full parallel-file client run: **192 passed, 0 failed/skipped**. Client `tsc --noEmit`, production build and diff whitespace passed.
+- Red/green confirmed before/after in both integration and browser tests. Original bug replaced history state with null; the browser lost the owner/page filters on Back. No backend, database, dependencies or unrelated package.json changes were required.
+
+These are client/controlled-HTTP checks; prior real database/performance evidence remains historical. The user subsequently authorized pushing this correction to PR #57; reviewer approval remains pending.

@@ -125,7 +125,10 @@ function ActionsPanel({ ticketId, ticketStatus, ticketCreatedAt, ticketVersion, 
       else result = await api.updateAction(ticketId, editor.action!.id, { ...actionPayload(editor.draft), expectedTicketVersion: editor.expectedTicketVersion, expectedActionVersion: editor.expectedActionVersion });
       if (!alive.current) return;
       setSelected(result.action); setVersion(v => Math.max(v, result.ticketVersion)); setEditor(null); attempt.current = null; setUncertain(false); setConfirm(false);
-      const url = new URL(window.location.href); url.searchParams.set("actionId", String(result.action.id)); window.history.replaceState(null, "", url.pathname + url.search); window.dispatchEvent(new Event("app:location-changed"));
+      const url = new URL(window.location.href); url.searchParams.set("actionId", String(result.action.id));
+      // Updating the selected Action must retain this Detail entry's return context.
+      window.history.replaceState(window.history.state, "", url.pathname + url.search);
+      window.dispatchEvent(new Event("app:location-changed"));
       setNotice(editor.mode === "followup" ? "Follow-up completion recorded. The original work and history are preserved." : "Action saved.");
       setRefresh(v => v + 1); focusElement(header.current);
       try { await onTicketChangedRef.current(); if (alive.current) setSummaryFailed(false); }

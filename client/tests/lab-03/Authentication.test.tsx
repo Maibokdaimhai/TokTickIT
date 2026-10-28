@@ -4,6 +4,8 @@ import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"
 import App from "../../src/App.js";
 import * as api from "../../src/api.js";
 import type { AuthResult } from "../../src/types.js";
+vi.mock("../../src/components/Dashboard.js", () => ({ Dashboard: ({ staff }: { staff: boolean }) => <h1>{staff ? "Staff Dashboard" : "Requester Dashboard"}</h1>, MyActiveActions: () => null }));
+
 vi.mock("../../src/api.js", async original => ({
   ...await original<typeof import("../../src/api.js")>(),
   getSession: vi.fn(), login: vi.fn(), logout: vi.fn(), changePassword: vi.fn(),

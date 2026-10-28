@@ -1,6 +1,6 @@
 # Lab 4 Engineering Specification - TokTickIT
 
-Status: Contract merged through PR #46; Actions foundation/UI merged through PR #54/#55. Issue #50 Ticket workflow implemented and verified locally on 27 October 2026, based on staging `f8238e9`. Dashboards and final release verification remain incomplete. See [workflow evidence](ticket-workflow.md). IDs in this document are scoped to Lab 4.
+Status: Contract merged through PR #46; Actions foundation/UI merged through PR #54/#55. Issue #50 Ticket workflow implemented and verified locally on 27 October 2026, based on staging `f8238e9`. Issue #51 dashboards implemented and verified locally on 28 October 2026; final release verification remains incomplete. See [workflow evidence](ticket-workflow.md) and [dashboard evidence](dashboards.md). IDs in this document are scoped to Lab 4.
 
 Source: CPE334 Lab 4 worksheet, Sections 1-14 and grading Parts 1-9. Earlier approved behavior remains governed by [Lab 3](../lab-03/specification.md) unless a change is explicitly stated here. This contract resolves implementation choices; it does not claim instructor or peer approval.
 
@@ -178,3 +178,5 @@ This list is a local plan; no GitHub Issues/PRs or pushes are created by this do
 Issue #48 implementation and migration/recovery details: [Actions foundation](actions-foundation.md). Current executed coverage is recorded in tests.md Section 8; the complete product Definition of Done above remains pending.
 
 Issue #49 shared Actions UI is implemented locally from merged PR #54; see [Actions UI notes](actions-ui.md) and tests.md Section 9. Later Ticket workflow, dashboards and full release verification remain pending.
+
+Issue #51 dashboards are implemented locally from merged PR #56; see [Dashboard notes](dashboards.md) and tests.md Section 11. Final release verification remains pending.
