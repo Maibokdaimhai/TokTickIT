@@ -1,0 +1,90 @@
+{
+  "date": "2026-10-28",
+  "realDiscovery": {
+    "summary": "Total: 38 tests in 10 files",
+    "cases": [
+      "[chromium] \u203a lab-03/authentication.spec.ts:17:3 \u203a E2E-01: Authentication Workflows & Session Management \u203a login page responsive rendering and baseline screenshots",
+      "[chromium] \u203a lab-03/authentication.spec.ts:37:3 \u203a E2E-01: Authentication Workflows & Session Management \u203a first-login mandatory password change enforces 403 API block, updates password, and restores full access",
+      "[chromium] \u203a lab-03/authentication.spec.ts:101:3 \u203a E2E-01: Authentication Workflows & Session Management \u203a invalid and inactive credentials show safe feedback without exposing protected shell",
+      "[chromium] \u203a lab-03/authentication.spec.ts:117:3 \u203a E2E-01: Authentication Workflows & Session Management \u203a role-based shells render role badges and restrict unauthorized actions and routes",
+      "[chromium] \u203a lab-03/requester-regression.spec.ts:36:3 \u203a E2E-04: Authenticated Requester Regression & Workflows \u203a E2E-01: End-to-end ticket creation workflow, responsive views, validation, and attachment upload",
+      "[chromium] \u203a lab-03/requester-regression.spec.ts:144:3 \u203a E2E-04: Authenticated Requester Regression & Workflows \u203a E2E-02: Search, category/system filter, responsive tables/cards, and pagination navigation",
+      "[chromium] \u203a lab-03/requester-regression.spec.ts:221:3 \u203a E2E-04: Authenticated Requester Regression & Workflows \u203a E2E-03: Ticket detail inspection, attachment upload, download, and soft-removal with reason audit",
+      "[chromium] \u203a lab-03/requester-regression.spec.ts:314:3 \u203a E2E-04: Authenticated Requester Regression & Workflows \u203a E2E-04: Requester communication, problem-resolved indication, and ownership isolation",
+      "[chromium] \u203a lab-03/responsive-accessibility.spec.ts:34:3 \u203a VIS-01: Responsive Layout & Accessibility Inspection \u203a Screen 1 & 2: Login and Mandatory Change Password responsive rendering and baseline evidence",
+      "[chromium] \u203a lab-03/responsive-accessibility.spec.ts:94:3 \u203a VIS-01: Responsive Layout & Accessibility Inspection \u203a Screen 3, 4 & 5: Requester views responsive table-to-card switching and overflow verification",
+      "[chromium] \u203a lab-03/responsive-accessibility.spec.ts:167:3 \u203a VIS-01: Responsive Layout & Accessibility Inspection \u203a Screen 6 & 7: Staff views responsive table-to-card switching and queue filtering",
+      "[chromium] \u203a lab-03/responsive-accessibility.spec.ts:281:3 \u203a VIS-01: Responsive Layout & Accessibility Inspection \u203a Screen 8: Administrator User Management responsive table-to-card switching and modals",
+      "[chromium] \u203a lab-03/responsive-accessibility.spec.ts:333:3 \u203a VIS-01: Responsive Layout & Accessibility Inspection \u203a Accessibility: Modal dialog focus trapping, keyboard navigation, and escape key restoration",
+      "[chromium] \u203a lab-03/responsive-accessibility.spec.ts:371:3 \u203a VIS-01: Responsive Layout & Accessibility Inspection \u203a Design System: Zen Green tokens, color contrasts, and semantic landmark verification",
+      "[chromium] \u203a lab-03/safety-cleanup.spec.ts:15:3 \u203a Safety Guard & Cleanup Deterministic Verification \u203a Requirement 1: Disposable-database safety guard rejects dev DB and validates correctly",
+      "[chromium] \u203a lab-03/safety-cleanup.spec.ts:53:3 \u203a Safety Guard & Cleanup Deterministic Verification \u203a Requirement 2: Complete fixture cleanup leaves zero orphaned records or references",
+      "[chromium] \u203a lab-03/safety-cleanup.spec.ts:178:3 \u203a Safety Guard & Cleanup Deterministic Verification \u203a Lab 4 cleanup retains audited fixtures and their referenced people without bypassing history triggers",
+      "[chromium] \u203a lab-03/staff-ticket-flow.spec.ts:82:3 \u203a E2E-02: Staff Ticket Operations & Queue Workflow \u203a staff queue: responsive layout, search, filters, sorting, and preserved pagination",
+      "[chromium] \u203a lab-03/staff-ticket-flow.spec.ts:186:3 \u203a E2E-02: Staff Ticket Operations & Queue Workflow \u203a staff queue edge states: filtered no-results, clear filters, true-empty, retry, and requester forbidden",
+      "[chromium] \u203a lab-03/staff-ticket-flow.spec.ts:256:3 \u203a E2E-02: Staff Ticket Operations & Queue Workflow \u203a ticket operations: claim, eligible owners list, reassignment, IT priority update, and complete status lifecycle",
+      "[chromium] \u203a lab-03/staff-ticket-flow.spec.ts:433:3 \u203a E2E-02: Staff Ticket Operations & Queue Workflow \u203a communication and attachments: public comment, internal note, requester isolation, metadata, download byte check, soft-removal reason audit, and problem resolved display",
+      "[chromium] \u203a lab-03/user-administration.spec.ts:37:3 \u203a E2E-03: Administrator User Management Workflow \u203a user list inspection, responsive tables/cards, search, and filtering",
+      "[chromium] \u203a lab-03/user-administration.spec.ts:84:3 \u203a E2E-03: Administrator User Management Workflow \u203a create user workflow with password-policy boundaries and duplicate email handling",
+      "[chromium] \u203a lab-03/user-administration.spec.ts:173:3 \u203a E2E-03: Administrator User Management Workflow \u203a edit user attributes, reset initial password with failure handling, and self-deactivation guard",
+      "[chromium] \u203a lab-03/user-administration.spec.ts:252:3 \u203a E2E-03: Administrator User Management Workflow \u203a deterministic last-active-admin protection with try/finally restoration",
+      "[chromium] \u203a lab-03/user-administration.spec.ts:320:3 \u203a E2E-03: Administrator User Management Workflow \u203a ticket unassignment upon staff deactivation or demotion",
+      "[chromium] \u203a lab-03/user-administration.spec.ts:353:3 \u203a E2E-03: Administrator User Management Workflow \u203a session revocation when an administrator deactivates a user account",
+      "[chromium] \u203a lab-03/user-administration.spec.ts:389:3 \u203a E2E-03: Administrator User Management Workflow \u203a no user deletion: verify no Delete controls and safe 404 on DELETE endpoint",
+      "[chromium] \u203a lab-04/actions-taken-flow.spec.ts:24:1 \u203a multiple contributors, assignee/performer identity, failure recovery, cancellation and public follow-up revisions survive resolution",
+      "[chromium] \u203a lab-04/dashboard-flow.spec.ts:39:1 \u203a Requester dashboard counts and links survive filters, reload and Back without leaking another Requester",
+      "[chromium] \u203a lab-04/dashboard-flow.spec.ts:51:1 \u203a Staff dashboard opens exact Ticket filters, paginated Actions and a selected Action beyond the first chronological page",
+      "[chromium] \u203a lab-04/dashboard-flow.spec.ts:58:1 \u203a Administrator uses its own assignments and retains management navigation",
+      "[chromium] \u203a lab-04/responsive-accessibility.spec.ts:41:1 \u203a Requester login, create/list/detail, dashboard and public history render across four widths with labels/contrast/targets and 200% zoom",
+      "[chromium] \u203a lab-04/responsive-accessibility.spec.ts:57:1 \u203a Staff queue, dashboard, active Actions, editor and communication retain bounds/focus/contrast at all widths and 200% zoom",
+      "[chromium] \u203a lab-04/responsive-accessibility.spec.ts:77:1 \u203a Administrator management and modal keyboard access at four widths plus mandatory password screen",
+      "[chromium] \u203a lab-04/ticket-resolution.spec.ts:59:1 \u203a real Staff/Requester lifecycle releases the follow-up gate and retains history",
+      "[chromium] \u203a lab-04/ticket-resolution.spec.ts:116:1 \u203a cancellation freezes unfinished work and reopening permits completing it",
+      "[chromium] \u203a lab-04/ticket-resolution.spec.ts:124:1 \u203a legacy resolved Tickets can close but must record work before re-resolution"
+    ]
+  },
+  "fixtureDiscovery": {
+    "summary": "Total: 14 tests in 2 files",
+    "cases": [
+      "[chromium] \u203a actions-ui.spec.ts:78:44 \u203a Actions cards/editor fit at 320px",
+      "[chromium] \u203a actions-ui.spec.ts:78:44 \u203a Actions cards/editor fit at 390px",
+      "[chromium] \u203a actions-ui.spec.ts:78:44 \u203a Actions cards/editor fit at 820px",
+      "[chromium] \u203a actions-ui.spec.ts:78:44 \u203a Actions cards/editor fit at 1440px",
+      "[chromium] \u203a actions-ui.spec.ts:94:1 \u203a Staff creates, assigns, completes and inspects work history",
+      "[chromium] \u203a actions-ui.spec.ts:112:1 \u203a Completed follow-up is recorded without editing the original work",
+      "[chromium] \u203a actions-ui.spec.ts:121:1 \u203a Requester sees read-only work/history with keyboard focus and no write controls",
+      "[chromium] \u203a actions-ui.spec.ts:133:1 \u203a Action forms remain usable at 200% zoom and focus errors above the sticky shell",
+      "[chromium] \u203a actions-ui.spec.ts:144:1 \u203a Reduced motion disables the shell transition rather than only setting the media preference",
+      "[chromium] \u203a dashboard-review.spec.ts:37:3 \u203a requester failed refresh retains stale metrics/as-of and retry recovers",
+      "[chromium] \u203a dashboard-review.spec.ts:54:3 \u203a requester Detail reload preserves list filters/page for its Back button",
+      "[chromium] \u203a dashboard-review.spec.ts:37:3 \u203a staff failed refresh retains stale metrics/as-of and retry recovers",
+      "[chromium] \u203a dashboard-review.spec.ts:54:3 \u203a staff Detail reload preserves list filters/page for its Back button",
+      "[chromium] \u203a dashboard-review.spec.ts:70:1 \u203a Staff Action save keeps page-2 list context through Detail reload and Back"
+    ]
+  },
+  "configEntryGuards": [
+    {
+      "case": "missing opt-in",
+      "rejected": true
+    },
+    {
+      "case": "development database",
+      "rejected": true
+    },
+    {
+      "case": "unsafe upload directory",
+      "rejected": true
+    }
+  ],
+  "legacyLab2": {
+    "file": "e2e/lab-02/requester-ticket-flow.spec.ts",
+    "state": "Archived selector-era journeys; not executed against authenticated Lab 4.",
+    "replacement": "e2e/lab-03/requester-regression.spec.ts",
+    "mapping": {
+      "creation, validation, safe failure, busy state and initial upload": "E2E-01",
+      "search, filters, pagination, mobile cards and empty state": "E2E-02",
+      "detail, additional upload, download bytes and soft-removal audit": "E2E-03"
+    },
+    "intentionalChange": "The retired requester selector/public requester API is replaced by signed-in sessions and explicit sign-out/sign-in."
+  }
+}

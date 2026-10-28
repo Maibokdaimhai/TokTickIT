@@ -1,6 +1,6 @@
 # Lab 4 UI Contract - TokTickIT
 
-Status: Actions Taken merged through PR #55. Ticket workflow/history UI implemented and verified locally under Issue #50; see [workflow evidence](ticket-workflow.md). Dashboards implemented and verified locally under Issue #51; see [dashboard evidence](dashboards.md). Final application inspection remains planned. See [Actions UI verification](actions-ui.md) for exact scope. Reuse [Lab 2 tokens](../lab-02/ui-spec.md) and [Lab 3 conventions](../lab-03/ui-spec.md). Behavior and scope follow [specification.md](specification.md); exact filters and responses follow [api-spec.md](api-spec.md).
+Status: Lab 4 features merged through PR #57. Issue #52 local rendered checks and corrections are recorded in [regression evidence](regression-and-evidence.md); final-main/release inspection remains pending. Reuse [Lab 2 tokens](../lab-02/ui-spec.md) and [Lab 3 conventions](../lab-03/ui-spec.md). Behavior and scope follow [specification.md](specification.md); exact filters and responses follow [api-spec.md](api-spec.md).
 
 ## 1. Shell, navigation, and routes
 
@@ -74,8 +74,8 @@ Semantic headings/landmarks, native labelled controls, explicit button types, vi
 - [x] Requester/Staff dashboards: accurate nonzero/zero data, loading, failure, forbidden and drill-down (SQL-oracle/API/component tests plus three real browser scenarios; tests.md Section 11).
 - [x] Actions: list, create, assign, edit, complete, cancel, record follow-up completion on completed work, public history and Requester read view (component/App checks and controlled-API Chromium coverage; selected real backend workflows now covered in Issue #50; full release E2E remains pending).
 - [x] Workflow: permitted/blocked/stale transitions, resolution gate and legacy case (Issue #50 API/component tests and three real-backend Chromium scenarios; see tests.md Section 10).
-- [ ] Existing communication panels and every new screen at all four widths; direct element bounds as well as body overflow.
-- [ ] Long-content/wrapping, keyboard-only flow, modal focus, accessible names, contrast, touch targets, reduced motion and zoom.
-- [ ] Safe API failure and draft preservation; browser console and links inspected.
+- [x] Existing communication panels and new screens at four widths; direct bounds and contained table scrolling checked in Issue #52 local evidence.
+- [x] Long content/names, sampled keyboard flows/modal focus, accessible names, rendered contrast, 44px targets, reduced motion and 200% equivalent reflow checked locally; scope/limits in regression-and-evidence.md.
+- [x] Safe failure/draft retention and links exercised; no uncaught page errors in new Requester/Staff render journeys. Expected HTTP failures and final-main limits are recorded explicitly.
 
 Store new evidence under `artifacts/lab-04/screenshots/{staff-dashboard,requester-dashboard,actions-taken,ticket-workflow,regression}/`. Record tested commit, role, viewport, scenario, browser and result in tests.md. Actions, workflow and dashboard screenshots now exist for their documented local scope; final release regression captures remain pending.
