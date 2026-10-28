@@ -1,0 +1,91 @@
+{
+  "date": "2026-10-28",
+  "branch": "feature/lab4-dashboards",
+  "baseCommit": "90c4c01f3e92f62c06759174647055ec92ae2b0c",
+  "workingTree": true,
+  "sourceScope": [
+    "server",
+    "client/src",
+    "client/tests",
+    "e2e/lab-04",
+    "playwright.dashboard.config.ts",
+    "playwright.workflow.config.ts",
+    "playwright.ui.config.ts"
+  ],
+  "fingerprintAlgorithm": "SHA-256 of sorted path + NUL + file bytes + NUL for tracked and nonignored untracked source files",
+  "sourceFingerprint": "8824c9ddb96deef0c96798400038792f42e16e2434c166439a456169b8d3ca3d",
+  "sourceFiles": 166,
+  "database": {
+    "container": "toktickit-db",
+    "postgresVersion": "16.14",
+    "disposableDatabase": "toktickit_lab4_dashboard_test_20261028_51",
+    "developmentDatabaseModified": false,
+    "cleanup": "Disposable database dropped after explicit user authorization; development database and project container preserved."
+  },
+  "results": {
+    "backend": {
+      "numPassedTests": 373,
+      "numFailedTests": 0,
+      "numPendingTests": 1
+    },
+    "client": {
+      "numPassedTests": 173,
+      "numFailedTests": 0,
+      "numPendingTests": 0
+    },
+    "perf-tests": {
+      "numPassedTests": 1,
+      "numFailedTests": 0,
+      "numPendingTests": 0
+    },
+    "browser": {
+      "expected": 3,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "workflow": {
+      "expected": 3,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "fixture": {
+      "expected": 8,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  },
+  "typechecks": {
+    "server": "passed",
+    "client": "passed"
+  },
+  "builds": {
+    "server": "passed",
+    "client": "passed"
+  },
+  "newTests": {
+    "backend": 30,
+    "client": 24,
+    "performanceOptIn": 1,
+    "realBrowser": 3
+  },
+  "screenshots": [
+    "artifacts/lab-04/screenshots/requester-dashboard/dashboard-1440.png",
+    "artifacts/lab-04/screenshots/requester-dashboard/dashboard-320.png",
+    "artifacts/lab-04/screenshots/requester-dashboard/dashboard-390.png",
+    "artifacts/lab-04/screenshots/requester-dashboard/dashboard-820.png",
+    "artifacts/lab-04/screenshots/staff-dashboard/dashboard-1440.png",
+    "artifacts/lab-04/screenshots/staff-dashboard/dashboard-320.png",
+    "artifacts/lab-04/screenshots/staff-dashboard/dashboard-390.png",
+    "artifacts/lab-04/screenshots/staff-dashboard/dashboard-820.png"
+  ],
+  "limits": [
+    "Tests ran on the uncommitted source snapshot, matched to implementation commit d98de9ef06bc78a8daaf748f223addd2d5cff2ad before publication; not final-main evidence.",
+    "One performance test is intentionally skipped in the default backend run and separately passed with opt-in.",
+    "Full earlier browser inventory and complete application accessibility/contrast audit remain for Issue #52.",
+    "Existing unrelated client/package.json edit is excluded and preserved."
+  ],
+  "implementationCommit": "d98de9ef06bc78a8daaf748f223addd2d5cff2ad"
+}

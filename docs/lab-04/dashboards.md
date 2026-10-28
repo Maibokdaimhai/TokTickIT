@@ -1,0 +1,36 @@
+# Issue #51 role dashboards and drill-downs
+
+Implemented locally on `feature/lab4-dashboards`, based on staging `90c4c01f3e92f62c06759174647055ec92ae2b0c` after PR #56 merged. Implementation commit `d98de9ef06bc78a8daaf748f223addd2d5cff2ad`; the user subsequently authorized pushing this branch and opening a PR. [Verification summary](../../artifacts/lab-04/verification/dashboards.json) identifies the tested source snapshot, matched to the implementation commit before publication.
+
+## Behavior and authorization
+
+Requester Dashboard counts only the session user's active, waiting and recently resolved Tickets, with a stable five-item recent preview. Recently resolved includes current Resolved/Closed records within the inclusive seven-Bangkok-calendar-date window and labels estimated legacy timestamps. Staff/Admin Dashboard provides global status buckets, active IT-priority buckets, unassigned active Tickets and the current actor's active Tickets/assigned Actions. Assigned work uses assignee, not original performer, and excludes terminal parents. Every enum bucket is present even at zero.
+
+Both Dashboard endpoints reject all query parameters, use one repeatable-read transaction and one backend asOf/window, and aggregate in the database with bounded previews. Failures remain errors rather than fabricated zeros. New Action previews reuse the existing safe public projection without email, retry keys or private notes. Authentication, password-change gates, role checks and no-store headers remain active.
+
+Requester lists now accept all eight statuses and updatedAt descending with ID tie-breaker. Both Ticket lists accept active-status grouping and strict paired inclusive resolution bounds, combined with existing filters using AND. Group/status conflicts, invalid calendar dates, offsetless dates, duplicate/unknown parameters and empty new filters are rejected. My Active Actions requires assignee=me/statusGroup=active, paginates stably and handles far-out pages without an oversized database offset.
+
+Role-aware Dashboard is now login/default/brand/Return Home. Existing deep links, Requester creation, Staff Queue and Administrator User Management remain available. Cards retain the exact filter/window in the URL, including zero-count destinations. Reload and Back restore filters; detail Back retains the latest list filters/page. Action links select the authorized action even beyond the first chronological page. Reads abort/ignore stale responses, clear protected old data on refresh, and expose explicit loading/empty/error/forbidden/retry states. There is no background auto-refresh.
+
+## Executed verification
+
+- Full backend: **373 passed, 0 failed**, plus one intentionally skipped opt-in performance case. New dashboard suites contain **30 tests**: fixed Bangkok windows (4), Requester SQL oracle (2), Staff/Admin SQL oracle (2), security/concurrent snapshot (3), exact drill-downs and validation (19).
+- Performance opt-in: **1 passed** separately on exactly **10,000 Tickets / 30,000 Actions**. Twenty warm sequential requests per role: p95 Requester **5.48 ms**, Staff **18.55 ms**, Administrator **22.16 ms**; largest response **5,131 bytes**, previews no larger than five.
+- Full client: **173 passed, 0 failed/skipped**, including **24** dashboard/component/routing/HTTP tests. Prior authentication/navigation tests now expect the new role home while retaining permission and filter-preservation assertions.
+- Real Chromium dashboard scenarios: **3 passed**, covering Requester/Staff/Administrator, own assignments, keyboard card activation, URL filters, reload/Back, paginated Actions and a selected Action beyond page one.
+- Prior real workflow Chromium regression: **3 passed**. Prior controlled-API Actions UI regression: **8 passed**. These two evidence types remain distinct.
+- Both `tsc --noEmit` checks and production builds passed. Dashboard/screenshots checked at **320/390/820/1440 px**, including direct control/text bounds, no page overflow and at least 44 px links/buttons.
+
+See [performance environment and EXPLAIN ANALYZE](../../artifacts/lab-04/verification/dashboard-performance.json), [Requester screenshots](../../artifacts/lab-04/screenshots/requester-dashboard/) and [Staff screenshots](../../artifacts/lab-04/screenshots/staff-dashboard/). Query plans use bitmap indexes for resolution/assigned-work selection. The parent active-status join scans 6,250 of 10,000 Tickets: this low-selectivity sequential scan completed in about 0.57 ms in the recorded plan; the bounded action preview completed in about 2.14 ms. No production-scale claim follows from this local smoke run. Actual host: Apple M4 Pro, 24 GiB, Node v22.17.1, PostgreSQL 16.14.
+
+The first full regression attempt lacked the seed password and therefore had missing baseline reference fixtures. Supplying a synthetic local seed password fixed setup; the complete backend rerun passed. The first new HTTP test reused a Response object across reads; returning a fresh mock response fixed the test and the complete client rerun passed. Initial home-route failures identified expected contract changes and exposed list-return preservation that was fixed and verified. No failed attempt is counted as a pass.
+
+## Reproduction and boundaries
+
+Use only a disposable PostgreSQL database with `E2E_ALLOW_DB_WRITE=1`; this run used `toktickit_lab4_dashboard_test_20261028_51` in the user's `toktickit-db` container. Existing migrations and seed were applied there with a synthetic local `LAB3_INITIAL_PASSWORD`. Development database `toktickit`, `.env`, unrelated containers and the user's pre-existing package.json edit were untouched. No migration or dependency changes were needed.
+
+Run `npm test` from server with guarded DATABASE_URL and `LAB4_RECOVERY_CONTAINER=toktickit-db`; run client `npm test`. For performance, run only `tests/lab-04/dashboard-performance.test.ts` with `LAB4_DASHBOARD_PERF=1` and an optional local `LAB4_PERF_OUTPUT` path. The performance fixture creates and drops only its own UUID test schema.
+
+From repository root, run `npx --no-install playwright test --config=playwright.dashboard.config.ts` with the guarded database URL and synthetic `E2E_INITIAL_PASSWORD`; use `playwright.workflow.config.ts` for the three real workflow regressions and `playwright.ui.config.ts` for eight fixture checks. Run backend clock fixtures and real browser suites sequentially or in separate databases so authentication sessions do not interfere. Typecheck each package with `npx --no-install tsc --noEmit`, then run its production build. Never commit passwords or raw traces.
+
+After verification, the user explicitly authorized deletion of the disposable database. It was dropped and its absence verified; the development database and project container remain intact. Audit fixtures were removed through whole-database teardown; cleanup never disabled immutable-history triggers. Actions/workflow screenshots were regenerated by their regression suites. Full earlier browser discovery/inventory, complete application accessibility/contrast review, final-main verification and release/submission evidence remain for Issues #52/#53.

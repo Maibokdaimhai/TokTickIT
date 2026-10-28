@@ -36,3 +36,7 @@ Branch: feature/lab4-actions-ui, based on ce32e77; implementation commit 47451ec
 ## Issue #50 implementation awaiting review
 
 The user reported PR #55 merged. Current branch `feature/lab4-ticket-workflow` starts from staging `f8238e9`; implementation commit `ac9ff59e394cca428bb227f4dcda0516ffdacffb`. Publication and PR creation authorized; reviewer approval remains pending. Review resolution locking/gates, active owner races, atomic immutable transition events, metadata/legacy behavior, safe public history and actionable UI feedback. Verification: 343 backend, 149 client, 3 real-backend Chromium and 8 fixture Chromium checks passed; both typechecks/builds passed. See tests.md Section 10 and ticket-workflow.md. Dashboard and release verification remain pending.
+
+## Issue #51 implementation awaiting review
+
+PR #56 is confirmed merged into `lab4-staging` at `90c4c01f3e92f62c06759174647055ec92ae2b0c`. New branch `feature/lab4-dashboards` implements Issue #51 in commit `d98de9ef06bc78a8daaf748f223addd2d5cff2ad`; the user authorized pushing and PR creation. Reviewer approval remains pending. Review snapshot/count/window semantics, exact filtered destinations, own-assignee versus performer identity, role/password gates, URL state and protected stale-read handling. Verification: 373 backend, 173 client, 1 opt-in performance, 3 real dashboard browser, 3 real workflow regression and 8 fixture browser tests passed. One performance test is intentionally skipped in the default backend run and separately executed. See tests.md Section 11.

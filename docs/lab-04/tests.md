@@ -194,3 +194,26 @@ Red/green evidence: direct resolution without completed work returned 200 before
 Used the user's `toktickit-db` container, PostgreSQL 16.14, with only a guarded disposable test database; development data untouched. Backend and real browser suites ran sequentially to isolate fake-clock authentication fixtures. Test cleanup retains audited records until whole disposable database teardown; it does not bypass immutable-history triggers.
 
 This execution supersedes the earlier pending workflow portions of API-19/20 and provides local API-10/11/12/13 workflow, UI workflow and E2E-02 evidence within the stated scenarios. It does not mark dashboards, full product accessibility, the complete earlier browser suite or final-main release verification as passed.
+
+## 11. Issue #51 dashboard execution
+
+Tests ran on uncommitted source on `feature/lab4-dashboards`, based on merged PR #56 at `90c4c01`; its fingerprint was matched to implementation commit `d98de9ef06bc78a8daaf748f223addd2d5cff2ad` before publication. [Sanitized verification](../../artifacts/lab-04/verification/dashboards.json) fingerprints the source; [runbook](dashboards.md) describes setup and limits.
+
+| Actual suite/check | Result | Verified scope |
+|---|---|---|
+| server/tests/lab-04/dashboard-window.test.ts | 4 passed | Fixed Bangkok midnight, month/year and leap-year boundaries |
+| server/tests/lab-04/requester-dashboard.api.test.ts | 2 passed | Independent SQL membership/order, ownership, inclusive bounds/estimates, zeros and safe previews |
+| server/tests/lab-04/staff-dashboard.api.test.ts | 2 passed | Independent SQL metrics/buckets, assignee versus performer, active parent, actor-scoped Administrator and zero buckets |
+| server/tests/lab-04/dashboard-security.api.test.ts | 3 passed | Sessions/roles/password/deactivation, no-store/spoof/failure safety and real concurrent-commit snapshot consistency |
+| server/tests/lab-04/dashboard-drilldown.api.test.ts | 19 passed | Every card/bucket total, all eight Requester statuses, strict dates/group/query validation, AND filters and stable bounded Action pagination |
+| Full backend | 373 passed, 0 failed; 1 opt-in skipped | Earlier regression including migration/restore; performance case separately passed below |
+| server/tests/lab-04/dashboard-performance.test.ts | 1 passed with opt-in | 10,000 Tickets/30,000 Actions; 20 warm reads per role; p95 5.48/18.55/22.16 ms, max 5,131 bytes, five-item previews; [host/plans](../../artifacts/lab-04/verification/dashboard-performance.json) |
+| client/tests/lab-04/Dashboard.test.tsx | 11 passed | Role metrics/routes, windows/estimates, zeros, explicit refresh/error/forbidden, stale response suppression, Actions and invalid query feedback |
+| client/tests/lab-04/DashboardRouting.test.tsx | 10 passed | Actual App role home/password/forbidden/deep links, exact URL filters, reload/Back and clearing/combining filters |
+| client/tests/lab-04/dashboard-api.test.ts | 3 passed | Credentialed abortable reads, exact Action query, role errors and session expiry |
+| Full client | 173 passed, 0 failed/skipped | Earlier auth/home expectations updated for Lab 4; permissions and list-return preservation retained |
+| e2e/lab-04/dashboard-flow.spec.ts | 3 real API/DB Chromium passed | All three roles, independent assignments, keyboard card activation, filters/reload/Back, Action pagination/anchor; four-width screenshots/bounds/touch targets |
+| Prior browser regression | 3 real workflow + 8 controlled-API Actions UI passed | Workflow/fixture configs kept separate; no earlier full-browser release claim |
+| Server/client typechecks and production builds | Passed | No source JS emission or new dependencies |
+
+This supplies local UNIT-03, API-15/16/17/18, UI-05/06/08, dashboard parts of UI-07 and E2E-03, and PERF-01 evidence within the recorded scenarios. Initial seed/test-mock setup failures and the list-return regression are described in dashboards.md; only successful reruns are counted above. Tests used a new disposable database in `toktickit-db`; development data remained untouched. Full earlier browser inventory, complete visual/accessibility audit and final-main verification remain pending under Issues #52/#53.
