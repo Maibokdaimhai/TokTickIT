@@ -6,18 +6,30 @@ export const statusOrder = ["NEW", "OPEN", "IN_PROGRESS", "WAITING_FOR_REQUESTER
 const priorities = ["URGENT", "HIGH", "MEDIUM", "LOW"] as const;
 const label = (value: string) => value.toLowerCase().replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
 const date = (value: string) => new Date(value).toLocaleString("en-GB", { timeZone: "Asia/Bangkok" });
-function useRead<T>(read: (signal: AbortSignal) => Promise<T>, deps: unknown[]) {
-  const [data, setData] = useState<T | null>(null), [loading, setLoading] = useState(true), [error, setError] = useState<{ message: string; status?: number } | null>(null), [retry, setRetry] = useState(0);
+function useRead<T>(read: (signal: AbortSignal) => Promise<T>, scope: string, retainOnRefresh = false) {
+  const [snapshot, setSnapshot] = useState<{ scope: string; data: T; stale: boolean } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<{ message: string; status?: number } | null>(null);
+  const [retry, setRetry] = useState(0);
   useEffect(() => {
     const controller = new AbortController(); let active = true;
-    setData(null); setLoading(true); setError(null);
-    read(controller.signal).then(value => { if (active) setData(value); }).catch(reason => {
-      if (active && reason.name !== "AbortError") setError({ message: reason.message || "Unable to load data", status: reason.status });
+    // Keep a successful dashboard during refresh, but never reuse another scope.
+    setSnapshot(previous => retainOnRefresh && previous?.scope === scope ? previous : null);
+    setLoading(true); setError(null);
+    read(controller.signal).then(value => {
+      if (active) setSnapshot({ scope, data: value, stale: false });
+    }).catch(reason => {
+      if (!active || reason.name === "AbortError") return;
+      setError({ message: reason.message || "Unable to load data", status: reason.status });
+      if (reason.status === 401 || reason.status === 403) setSnapshot(null);
+      else setSnapshot(previous => previous?.scope === scope ? { ...previous, stale: true } : null);
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; controller.abort(); };
-  }, [...deps, retry]);
-  return { data, loading, error, refresh: () => setRetry(n => n + 1) };
+  }, [scope, retry, retainOnRefresh]);
+  const current = snapshot?.scope === scope ? snapshot : null;
+  return { data: current?.data ?? null, stale: current?.stale ?? false, loading, error, refresh: () => setRetry(n => n + 1) };
 }
+
 function ReadState({ loading, error, retry }: { loading: boolean; error: { message: string; status?: number } | null; retry: () => void }) {
   return <>{loading && <p role="status">Loading…</p>}{error && <div role="alert" className="workflow-feedback"><p>{error.status === 403 ? "Access denied (403). Return to your permitted Dashboard." : error.message}</p><button type="button" className="btn-secondary" onClick={retry}>Retry</button></div>}</>;
 }
@@ -31,7 +43,7 @@ function ActionList({ actions, navigate }: { actions: ActionPreview[]; navigate:
   return actions.length ? <ul className="dashboard-list">{actions.map(a => <li key={a.id}><Link to={`/staff/tickets/${a.ticketId}?actionId=${a.id}`} navigate={navigate}>{a.ticket.ticketNumber}: {a.description}</Link><p>Assigned to {a.assignee.name} · {label(a.status)}</p></li>)}</ul> : <p>No active Actions assigned to you.</p>;
 }
 export function Dashboard({ staff, navigate }: { staff: boolean; navigate: (path: string) => void }) {
-  const { data, loading, error, refresh } = useRead<RequesterDashboard | StaffDashboard>(signal => staff ? fetchStaffDashboard(signal) : fetchRequesterDashboard(signal), [staff]);
+  const { data, stale, loading, error, refresh } = useRead<RequesterDashboard | StaffDashboard>(signal => staff ? fetchStaffDashboard(signal) : fetchRequesterDashboard(signal), staff ? "staff" : "requester", true);
   const r = data as RequesterDashboard | null, s = data as StaffDashboard | null;
   const resolvedQuery = data ? new URLSearchParams({ resolvedFrom: data.windowStart, resolvedTo: data.asOf }).toString() : "";
   const cards: [string, number, string][] = !data ? [] : staff ? [
@@ -45,6 +57,7 @@ export function Dashboard({ staff, navigate }: { staff: boolean; navigate: (path
   ];
   return <section className="dashboard" aria-labelledby="dashboard-title"><div className="dashboard-heading"><h1 id="dashboard-title">{staff ? "Staff" : "Requester"} Dashboard</h1><button type="button" className="btn-secondary" onClick={refresh} disabled={loading}>Refresh Dashboard</button></div>
     <ReadState loading={loading} error={error} retry={refresh} />
+    {stale && <p role="status" className="workflow-feedback">Stale data — refresh failed. Showing the last successful update; retry to get current data.</p>}
     {data && <><p>As of {date(data.asOf)} (Asia/Bangkok). Recent window: {date(data.windowStart)} – {date(data.asOf)}.</p>
       {!staff && <p>Waiting for You means staff is waiting for your input. Your resolution indication remains advisory.</p>}
       {!staff && r!.recentlyResolvedIncludesEstimates && <p className="workflow-feedback">Recently Resolved includes estimated legacy resolution times.</p>}
@@ -63,7 +76,7 @@ export function MyActiveActions({ search, navigate }: { search: string; navigate
   return valid ? <ActiveActionsList key={search} page={page} navigate={navigate} /> : <section role="alert"><h1>Invalid action filters</h1><p>Use assignee=me and statusGroup=active with a positive page number.</p></section>;
 }
 function ActiveActionsList({ page, navigate }: { page: number; navigate: (path: string) => void }) {
-  const { data, loading, error, refresh } = useRead<MyActionsPage>(signal => fetchMyActions(page, signal), [page]);
+  const { data, loading, error, refresh } = useRead<MyActionsPage>(signal => fetchMyActions(page, signal), `actions:${page}`);
   const go = (p: number) => navigate(`/staff/actions?assignee=me&statusGroup=active&page=${p}`);
   return <section className="dashboard"><div className="dashboard-heading"><h1>My Active Actions</h1><button className="btn-secondary" type="button" onClick={refresh} disabled={loading}>Refresh Actions</button></div><ReadState loading={loading} error={error} retry={refresh} />{data && <><p>{data.pagination.totalItems} active Actions assigned to you on active Tickets.</p><ActionList actions={data.actions} navigate={navigate} /><div className="dashboard-heading"><button type="button" className="btn-secondary" onClick={() => go(page - 1)} disabled={page <= 1}>Previous page</button><span>Page {page} of {Math.max(1, data.pagination.totalPages)}</span><button type="button" className="btn-secondary" onClick={() => go(page + 1)} disabled={page >= data.pagination.totalPages}>Next page</button></div></>}</section>;
 }

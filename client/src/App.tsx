@@ -11,14 +11,14 @@ import { StaffTicketQueue } from "./components/StaffTicketQueue.js";
 import { StaffTicketDetail } from "./components/StaffTicketDetail.js";
 import { UserManagement } from "./components/UserManagement.js";
 import { Dashboard, MyActiveActions } from "./components/Dashboard.js";
-import { readTicketQuery, rememberTicketQuery } from "./utils/ticket-query.js";
+import { readTicketQuery, rememberTicketQuery, ticketListState, ticketListReturn } from "./utils/ticket-query.js";
 
 type TabType = "dashboard" | "my-tickets" | "create-ticket" | "ticket-queue" | "user-management";
 
 interface MainContentProps {
   pathname: string;
   search: string;
-  navigate: (path: string, replace?: boolean) => void;
+  navigate: (path: string, replace?: boolean, state?: unknown) => void;
 }
 
 const parsePositiveId = (val: string): number | null => {
@@ -139,8 +139,9 @@ const MainContent: React.FC<MainContentProps> = ({ pathname, search, navigate })
   const { session } = useAuth();
   const { selectedRequester } = useRequester();
 
-  const staffListQuery = React.useRef("");
-  const requesterListQuery = React.useRef("");
+  const savedReturn = session ? ticketListReturn(session.user) : null;
+  const staffListQuery = React.useRef(savedReturn?.startsWith("/staff/tickets?") ? savedReturn.slice("/staff/tickets".length) : "");
+  const requesterListQuery = React.useRef(savedReturn?.startsWith("/my-tickets?") ? savedReturn.slice("/my-tickets".length) : "");
   const role = session?.user.role;
   const getHomePath = () => {
     return role === "REQUESTER" ? "/dashboard" : "/staff/dashboard";
@@ -215,7 +216,7 @@ const MainContent: React.FC<MainContentProps> = ({ pathname, search, navigate })
         {/* 1. Staff Ticket Queue */}
         {pathname === "/staff/tickets" && (
           role === "IT_STAFF" || role === "ADMINISTRATOR" ? (
-            (() => { try { return <StaffTicketQueue key={search} initialParams={readTicketQuery(search, true)} onParamsChange={p => { rememberTicketQuery("/staff/tickets", p); staffListQuery.current = window.location.search; }} onOpenTicket={id => navigate(`/staff/tickets/${id}`)} />; }
+            (() => { try { return <StaffTicketQueue key={search} initialParams={readTicketQuery(search, true)} onParamsChange={p => { rememberTicketQuery("/staff/tickets", p); staffListQuery.current = window.location.search; }} onOpenTicket={id => navigate(`/staff/tickets/${id}`, false, ticketListState(session!.user))} />; }
               catch { return <div role="alert">Invalid Ticket filters. <button type="button" onClick={() => navigate("/staff/tickets", true)}>Clear filters</button></div>; } })()
           ) : (
             <ForbiddenView
@@ -238,7 +239,7 @@ const MainContent: React.FC<MainContentProps> = ({ pathname, search, navigate })
                 <StaffTicketDetail
                   ticketId={ticketId}
                   actor={session?.user}
-                  onBack={() => navigate("/staff/tickets" + staffListQuery.current)}
+                  onBack={() => navigate(ticketListReturn(session!.user) ?? "/staff/tickets" + staffListQuery.current)}
                 />
               );
             })()
@@ -265,7 +266,7 @@ const MainContent: React.FC<MainContentProps> = ({ pathname, search, navigate })
         {/* 4. Requester Tickets List */}
         {pathname === "/my-tickets" && (
           role === "REQUESTER" ? (
-            (() => { try { return <MyTicketsPage key={search} initialParams={readTicketQuery(search, false)} onParamsChange={p => { rememberTicketQuery("/my-tickets", p); requesterListQuery.current = window.location.search; }} onNavigateToCreate={() => navigate("/tickets/new")} onSelectTicket={id => navigate(`/tickets/${id}`)} />; }
+            (() => { try { return <MyTicketsPage key={search} initialParams={readTicketQuery(search, false)} onParamsChange={p => { rememberTicketQuery("/my-tickets", p); requesterListQuery.current = window.location.search; }} onNavigateToCreate={() => navigate("/tickets/new")} onSelectTicket={id => navigate(`/tickets/${id}`, false, ticketListState(session!.user))} />; }
               catch { return <div role="alert">Invalid Ticket filters. <button type="button" onClick={() => navigate("/my-tickets", true)}>Clear filters</button></div>; } })()
           ) : (
             <ForbiddenView
@@ -301,7 +302,7 @@ const MainContent: React.FC<MainContentProps> = ({ pathname, search, navigate })
               return (
                 <TicketDetailPage
                   ticketId={ticketId}
-                  onBack={() => navigate("/my-tickets" + requesterListQuery.current)}
+                  onBack={() => navigate(ticketListReturn(session!.user) ?? "/my-tickets" + requesterListQuery.current)}
                 />
               );
             })()
@@ -341,8 +342,9 @@ function SessionGate() {
   const [pathname, setPathname] = useState<string>(() => window.location.pathname || "/");
   const [search, setSearch] = useState(() => window.location.search);
   const acceptedLocation = React.useRef(window.location.pathname + window.location.search);
+  const acceptedState = React.useRef(window.history.state);
 
-  useEffect(() => { acceptedLocation.current = window.location.pathname + window.location.search; }, [pathname]);
+  useEffect(() => { acceptedLocation.current = window.location.pathname + window.location.search; acceptedState.current = window.history.state; }, [pathname]);
 
   const getHomePath = () => {
     return session?.user.role === "REQUESTER" ? "/dashboard" : "/staff/dashboard";
@@ -351,14 +353,15 @@ function SessionGate() {
   useEffect(() => {
     const onPopState = () => {
       if (!window.dispatchEvent(new Event("app:before-navigate", { cancelable: true }))) {
-        window.history.pushState(null, "", acceptedLocation.current);
+        window.history.pushState(acceptedState.current, "", acceptedLocation.current);
         return;
       }
       acceptedLocation.current = window.location.pathname + window.location.search;
+      acceptedState.current = window.history.state;
       setPathname(window.location.pathname || "/");
       setSearch(window.location.search);
     };
-    const rememberLocation = () => { acceptedLocation.current = window.location.pathname + window.location.search; };
+    const rememberLocation = () => { acceptedLocation.current = window.location.pathname + window.location.search; acceptedState.current = window.history.state; };
     window.addEventListener("popstate", onPopState);
     window.addEventListener("app:location-changed", rememberLocation);
     return () => { window.removeEventListener("popstate", onPopState); window.removeEventListener("app:location-changed", rememberLocation); };
@@ -390,16 +393,17 @@ function SessionGate() {
     }
   }, [loading, session, pathname]);
 
-  const navigate = (newPath: string, replace = false) => {
+  const navigate = (newPath: string, replace = false, state: unknown = null) => {
     if (newPath !== window.location.pathname + window.location.search && !window.dispatchEvent(new Event("app:before-navigate", { cancelable: true }))) return;
     if (replace) {
-      window.history.replaceState(null, "", newPath);
+      window.history.replaceState(state, "", newPath);
     } else {
-      window.history.pushState(null, "", newPath);
+      window.history.pushState(state, "", newPath);
     }
     setPathname(window.location.pathname);
     setSearch(window.location.search);
     acceptedLocation.current = window.location.pathname + window.location.search;
+    acceptedState.current = window.history.state;
   };
 
   if (loading) {

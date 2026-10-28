@@ -40,10 +40,55 @@ describe('Role dashboards',()=>{
   fireEvent.click(screen.getByRole('button',{name:'Retry'}));await screen.findByRole('link',{name:'Active Tickets 22'});expect(api.fetchRequesterDashboard).toHaveBeenCalledTimes(2);
   fireEvent.click(screen.getByRole('button',{name:'Refresh Dashboard'}));await waitFor(()=>expect(api.fetchRequesterDashboard).toHaveBeenCalledTimes(3));
  });
+ it.each([false,true])('retains the last successful metrics, previews, links and as-of after a failed refresh (staff=%s), then replaces them on retry',async isStaff=>{
+  const read=isStaff?vi.mocked(api.fetchStaffDashboard):vi.mocked(api.fetchRequesterDashboard);
+  render(<Dashboard staff={isStaff} navigate={vi.fn()}/>);
+  const card=isStaff?'My Active Tickets 7':'Active Tickets 22';
+  await screen.findByRole('link',{name:card});
+  const asOf=screen.getByText(/As of /).textContent;
+  const oldHref=screen.getByRole('link',{name:card}).getAttribute('href');
+  read.mockRejectedValueOnce(Object.assign(new Error('Refresh unavailable'),{status:503}));
+  fireEvent.click(screen.getByRole('button',{name:'Refresh Dashboard'}));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Refresh unavailable');
+  expect(screen.getByRole('link',{name:card})).toHaveAttribute('href',oldHref);
+  expect(screen.getByText(/As of /).textContent).toBe(asOf);
+  expect(screen.getByRole('link',{name:'TKT-11: Keyboard issue'})).toBeInTheDocument();
+  expect(screen.getByText(/Stale data/)).toBeInTheDocument();
+  const replacement=isStaff?{...staff,asOf:'2026-10-29T01:00:00.000Z',metrics:{...staff.metrics,myTickets:8}}:{...requester,asOf:'2026-10-29T01:00:00.000Z',metrics:{...requester.metrics,activeTickets:23}};
+  read.mockResolvedValueOnce(replacement as never);
+  fireEvent.click(screen.getByRole('button',{name:'Retry'}));
+  await screen.findByRole('link',{name:isStaff?'My Active Tickets 8':'Active Tickets 23'});
+  expect(screen.getByText(/As of /).textContent).not.toBe(asOf);
+  expect(screen.queryByText(/Stale data/)).not.toBeInTheDocument();
+ });
+ it('retains the original resolution window on network failure and while retrying',async()=>{
+  render(<Dashboard staff={false} navigate={vi.fn()}/>);await screen.findByRole('link',{name:'Active Tickets 22'});
+  const original=screen.getByRole('link',{name:'Recently Resolved (Last 7 Calendar Dates) 0'}).getAttribute('href');
+  vi.mocked(api.fetchRequesterDashboard).mockRejectedValueOnce(new TypeError('Network unavailable'));
+  fireEvent.click(screen.getByRole('button',{name:'Refresh Dashboard'}));await screen.findByRole('alert');
+  let finish!:(value:RequesterDashboard)=>void;vi.mocked(api.fetchRequesterDashboard).mockReturnValueOnce(new Promise(resolve=>{finish=resolve;}));
+  fireEvent.click(screen.getByRole('button',{name:'Retry'}));
+  expect(screen.getByText(/Stale data/)).toBeInTheDocument();
+  expect(screen.getByRole('link',{name:'Recently Resolved (Last 7 Calendar Dates) 0'})).toHaveAttribute('href',original);
+  await act(async()=>finish(requester));expect(screen.queryByText(/Stale data/)).not.toBeInTheDocument();
+ });
+ it('clears protected data and as-of after session failure rather than marking it stale',async()=>{
+  render(<Dashboard staff={false} navigate={vi.fn()}/>);await screen.findByRole('link',{name:'Active Tickets 22'});
+  vi.mocked(api.fetchRequesterDashboard).mockRejectedValueOnce(Object.assign(new Error('Session ended'),{status:401}));
+  fireEvent.click(screen.getByRole('button',{name:'Refresh Dashboard'}));await screen.findByRole('alert');
+  expect(screen.queryByRole('link')).not.toBeInTheDocument();expect(screen.queryByText(/As of /)).not.toBeInTheDocument();expect(screen.queryByText(/Stale data/)).not.toBeInTheDocument();
+ });
  it('discards an old response after role/read changes even if abort is ignored',async()=>{
   let finish!:(d:RequesterDashboard)=>void;vi.mocked(api.fetchRequesterDashboard).mockReturnValue(new Promise(r=>{finish=r;}));
   const view=render(<Dashboard staff={false} navigate={vi.fn()}/>);view.rerender(<Dashboard staff navigate={vi.fn()}/>);
   await screen.findByRole('link',{name:'My Active Tickets 7'});await act(async()=>finish(requester));expect(screen.queryByRole('link',{name:'Active Tickets 22'})).not.toBeInTheDocument();
+ });
+ it('never retains a successful snapshot across a changed role scope',async()=>{
+  const view=render(<Dashboard staff={false} navigate={vi.fn()}/>);await screen.findByRole('link',{name:'Active Tickets 22'});
+  vi.mocked(api.fetchStaffDashboard).mockRejectedValueOnce(new Error('Staff read failed'));
+  view.rerender(<Dashboard staff navigate={vi.fn()}/>);
+  expect(screen.queryByRole('link',{name:'Active Tickets 22'})).not.toBeInTheDocument();
+  await screen.findByRole('alert');expect(screen.queryByText(/As of /)).not.toBeInTheDocument();expect(screen.queryByText(/Stale data/)).not.toBeInTheDocument();
  });
  it('shows forbidden feedback and hides previous protected metrics on refresh failure',async()=>{
   render(<Dashboard staff navigate={vi.fn()}/>);await screen.findByRole('link',{name:'My Active Tickets 7'});

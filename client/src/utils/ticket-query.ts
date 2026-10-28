@@ -24,3 +24,26 @@ export function rememberTicketQuery(path: string, params: FetchStaffTicketsParam
     window.dispatchEvent(new Event("app:location-changed"));
   }
 }
+
+interface ListActor { id: number; role: string }
+interface TicketListContext { userId: number; role: string; returnTo: string }
+// Per-entry browser history state survives Detail reloads, without a global
+// last-list cache that could mix tabs, users or separate Detail entries.
+export function ticketListState(actor: ListActor) {
+  return { ticketListContext: { userId: actor.id, role: actor.role, returnTo: window.location.pathname + window.location.search } satisfies TicketListContext };
+}
+export function ticketListReturn(actor: ListActor, state: unknown = window.history.state): string | null {
+  if (!state || typeof state !== "object" || !("ticketListContext" in state)) return null;
+  const context = state.ticketListContext;
+  if (!context || typeof context !== "object") return null;
+  const value = context as TicketListContext;
+  if (value.userId !== actor.id || value.role !== actor.role || typeof value.returnTo !== "string") return null;
+  const path = actor.role === "REQUESTER" ? "/my-tickets" : "/staff/tickets";
+  const [pathname, search = ""] = value.returnTo.split("?");
+  if (pathname !== path || value.returnTo.includes("#") || value.returnTo.split("?").length > 2) return null;
+  try {
+    if (actor.role === "REQUESTER") readTicketQuery(search, false);
+    else readTicketQuery(search, true);
+    return value.returnTo;
+  } catch { return null; }
+}
