@@ -231,3 +231,14 @@ Tests ran on an uncommitted follow-up based on `5e13a36`, matched to implementat
 - Client `tsc --noEmit`, production build, documentation links and diff whitespace passed. No server code or dependencies changed.
 
 Five new regression cases were red before the fixes and green afterward. [Follow-up notes](dashboards.md) explain behavior, timing limits and fixture correction. The user subsequently authorized pushing the corrections to PR #57; reviewer approval remains pending.
+
+## 13. PR #57 Action-save history-state regression
+
+Tests ran on an uncommitted follow-up based on `741447c`, matched to implementation commit `414f3f18c62c2b1fc343758e151c6d4cea5f9bcb` before publication; [verification](../../artifacts/lab-04/verification/action-list-context.json) records the source fingerprint. Saving an Action updates its selected actionId while preserving the existing Detail history state.
+
+- Actual App/Actions integration: new filtered Staff page-2 -> Detail -> save -> simulated reload -> Back case verifies exact filters/page, selected actionId and unrelated history-entry data. The ActionsIntegration suite now has **4 passing tests**.
+- Controlled Chromium review suite: **5 passed, 0 failed/skipped/flaky**, including a new real Detail reload after Action creation and assertions against both restored list URL and request parameters.
+- Full parallel-file client run: **192 passed, 0 failed/skipped**. Client `tsc --noEmit`, production build and diff whitespace passed.
+- Red/green confirmed before/after in both integration and browser tests. Original bug replaced history state with null; the browser lost the owner/page filters on Back. No backend, database, dependencies or unrelated package.json changes were required.
+
+These are client/controlled-HTTP checks; prior real database/performance evidence remains historical. The user subsequently authorized pushing this correction to PR #57; reviewer approval remains pending.
