@@ -37,6 +37,32 @@ describe('Actions Taken wired into authenticated Ticket Detail', () => {
     await waitFor(() => expect(shared.fetchStaffTicketDetail).toHaveBeenCalledTimes(2));
     expect(await screen.findByText('Action saved.')).toBeInTheDocument();
   });
+  it('preserves page-2 Staff list context through an Action save, Detail reload and Back', async () => {
+    const query = '?owner=me&statusGroup=active&itPriority=HIGH&page=2&sort=updatedAt_desc';
+    window.history.replaceState(null, '', '/staff/tickets' + query);
+    vi.mocked(shared.fetchStaffTickets).mockResolvedValue({ tickets: [{ ...ticket, itPriority: "HIGH", owner: ticket.owner ?? null, version: ticket.version ?? 0, attachmentCount: 0, publicCommentCount: 0 }], pagination: { page: 2, limit: 10, totalItems: 12, totalPages: 2 } });
+    const saved = { ...action, id: 5, description: 'Inspect routing after entering from page 2' };
+    vi.mocked(api.createAction).mockResolvedValue({ action: saved, ticketVersion: 2 });
+    vi.mocked(api.fetchAction).mockResolvedValue({ action: saved, ticketVersion: 2 });
+    const view = render(<App />);
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Open ticket TKT-2026-000001' }))[0]);
+    await screen.findByText('Shared action information');
+    const entryState = { ...window.history.state, unrelatedEntryData: 'preserve this too' };
+    window.history.replaceState(entryState, '', window.location.href);
+    fireEvent.click(screen.getByRole('button', { name: 'New Action' }));
+    await screen.findByRole('option', { name: 'Alex Staff' });
+    fireEvent.change(screen.getByLabelText('Action Description'), { target: { value: saved.description } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save Action' }));
+    await screen.findByText('Action saved.');
+    expect(new URLSearchParams(window.location.search).get('actionId')).toBe('5');
+    expect(window.history.state).toEqual(entryState);
+    view.unmount(); vi.mocked(shared.fetchStaffTickets).mockClear(); render(<App />);
+    await screen.findByRole('article', { name: 'Action #5' });
+    fireEvent.click(screen.getByRole('button', { name: '← Back to Ticket Queue' }));
+    await waitFor(() => expect(shared.fetchStaffTickets).toHaveBeenCalledWith(expect.objectContaining({ owner: 'me', statusGroup: 'active', itPriority: 'HIGH', page: 2, sort: 'updatedAt_desc' })));
+    const restored = new URLSearchParams(window.location.search);
+    for (const [key, value] of new URLSearchParams(query)) expect(restored.get(key)).toBe(value);
+  });
   it('shows the shared action section read-only on the Requester route', async () => {
     window.history.replaceState(null, '', '/tickets/1'); vi.mocked(shared.getSession).mockResolvedValue({ user: requester, mustChangePassword: false });
     render(<App />); await screen.findByText('Shared action information');
