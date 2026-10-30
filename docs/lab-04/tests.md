@@ -1,6 +1,6 @@
 # Lab 4 Test Plan and Traceability - TokTickIT
 
-Status: PRs #57 and #58 are approved and merged into `lab4-staging`. Issue #52 regression/accessibility execution and its phase limits are recorded in Sections 14–15; earlier sections remain historical. Final-main/release execution remains Issue #53. The submission PDF is prepared last, after integration into `main` and final-main verification; it is outside this documentation PR.
+Status: release PR #60 merged into `main` at `51d0d7aeef13097376a9e3fd98bcaea670d8f191`. Main verification has executed; Section 16 records passing suites and the compiled-startup failure, followed by separately tested branch correction. Final all-pass status awaits the corrected merged-main SHA. Sections 8–15 remain historical evidence. PDF preparation follows final verification.
 
 ## 1. Strategy and evidence rules
 
@@ -216,7 +216,7 @@ Tests ran on uncommitted source on `feature/lab4-dashboards`, based on merged PR
 | Prior browser regression | 3 real workflow + 8 controlled-API Actions UI passed | Workflow/fixture configs kept separate; no earlier full-browser release claim |
 | Server/client typechecks and production builds | Passed | No source JS emission or new dependencies |
 
-This supplies local UNIT-03, API-15/16/17/18, UI-05/06/08, dashboard parts of UI-07 and E2E-03, and PERF-01 evidence within the recorded scenarios. Initial seed/test-mock setup failures and the list-return regression are described in dashboards.md; only successful reruns are counted above. Tests used a new disposable database in `toktickit-db`; development data remained untouched. Full earlier browser inventory, complete visual/accessibility audit and final-main verification remain pending under Issues #52/#53.
+This supplies local UNIT-03, API-15/16/17/18, UI-05/06/08, dashboard parts of UI-07 and E2E-03, and PERF-01 evidence within the recorded scenarios. Initial seed/test-mock setup failures and the list-return regression are described in dashboards.md; only successful reruns are counted above. Tests used a new disposable database in `toktickit-db`; development data remained untouched. At that execution stage, full earlier-browser inventory, the complete visual/accessibility audit, and main verification were deferred to Issues #52/#53. Sections 14–16 now record those later executions and the specific compiled-startup blocker.
 
 ## 12. PR #57 requested-change follow-up
 
@@ -271,7 +271,7 @@ The 38-case real-browser and full backend runs completed before approved test-da
 | AC-14; UI state tests | Full client error/conflict/draft/expiry suites, new real Action 500 recovery, controlled stale/403/401 and reload context regressions |
 | AC-15; STYLE-01, E2E-04, retained mobile regression | New rendered audit, 320/390/820/1440 widths, long names/content, named contained-table keyboard scrolling, dialog focus and 200% equivalent reflow; reduced-motion CSS separately verified |
 | AC-16; PERF-01 | Actual 10k/30k dataset, bounded payload/preview, 20 warm reads per role and EXPLAIN ANALYZE in regression-performance.json |
-| AC-17; RELEASE-01 | Still pending final-main/release/submission work in Issue #53 |
+| AC-17; RELEASE-01 | Deferred at this historical stage; Section 16 now records actual-main execution, its startup blocker, and the separately tested correction |
 
 Real failures led to input/header/password-rule contrast, control-label, bounded pagination/target and long-name/grid corrections. Test setup corrections cover Dashboard homes, sign-in completion, complete-work resolution prerequisites, deterministic last-admin fixtures and privacy assertions that inspect actual private content instead of public guidance wording. Root guards were exercised with missing opt-in, development DB and unsafe uploads and rejected all three before server startup. Eleven additional safety tests cover protocol/path/upload/symlink boundaries. Audited fixtures remain intact until whole-database teardown.
 
@@ -291,3 +291,20 @@ Feedback: [Kawi-HBLI review](https://github.com/Maibokdaimhai/TokTickIT/pull/58#
 Markers are exact case-insensitive tokens separated by `_` or `-` (or the full name). E2E, fixture and cleanup checks use one shared validator; uploads additionally require their own separated uploads token and preserve root/symlink restrictions.
 
 Review completion: [PR #58](https://github.com/Maibokdaimhai/TokTickIT/pull/58) was approved by Kawi-HBLI ([approval review](https://github.com/Maibokdaimhai/TokTickIT/pull/58#pullrequestreview-5685046992)) and merged into `lab4-staging`. These approvals do not change the source snapshots, test counts, or verification limits above.
+
+## 16. Actual-main verification and compiled-startup correction
+
+See [the full execution record](final-main-verification.md), [sanitized results](../../artifacts/lab-04/verification/final-main.json), [source manifests](../../artifacts/lab-04/verification/final-main-source-snapshots.json), [performance](../../artifacts/lab-04/verification/final-main-performance.json), and [rendered checks](../../artifacts/lab-04/verification/final-main-rendered-accessibility.json).
+
+| Phase | Executed result |
+| --- | --- |
+| Actual main `51d0d7a` backend / restore | 424 passed; 1 performance opt-in skipped; actual restore rehearsal passed |
+| Actual main separate performance | 1 passed; 10,000 Tickets / 30,000 Actions; p95 Requester/Staff/Admin 5.96/15.15/21.89 ms |
+| Actual main client / real browser / controlled browser | 195 / 38 / 14 passed, zero failures; browsers zero skips/flakes |
+| Actual main rendered checks | 65 successful scenarios; four widths and zoom-equivalent reflow |
+| Actual main types/builds | Both packages passed |
+| Actual main compiled startup | Failed: missing `dist/src/index.js`; actual emitted entry was `dist/server/src/index.js` |
+| Correction `30d436a` regression | 1 failed before fix, 1 passed after fix; health, login, protected Dashboard verified |
+| Correction complete backend / server types/build | 425 passed; 1 separately executed performance opt-in skipped; typecheck/build passed |
+
+RELEASE-01 has executed on main and found a blocker; AC-17 is not all-pass. The new `server/tests/lab-04/production-start.test.ts` is opt-in through `LAB4_PRODUCTION_SMOKE=1`, checks a clean build and actual `npm start`, and uses only an isolated migrated test schema. Correction results are not presented as merged-main results. The named main-test database/uploads were removed after explicit approval; development storage and container were preserved. Issue #53 remains open for the correction's reviewed integration, updated-main checks, and the later PDF.

@@ -1,6 +1,6 @@
 # Lab 4 UI Contract - TokTickIT
 
-Status: Lab 4 features and Issue #52 regression/safety corrections are approved and merged through PR #58 into `lab4-staging`. Rendered checks and corrections are recorded in [regression evidence](regression-and-evidence.md); final-main/release inspection remains pending. Reuse [Lab 2 tokens](../lab-02/ui-spec.md) and [Lab 3 conventions](../lab-03/ui-spec.md). Behavior and scope follow [specification.md](specification.md); exact filters and responses follow [api-spec.md](api-spec.md).
+Status: Lab 4 features and Issue #52 regression/safety corrections are approved and merged through PR #58 into `lab4-staging`. Rendered checks and corrections are recorded in [regression evidence](regression-and-evidence.md); the actual-main rendered/browser checks are recorded in [final-main verification](final-main-verification.md). The separate compiled-startup blocker awaits corrected-main verification. Reuse [Lab 2 tokens](../lab-02/ui-spec.md) and [Lab 3 conventions](../lab-03/ui-spec.md). Behavior and scope follow [specification.md](specification.md); exact filters and responses follow [api-spec.md](api-spec.md).
 
 ## 1. Shell, navigation, and routes
 
@@ -68,14 +68,14 @@ Test 320x900, 390x844, 820x1180, 1440x900. Cards use an auto-fit grid whose mini
 
 Semantic headings/landmarks, native labelled controls, explicit button types, visible keyboard focus, accessible loading/error/success announcements, text-only status cues, and logical tab order are required. Any existing confirmation modal must trap focus, support Escape where cancellation is allowed, label itself and return focus on close. Respect reduced motion. Focus must not disappear when a saved item changes layout.
 
-## 8. Evidence checklist (product-wide completion still pending)
+## 8. Evidence checklist (rendered checks executed; release startup blocked)
 
-- [x] Dashboard/role navigation, login home and deep links for all three roles (component tests and real Chromium feature scope; full release inspection pending).
+- [x] Dashboard/role navigation, login home and deep links for all three roles (component tests and real Chromium feature scope; actual-main rendered/browser inspection recorded in final-main-verification.md).
 - [x] Requester/Staff dashboards: accurate nonzero/zero data, loading, failure, forbidden and drill-down (SQL-oracle/API/component tests plus three real browser scenarios; tests.md Section 11).
-- [x] Actions: list, create, assign, edit, complete, cancel, record follow-up completion on completed work, public history and Requester read view (component/App checks and controlled-API Chromium coverage; selected real backend workflows now covered in Issue #50; full release E2E remains pending).
+- [x] Actions: list, create, assign, edit, complete, cancel, record follow-up completion on completed work, public history and Requester read view (component/App checks and controlled-API Chromium coverage; selected real backend workflows now covered in Issue #50; actual-main E2E execution is recorded in final-main-verification.md).
 - [x] Workflow: permitted/blocked/stale transitions, resolution gate and legacy case (Issue #50 API/component tests and three real-backend Chromium scenarios; see tests.md Section 10).
 - [x] Existing communication panels and new screens at four widths; direct bounds and contained table scrolling checked in Issue #52 local evidence.
 - [x] Long content/names, sampled keyboard flows/modal focus, accessible names, rendered contrast, 44px targets, reduced motion and 200% equivalent reflow checked locally; scope/limits in regression-and-evidence.md.
 - [x] Safe failure/draft retention and links exercised; no uncaught page errors in new Requester/Staff render journeys. Expected HTTP failures and final-main limits are recorded explicitly.
 
-Store new evidence under `artifacts/lab-04/screenshots/{staff-dashboard,requester-dashboard,actions-taken,ticket-workflow,regression}/`. Record tested commit, role, viewport, scenario, browser and result in tests.md. Actions, workflow and dashboard screenshots now exist for their documented local scope; final release regression captures remain pending.
+Store new evidence under `artifacts/lab-04/screenshots/{staff-dashboard,requester-dashboard,actions-taken,ticket-workflow,regression}/`. Record tested commit, role, viewport, scenario, browser and result in tests.md. Actions, workflow and dashboard screenshots now exist for their documented local scope; selected fresh actual-main captures are under `artifacts/lab-04/screenshots/final-main/`; the compiled-startup correction remains a separate release blocker.

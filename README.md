@@ -4,7 +4,7 @@ IT Service Desk application built with React, TypeScript, Vite, Express, Prisma,
 
 Lab 4 adds Actions Taken with revision history and follow-up completion, enforced Ticket resolution, public status history, and role-scoped dashboards with filtered drill-downs. Session-based ownership, Public Comments, private Internal Notes, attachments, and Administrator account safeguards from earlier labs remain in place.
 
-PRs [#45](https://github.com/Maibokdaimhai/TokTickIT/pull/45), [#46](https://github.com/Maibokdaimhai/TokTickIT/pull/46), [#54](https://github.com/Maibokdaimhai/TokTickIT/pull/54), [#55](https://github.com/Maibokdaimhai/TokTickIT/pull/55), [#56](https://github.com/Maibokdaimhai/TokTickIT/pull/56), [#57](https://github.com/Maibokdaimhai/TokTickIT/pull/57), and [#58](https://github.com/Maibokdaimhai/TokTickIT/pull/58) are reviewed and merged into `lab4-staging`. This documentation branch prepares [Issue #53](https://github.com/Maibokdaimhai/TokTickIT/issues/53); release integration and verification on the actual final `main` commit remain pending. The submission PDF is prepared last, after that verification.
+Lab 4 staging increments and documentation were integrated into `main` through [release PR #60](https://github.com/Maibokdaimhai/TokTickIT/pull/60). Verification on `51d0d7aeef13097376a9e3fd98bcaea670d8f191` has executed: suites/builds passed, but compiled API startup failed. This branch fixes the build layout and records separate correction results; see [final-main verification](docs/lab-04/final-main-verification.md). [Issue #53](https://github.com/Maibokdaimhai/TokTickIT/issues/53) remains open until the correction is merged and verified on the updated main SHA. The PDF follows that verification.
 
 ## Backend Structure
 
@@ -116,7 +116,7 @@ npm --prefix client run build
 npm --prefix server start
 ```
 
-The API start script uses `node dist/src/index.js`, matching the current TypeScript output. Supply the intended database and origin settings before startup. Serve `client/dist` through a frontend host with SPA fallback; `npm --prefix client run preview` is a local preview, not a production hosting configuration.
+The API start script uses `node dist/src/index.js`. The dedicated `server/tsconfig.build.json` pins this output layout and excludes tests from the production build; the general config still typechecks tests. Supply the intended database and origin settings before startup. Serve `client/dist` through a frontend host with SPA fallback; `npm --prefix client run preview` is a local preview, not a production hosting configuration.
 
 ## Testing Safely
 
@@ -149,11 +149,12 @@ npm --prefix server run build
 npm --prefix client run build
 ```
 
-Migration tests additionally create and remove their own random schemas. To include the actual restore rehearsal, set `LAB4_RECOVERY_CONTAINER=toktickit-db` for the backend test process; Docker access and a matching database/user inside that container are required. Without that setting, the restore case is skipped. Performance is separately opt-in:
+Migration tests additionally create and remove their own random schemas. To include the actual restore rehearsal, set `LAB4_RECOVERY_CONTAINER=toktickit-db` for the backend test process; Docker access and a matching database/user inside that container are required. Without that setting, the restore case is skipped. Performance and compiled-start verification are separately opt-in:
 
 ```sh
 LAB4_RECOVERY_CONTAINER=toktickit-db npm --prefix server test -- --run tests/lab-04/migration-regression.test.ts
 LAB4_DASHBOARD_PERF=1 npm --prefix server test -- --run tests/lab-04/dashboard-performance.test.ts
+LAB4_PRODUCTION_SMOKE=1 npm --prefix server test -- --run tests/lab-04/production-start.test.ts
 ```
 
 ### Browser Checks
@@ -185,7 +186,7 @@ Screenshots default to the regression evidence directories. To preserve committe
 
 The [test record](docs/lab-04/tests.md), [regression runbook](docs/lab-04/regression-and-evidence.md), and [sanitized verification artifacts](artifacts/lab-04/verification/) identify the actual tested snapshots. Recorded regression results include 384 backend tests, 195 client tests, 38 real-browser cases, 14 controlled-browser cases, and 65 rendered scenarios. Performance was separately measured with 10,000 Tickets/30,000 Actions. A later PR #58 guard correction passed 56 focused tests without database operations.
 
-These are historical executions, not a fresh final-main run. The final motion-only follow-up was checked with client/controlled-browser suites after test-DB cleanup; the full database/browser suites were not rerun for that change. PR #58's guard-only checks likewise do not replace a complete release run. Preserve those phase limits when reporting results.
+The preceding counts describe historical staging executions. A new [actual-main run](docs/lab-04/final-main-verification.md) records 424 backend, 195 client, 38 real-browser, 14 controlled-browser, 65 rendered scenarios, and separately passed performance/restore checks; compiled startup failed. The correction separately passes 425 backend tests including compiled startup. It awaits verification on the updated merged-main SHA. Historical phase limits follow: The final motion-only follow-up was checked with client/controlled-browser suites after test-DB cleanup; the full database/browser suites were not rerun for that change. PR #58's guard-only checks likewise do not replace a complete release run. Preserve those phase limits when reporting results.
 
 ## Demo Walkthrough
 
@@ -206,7 +207,7 @@ Stop writes and retain the failed/post-migration database for investigation. Res
 
 - [Engineering specification and DoD](docs/lab-04/specification.md)
 - [API contract](docs/lab-04/api-spec.md) and [UI contract](docs/lab-04/ui-spec.md)
-- [Tests and traceability](docs/lab-04/tests.md)
+- [Tests and traceability](docs/lab-04/tests.md) and [actual-main results/correction](docs/lab-04/final-main-verification.md)
 - [Peer-review record](docs/lab-04/reviewer.md) and [AI-use/reflection](docs/lab-04/ai-use.md)
 
-Current sequence: finish and review this documentation PR into `lab4-staging`, review the release into `main`, record the actual final-main SHA and execute the required release checks, then prepare the nine-part submission PDF last. This documentation update does not claim a completed final-main release.
+Current sequence: review/merge the compiled-startup correction into `main`, record and verify the updated main SHA, complete the remaining DoD/Issue #53 status, then prepare the nine-part submission PDF last. The previous release integration and main test execution are complete; a fully passing updated main release is not yet claimed.

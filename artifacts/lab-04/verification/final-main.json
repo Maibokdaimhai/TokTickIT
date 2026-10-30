@@ -1,0 +1,111 @@
+{
+  "dateLocal": "2026-10-31",
+  "timeZone": "Asia/Bangkok",
+  "releasePR": "https://github.com/Maibokdaimhai/TokTickIT/pull/60",
+  "releaseApproval": "https://github.com/Maibokdaimhai/TokTickIT/pull/60#pullrequestreview-5715785065",
+  "main": {
+    "commit": "51d0d7aeef13097376a9e3fd98bcaea670d8f191",
+    "sourceFingerprintSha256": "78a6736ab589c13cfdab2b6e6d2679ba8000c4e61e2866a82306d0a667b4e26f",
+    "backend": {
+      "passed": 424,
+      "failed": 0,
+      "skipped": 1,
+      "total": 425
+    },
+    "client": {
+      "passed": 195,
+      "failed": 0,
+      "skipped": 0,
+      "total": 195
+    },
+    "performanceOptIn": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "total": 1
+    },
+    "realBrowsers": {
+      "expected": 38,
+      "unexpected": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "duration": 72797.543
+    },
+    "controlledBrowsers": {
+      "expected": 14,
+      "unexpected": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "duration": 7285.211
+    },
+    "serverTypecheck": "passed",
+    "serverBuild": "passed (emits the wrong startup path)",
+    "clientTypecheck": "passed",
+    "clientBuild": "passed",
+    "migrationBootstrapBaselineSeedLab4Seed": "passed",
+    "restoreRehearsal": "passed within full backend run",
+    "renderedScenarios": 65,
+    "compiledStartup": {
+      "result": "failed",
+      "exitCode": 1,
+      "reason": "npm start expects dist/src/index.js but the main build emits dist/server/src/index.js",
+      "failureCode": "MODULE_NOT_FOUND"
+    },
+    "overallReleaseResult": "blocked by compiled-startup defect; not all-pass"
+  },
+  "correction": {
+    "implementationCommit": "30d436a489c4abfa449aafb5a5e56c9fec8e35e2",
+    "sourceFingerprintSha256": "8732abbb2e711800048b19a14f5fb0f80f5a1049bce93076ab5fe8207f6c7cde",
+    "changes": [
+      "Dedicated tsconfig.build.json pins rootDir and compiles application/Prisma sources only",
+      "Build script selects the production config while the base config continues to typecheck tests",
+      "Opt-in production startup regression builds from empty dist, starts npm start, checks health, logs in and reads a protected dashboard in an isolated migrated schema"
+    ],
+    "regressionBeforeFix": {
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "total": 1
+    },
+    "testHarnessCorrection": "The first post-fix attempt exposed a process-cleanup signal-state race in the new test; corrected before the successful rerun. This was not counted as passing.",
+    "regressionAfterFix": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "total": 1
+    },
+    "completeBackendWithProductionSmoke": {
+      "passed": 425,
+      "failed": 0,
+      "skipped": 1,
+      "total": 426
+    },
+    "serverTypecheck": "passed",
+    "serverBuild": "passed",
+    "compiledEntry": "dist/src/index.js",
+    "limits": "Correction verified on this branch, not yet on a merged main SHA. Client/browser/performance main results are not relabelled as reruns after the build-only correction. NODE_ENV=test permits local HTTP smoke testing; no production deployment or HTTPS claim."
+  },
+  "environment": {
+    "database": "toktickit_lab4_main_test_20261031_53",
+    "container": "toktickit-db",
+    "postgres": "16.14",
+    "node": "22.17.1",
+    "dependencies": "Existing installed dependency directories reused via untracked worktree symlinks; no npm ci/fresh installation was claimed. The unrelated dirty client manifest in the original checkout was excluded.",
+    "runtimeConfig": "Explicit process environment; no development .env edited",
+    "ports": "Root real-browser runner 3104/5174; controlled runner 5178; production smoke allocates an available loopback port"
+  },
+  "cleanup": {
+    "explicitUserApproval": true,
+    "testDatabaseDropped": true,
+    "temporaryUploadsRemoved": true,
+    "developmentDatabasePresent": true,
+    "projectContainerRunning": true
+  },
+  "remaining": [
+    "Merge and review the production build correction",
+    "Verify compiled startup and required regression checks on the actual updated main SHA before marking release all-pass",
+    "Keep Issue #53 open until post-merge work and final submission are complete",
+    "Prepare the submission PDF last"
+  ],
+  "fingerprintMethod": "SHA256 of sorted path + NUL + file bytes + NUL; all tracked paths except docs/, artifacts/, and README.md; separate manifests stored in final-main-source-snapshots.json"
+}
