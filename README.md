@@ -65,7 +65,7 @@ Review `server/.env` locally. Its example points to the development database `to
 | `UPLOADS_DIR` | Optional attachment root; database-backed browser tests require their own guarded temporary directory. |
 | `VITE_API_URL` | Optional frontend API URL; needed when using a different API port. |
 
-The API loads `server/.env`; exported variables take precedence. Use `localhost` consistently for the browser/API pair. Mutations require the exact configured Origin and the session's CSRF token. Session cookies are HttpOnly/SameSite=Lax; production requires HTTPS for Secure cookies. Keep credentials, session data, backups, and raw failure traces out of submitted evidence.
+The API loads `server/.env`; exported variables take precedence. Use `localhost` consistently for the browser/API pair. Authenticated mutations use the session cookie and require an Origin header matching the configured `CLIENT_ORIGIN`; the implementation does not use a separate CSRF token. Session cookies are HttpOnly/SameSite=Lax; production requires HTTPS for Secure cookies. Keep credentials, session data, backups, and raw failure traces out of submitted evidence.
 
 ### Migration and Seed
 
