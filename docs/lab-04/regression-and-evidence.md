@@ -1,6 +1,6 @@
 # Issue #52 regression, accessibility and evidence
 
-Implemented locally on `test/lab4-regression-and-evidence`, based on staging `5d13a769f8444ae7757074f26b450a686e3f6393` after PR #57 merged. Implementation commit `003787cc964dec10b74991de1f7b724dd96ab227`; the user subsequently authorized pushing and PR creation. Reviewer approval remains pending. [Sanitized verification](../../artifacts/lab-04/verification/regression.json) records results, source fingerprints and verification phases. Final-main/release evidence remains Issue #53.
+Implemented locally on `test/lab4-regression-and-evidence`, based on staging `5d13a769f8444ae7757074f26b450a686e3f6393` after PR #57 merged. Implementation commit `003787cc964dec10b74991de1f7b724dd96ab227`; the user subsequently authorized pushing and PR creation. [PR #58](https://github.com/Maibokdaimhai/TokTickIT/pull/58) was approved by Kawi-HBLI ([approval review](https://github.com/Maibokdaimhai/TokTickIT/pull/58#pullrequestreview-5685046992)) and merged into `lab4-staging`. [Sanitized verification](../../artifacts/lab-04/verification/regression.json) records results, source fingerprints and verification phases. Final-main/release evidence remains Issue #53.
 
 ## Results and scope
 
@@ -94,7 +94,7 @@ npm run test:e2e:fixtures -- --list
 npm run test:e2e:fixtures
 ```
 
-Use LAB4_RECOVERY_CONTAINER=toktickit-db for the recovery test, E2E_INITIAL_PASSWORD/E2E_CHANGED_PASSWORD for browser accounts, E2E_AUDIT_OUTPUT for a local JSONL audit and LAB4_PERF_OUTPUT for local performance output. Sanitize results before committing; raw configs/traces can contain operational data. Final-main, release approval, README/submission and the student's personal reflection remain Issue #53.
+Use LAB4_RECOVERY_CONTAINER=toktickit-db for the recovery test, E2E_INITIAL_PASSWORD/E2E_CHANGED_PASSWORD for browser accounts, E2E_AUDIT_OUTPUT for a local JSONL audit and LAB4_PERF_OUTPUT for local performance output. Sanitize results before committing; raw configs/traces can contain operational data. README and final-main/release verification remain Issue #53. The AI-use/reflection and peer-review records are maintained in [ai-use.md](ai-use.md) and [reviewer.md](reviewer.md). The submission PDF follows integration into `main` and final-main verification as the last submission step, outside this documentation PR.
 
 ## PR #58 safety review correction
 
@@ -104,4 +104,4 @@ E2E configuration, Lab 4 fixture provisioning and audit-fixture cleanup now shar
 
 [Review verification](../../artifacts/lab-04/verification/pr58-safety-review.json): **56 focused tests passed**, zero failed/skipped, after **24 regression failures** before the fix. Negative cleanup tests prove no read/delete method is invoked on unsafe names. Four unsafe root-config invocations were rejected before server startup, an explicit tokenized target still discovered 38 real-browser cases, and the legacy migration rehearsal rejected the unsafe name during collection before client construction. Server typecheck/build passed. These checks required no database; no database was created, contacted for test operations or modified. Earlier full DB/browser/performance results remain historical rather than being counted as rerun for this correction.
 
-Safety correction implementation commit: `bb6665c648b431bb2974c76d157f5211406704cb`; focused evidence matches that source. The existing PR #58 is updated for re-review; no new PR or review approval is inferred.
+Safety correction implementation commit: `bb6665c648b431bb2974c76d157f5211406704cb`; focused evidence matches that source. [PR #58](https://github.com/Maibokdaimhai/TokTickIT/pull/58) was approved by Kawi-HBLI ([approval review](https://github.com/Maibokdaimhai/TokTickIT/pull/58#pullrequestreview-5685046992)) and merged into `lab4-staging`. The original requested changes and complete approval text are preserved in [reviewer.md](reviewer.md).

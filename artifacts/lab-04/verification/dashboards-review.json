@@ -97,7 +97,7 @@
     "artifacts/lab-04/screenshots/dashboard-review/staff-stale-390.png"
   ],
   "limits": [
-    "Tests ran on the uncommitted source snapshot, matched to implementation commit 06aa3e035edef33ea19331449dc82996ef1a52a9 before publication; reviewer approval remains pending.",
+    "Tests ran on the uncommitted source snapshot, matched to implementation commit 06aa3e035edef33ea19331449dc82996ef1a52a9 before publication; PR #57 subsequently received approval from Kawi-HBLI and merged into lab4-staging (https://github.com/Maibokdaimhai/TokTickIT/pull/57#pullrequestreview-5682875135). Test results still describe the original recorded source snapshot.",
     "Browser checks use controlled HTTP fixtures, not a database. No database or backend code changed; backend/performance results in dashboards.json are prior execution.",
     "Ten routing repetitions reduce timing uncertainty but do not prove absence of all possible flakes.",
     "Existing unrelated client/package.json edit preserved and excluded."

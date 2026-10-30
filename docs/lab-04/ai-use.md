@@ -1,45 +1,28 @@
-# Lab 4 AI Use and Reflection - TokTickIT
+# Lab 4 — AI Use and Reflection
 
-Status: Initial factual record, 27 October 2026. Tool used: OpenAI Codex. Do not infer a specific model from generated text; record the configured model from the actual session if needed for submission.
+**AI Model Used:** GPT-6.1 Sol (Medium)
 
-## Selected actual prompts
+---
 
-| # | Actual user prompt | Context / outcome |
-|---|---|---|
-| 1 | "After you create `lab4-staging` from `main` you can create `feature/lab4-lab3-tech-debt` to fix it." | Established staging and the first technical-debt feature branch for the deferred mobile communication fix. |
-| 2 | "can you add and commit and push about this PR? And use convention commit syntax like before in lab3." | Authorized the earlier technical-debt commit/push using conventional commit syntax. This is historical authorization for that earlier task, not permission to push this draft. |
-| 3 | "It already merge so you can do spec and tests. Don't push anything" | Authorized the original local engineering-contract and test-plan drafting after the tech-debt merge, with no push at that stage. |
-| 4 | "Ok create Lab 4 Issues now and don't forget about specification-and-tests Issue too. You can edit PR#46 Description to close issue" | Authorized creating the sprint backlog and linking the specification Issue to the PR. |
-| 5 | "Fix this request change and push it again" | Requested correction of PR #46 review feedback; the resulting BR-23 defines an audited path to complete outstanding follow-up. |
-| 6 | "PR46 Already merge so you can do next feature branch" | Started the next feature, Issue #48 Actions foundation, locally from merged staging. |
-| 7 | "PR54 Already merge so you can do next feature" | Started Issue #49 Actions UI locally from merged staging; authenticated views, draft/conflict recovery, component and controlled-API browser checks were implemented. |
+## 1. Selected Key Prompts Table
 
-| 8 | "PR55 already merge do next task" | Started Issue #50 Ticket workflow locally from merged staging; resolution gates, public transition history, timestamp metadata and tests implemented. No commit/push at this stage. |
+| Prompt # | Topic / Intent | Prompt Excerpt | Outcome / Applied Value |
+| :-: | :--- | :--- | :--- |
+| **1** | **Lab 4 Requirements** | *"Can you inspect lab4 worksheet and explain to me what to do"* | Organized the sprint scope into specification and test planning, Actions Taken, Ticket workflow, dashboards, regression checks, and final evidence. |
+| **2** | **Actions Taken Design and Implementation** | *"How action taken work? And how to implement it explain your code"* | Connected the Actions API and UI to lifecycle rules, validation, immutable revision history, Requester read-only access, and retry/conflict recovery. |
+| **3** | **Dashboard Components** | *"List neccesary component in dashboard page"* | Identified role-specific metric cards, recent or actionable Ticket lists, loading/error/empty states, as-of information, refresh controls, and filtered drill-down links. |
+| **4** | **Follow-up and Ticket Resolution** | *"How does follow-up work Why should it block Ticket resolution"* | Relevant implementation: the resolution gate checks outstanding follow-up; a dedicated completion operation records who completed it and when while preserving the original work and revisions. |
+| **5** | **Assignee and Performer Identity** | *"What is the difference between the Action assignee and the person who performed the work"* | Relevant implementation: assignment represents responsibility, while performer and revision actor fields preserve who did or recorded the work. Dashboard counts must use the intended identity. |
+| **6** | **Concurrent Updates** | *"how do you prevent conflicts when two staff members update the same ticket"* | Relevant implementation: transactions, consistent lock ordering, version checks, and conflict responses protect shared state. The UI preserves drafts for review before retrying. |
+| **7** | **Dashboard Metrics and Authorization** | *"how do dashboard metrics work and how make sure each role sees only allowed data"* | Relevant implementation: server-side role and ownership checks scope aggregate queries and drill-down results. Tests compare metric calculations with expected data and verify access boundaries. |
+| **8** | **Filters and Navigation State** | *"why do filters and pagination disappear after reloading ticket detail and explain to me how to preserve them."* | Relevant review correction: scoped list context is retained in browser history across Detail reloads, and Action-save URL updates preserve that state. Regression tests cover save → reload → Back. |
+| **9** | **Safe Integration Testing** | *"how can I test Lab 4 without affecting my development database"* | Relevant verification approach: named disposable databases in the project container, separated safety tokens, guarded upload paths, and explicit authorization for destructive cleanup preserve development data. |
+| **10** | **Regression and Completion Evidence** | *"what should we test before finishing Lab 4 and how do we check that Lab 3 still works"* | Relevant evidence: backend, client, real API/database browser, controlled browser, responsive/accessibility, and performance checks are recorded separately. Final-main verification remains pending under Issue #53. |
 
-| 9 | "56 merge เข้า staging แล้วมั้ง น่าจะทำอันต่อไปได้" | Verified PR #56 merge and started Issue #51 locally on feature/lab4-dashboards: aggregate APIs, exact drill-downs, role home/navigation, SQL-oracle/component/real browser and performance verification. No publication at this stage. |
+---
 
-| 10 | "Request changes." | User review identified stale refresh retention, Detail-reload list context loss and possible routing-test timing sensitivity. Added failing regressions, local fixes, parallel/serial and browser verification; no publication authorized in this follow-up. |
+## 2. My Reflection
 
-The worksheet asks for 6-10 selected key prompts; ten genuine excerpts are recorded here. Append or select later prompts as the sprint proceeds. Do not reconstruct prompts or count planned tests as actual implementation results.
+During Lab 4, I learned how specification-driven development connects the Actions lifecycle, follow-up completion, Ticket resolution, and role-based dashboards. Working through separate Issues and reviewed PRs helped me understand how each feature depends on the previous one. Peer feedback also showed me why tests need to cover complete user journeys, including failed refreshes, saving an Action, reloading Detail, and returning to a filtered list.
 
-## Specification and coding use
-
-In this drafting task Codex inspected the merged base, existing schema/routes/policies and earlier contracts, then proposed explicit choices for ambiguous Action statuses, assignment, audit history, resolution and dashboards. That original drafting task did not implement new feature code. After PR #46 merged, the Issue #48 task implemented Actions APIs/schema/seeds and 48 new backend tests; full backend verification passed 317 tests on a dedicated disposable PostgreSQL instance, including restore recovery. The verified implementation was committed as 0432b19; publication and PR creation were subsequently authorized by the user. No independent code-review approval is claimed.
-
-## My Reflection
-
-Pending the student's own reflection. Explain what you learned from the specification and coding work, which assumptions you challenged, how you checked generated claims, and what you would change next time. Do not submit AI-written first-person learning claims as if the student had supplied them.
-
-Issue #51 publication was subsequently authorized by the actual prompt: "push `feature/lab4-dashboards` และเปิด PR ได้เลย". The implementation and verification evidence are committed separately using Conventional Commits; reviewer approval remains pending.
-
-PR #57 correction publication was subsequently authorized by the actual prompt: "push it because it request change from PR. Give me the comment to reply him too". The reply text is provided to the user for posting; no reviewer comment is posted automatically.
-
-## Issue #52 regression execution
-
-Actual continuation prompt: "PR57 merge แล้ว ทำอันต่อไปได้". Codex verified the merged PR and opened the local regression/evidence branch. It inventoried earlier tests, preserved the archived Lab 2 requirements through authenticated replacements, ran real/controlled browser and database regressions, and fixed measured contrast, labels, long-name/grid bounds, pagination/touch targets and reduced-motion issues. Failures and test-setup corrections are recorded in regression-and-evidence.md; no passing results were substituted for failed attempts.
-
-The user explicitly approved deleting the named disposable Issue #52 database and its temporary uploads after testing. Publication was initially withheld pending the user's instruction. Final motion verification used only controlled browser fixtures after that cleanup; the phase difference is recorded. The student's own reflection remains pending.
-
-Issue #52 publication was subsequently authorized by the actual prompt: "push และเปิด PR เลย". The implementation/tests and documentation/evidence are committed separately using Conventional Commits; approval is not inferred from publication.
-
-PR #58 review follow-up: the user supplied the PR link and "Request change". Codex read Kawi-HBLI's actual review, reproduced 24 substring-guard failures, centralized separated-token checks and verified 56 tests plus startup/collection rejection before DB access. Correction and evidence commits update the existing PR; no new PR or reviewer comment is posted automatically. No database was required for this correction.
+I gained a better understanding of frontend state preservation, role-based data access, and safe integration testing with disposable databases. AI helped speed up implementation, debugging, and test preparation, but I still needed to check the environment, review the changes, and verify results against actual evidence. The main lesson was to use AI as a development assistant while keeping responsibility for correctness, safety, and the final submission.

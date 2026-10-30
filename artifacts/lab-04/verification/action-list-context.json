@@ -30,7 +30,7 @@
     "Chromium save -> Detail reload -> Back failed because the restored list request lost owner=me and other page-2 filters."
   ],
   "limits": [
-    "Tests ran on the uncommitted source snapshot, matched to implementation commit 414f3f18c62c2b1fc343758e151c6d4cea5f9bcb before publication; reviewer approval remains pending.",
+    "Tests ran on the uncommitted source snapshot, matched to implementation commit 414f3f18c62c2b1fc343758e151c6d4cea5f9bcb before publication; PR #57 subsequently received approval from Kawi-HBLI and merged into lab4-staging (https://github.com/Maibokdaimhai/TokTickIT/pull/57#pullrequestreview-5682875135). Test results still describe the original recorded source snapshot.",
     "Controlled HTTP fixtures only; no database or server code changed.",
     "Unrelated client/package.json edit preserved and excluded."
   ],

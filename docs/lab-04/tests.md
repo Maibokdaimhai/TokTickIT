@@ -1,6 +1,6 @@
 # Lab 4 Test Plan and Traceability - TokTickIT
 
-Status: Issue #52 local regression/accessibility execution completed on 28 October 2026, based on merged staging `5d13a76`. Section 14 records current results and phase limits; earlier sections remain historical. Final-main/release execution remains Issue #53.
+Status: PRs #57 and #58 are approved and merged into `lab4-staging`. Issue #52 regression/accessibility execution and its phase limits are recorded in Sections 14–15; earlier sections remain historical. Final-main/release execution remains Issue #53. The submission PDF is prepared last, after integration into `main` and final-main verification; it is outside this documentation PR.
 
 ## 1. Strategy and evidence rules
 
@@ -52,7 +52,7 @@ TDD: add a meaningful failing test for the current Issue, record its failure and
 | E2E-04 | Browser/style/a11y | FR-10 | AC-15 | Four widths, long content and 200% zoom: panel/control bounds, target sizes, no clipping/overlap; keyboard/labels/focus/reduced motion/console | e2e/lab-04/responsive-accessibility.spec.ts |
 | REG-01 | API/UI/E2E | FR-09/10; BR-22 | AC-13, AC-15 | Run all earlier suites; verify auth, My Tickets, detail, attachments/rollback, public/private communication, queue, admin safeguards; retain mobile communication regression | e2e/lab-04/earlier-labs-regression.spec.ts plus existing Labs 1-3 suites |
 | PERF-01 | API/DB smoke | FR-07/08; BR-21 | AC-16 | Bounded dashboard previews and warm request latency with indexed representative fixture; log dataset/hardware/query plans, no secrets | server/tests/lab-04/dashboard-performance.test.ts |
-| RELEASE-01 | Release/manual | FR-11 | AC-17 | Capture all suite/build output from actual final-main SHA, traceability, review/README/Issue evidence and nine-part report links | docs/lab-04/tests.md evidence ledger (manual release check) |
+| RELEASE-01 | Release/manual | FR-11 | AC-17 | Capture all suite/build output from actual final-main SHA, traceability and review/README/Issue evidence; prepare nine-part report links afterward, following main integration and final verification | docs/lab-04/tests.md evidence ledger (manual release check) |
 
 ## 3. Acceptance-criterion coverage index
 
@@ -230,7 +230,7 @@ Tests ran on an uncommitted follow-up based on `5e13a36`, matched to implementat
 - `e2e/lab-04/dashboard-review.spec.ts` with `playwright.dashboard-review.config.ts`: **4 passed, 0 failed/skipped/flaky**, using controlled HTTP fixtures and actual Detail components plus real browser reload, stale refresh/retry, 401 and 403. This creates no database and does not claim DB-backed verification.
 - Client `tsc --noEmit`, production build, documentation links and diff whitespace passed. No server code or dependencies changed.
 
-Five new regression cases were red before the fixes and green afterward. [Follow-up notes](dashboards.md) explain behavior, timing limits and fixture correction. The user subsequently authorized pushing the corrections to PR #57; reviewer approval remains pending.
+Five new regression cases were red before the fixes and green afterward. [Follow-up notes](dashboards.md) explain behavior, timing limits and fixture correction. The user subsequently authorized pushing the corrections to PR #57; [PR #57](https://github.com/Maibokdaimhai/TokTickIT/pull/57) was approved by Kawi-HBLI ([approval review](https://github.com/Maibokdaimhai/TokTickIT/pull/57#pullrequestreview-5682875135)) and merged into `lab4-staging`.
 
 ## 13. PR #57 Action-save history-state regression
 
@@ -241,7 +241,7 @@ Tests ran on an uncommitted follow-up based on `741447c`, matched to implementat
 - Full parallel-file client run: **192 passed, 0 failed/skipped**. Client `tsc --noEmit`, production build and diff whitespace passed.
 - Red/green confirmed before/after in both integration and browser tests. Original bug replaced history state with null; the browser lost the owner/page filters on Back. No backend, database, dependencies or unrelated package.json changes were required.
 
-These are client/controlled-HTTP checks; prior real database/performance evidence remains historical. The user subsequently authorized pushing this correction to PR #57; reviewer approval remains pending.
+These are client/controlled-HTTP checks; prior real database/performance evidence remains historical. The user subsequently authorized pushing this correction to PR #57; [PR #57](https://github.com/Maibokdaimhai/TokTickIT/pull/57) was approved by Kawi-HBLI ([approval review](https://github.com/Maibokdaimhai/TokTickIT/pull/57#pullrequestreview-5682875135)) and merged into `lab4-staging`.
 
 ## 14. Issue #52 regression, accessibility and evidence
 
@@ -275,7 +275,7 @@ The 38-case real-browser and full backend runs completed before approved test-da
 
 Real failures led to input/header/password-rule contrast, control-label, bounded pagination/target and long-name/grid corrections. Test setup corrections cover Dashboard homes, sign-in completion, complete-work resolution prerequisites, deterministic last-admin fixtures and privacy assertions that inspect actual private content instead of public guidance wording. Root guards were exercised with missing opt-in, development DB and unsafe uploads and rejected all three before server startup. Eleven additional safety tests cover protocol/path/upload/symlink boundaries. Audited fixtures remain intact until whole-database teardown.
 
-The user authorized deletion of `toktickit_lab4_regression_test_20261028_52` and its dedicated temporary uploads after verification. Both were removed; development `toktickit` and container remain intact. No new migration/dependency was needed. The user subsequently authorized pushing and PR creation; reviewer approval remains pending. Rendered checks are scoped automation/visual sample review, not formal accessibility certification or native toolbar zoom. Earlier evidence and review records remain historical.
+The user authorized deletion of `toktickit_lab4_regression_test_20261028_52` and its dedicated temporary uploads after verification. Both were removed; development `toktickit` and container remain intact. No new migration/dependency was needed. The user subsequently authorized pushing and PR creation; [PR #58](https://github.com/Maibokdaimhai/TokTickIT/pull/58) was approved by Kawi-HBLI ([approval review](https://github.com/Maibokdaimhai/TokTickIT/pull/58#pullrequestreview-5685046992)) and merged into `lab4-staging`. Rendered checks are scoped automation/visual sample review, not formal accessibility certification or native toolbar zoom. Earlier evidence and review records remain historical.
 
 ## 15. PR #58 separated-token safety correction
 
@@ -289,3 +289,5 @@ Feedback: [Kawi-HBLI review](https://github.com/Maibokdaimhai/TokTickIT/pull/58#
 - Server `tsc --noEmit`, production build and diff whitespace passed. No database was needed, created or modified; full DB/browser/performance counts in Section 14 remain historical.
 
 Markers are exact case-insensitive tokens separated by `_` or `-` (or the full name). E2E, fixture and cleanup checks use one shared validator; uploads additionally require their own separated uploads token and preserve root/symlink restrictions.
+
+Review completion: [PR #58](https://github.com/Maibokdaimhai/TokTickIT/pull/58) was approved by Kawi-HBLI ([approval review](https://github.com/Maibokdaimhai/TokTickIT/pull/58#pullrequestreview-5685046992)) and merged into `lab4-staging`. These approvals do not change the source snapshots, test counts, or verification limits above.

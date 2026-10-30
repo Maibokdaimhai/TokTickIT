@@ -1,6 +1,6 @@
 # Lab 4 Engineering Specification - TokTickIT
 
-Status: Contract and Lab 4 features merged through PR #57. Issue #52 regression/accessibility evidence completed locally on 28 October 2026, based on staging `5d13a76`; see [regression evidence](regression-and-evidence.md). Final-main/release verification remains Issue #53. IDs in this document are scoped to Lab 4.
+Status: Contract, Lab 4 features, and regression/safety corrections are approved and merged through PR #58 into `lab4-staging`; see [review record](reviewer.md) and [regression evidence](regression-and-evidence.md). Final-main/release verification remains Issue #53. The submission PDF is prepared last, after integration into `main` and final verification, outside this documentation PR. IDs in this document are scoped to Lab 4.
 
 Source: CPE334 Lab 4 worksheet, Sections 1-14 and grading Parts 1-9. Earlier approved behavior remains governed by [Lab 3](../lab-03/specification.md) unless a change is explicitly stated here. This contract resolves implementation choices; it does not claim instructor or peer approval.
 
@@ -32,7 +32,7 @@ Excluded: SLA/escalation automation, external notifications, inventory/purchasin
 | FR-08 | Serve Staff/Admin operational metrics, current-user Actions Taken, recent Tickets, and matching drill-downs. |
 | FR-09 | Preserve earlier records and authorized behavior through migration, seed, rollback/recovery, and regression testing. |
 | FR-10 | Extend Zen Green navigation and accessible responsive screens with complete loading/empty/error/conflict states. |
-| FR-11 | Maintain requirement-to-test traceability and final-main evidence, peer review, README, and nine-part submission. |
+| FR-11 | Maintain requirement-to-test traceability and final-main evidence, peer review, and README; prepare the nine-part submission after main integration and final verification. |
 
 ## 5. Business rules
 
@@ -142,43 +142,43 @@ Add action list/create/update/history and Ticket transition-history reads; add R
 | AC-14 | New forms retain drafts after safe failures/conflicts, prevent repeat submit, and all screens show appropriate loading/empty/forbidden/not-found states. |
 | AC-15 | Desktop/tablet/mobile, keyboard, labels, focus, contrast, touch targets, and direct clipping checks meet ui-spec.md with recorded visual evidence. |
 | AC-16 | Bounded dashboard payloads and indexed queries pass the documented performance smoke test without exposing secrets. |
-| AC-17 | Final main passes relevant suites/builds; every AC maps to tests and real evidence; reviewed release and nine-part report are complete. |
+| AC-17 | Final main passes relevant suites/builds; every AC maps to tests and real evidence; reviewed release is complete. Prepare the nine-part report afterward as the final submission step. |
 
 ## 10. Product Definition of Done
 
-- [ ] Contract and every AC reviewed before feature implementation; meaningful changes recorded in PR history.
-- [ ] Actions Taken, lifecycle, role dashboards, and drill-downs meet this contract and peer review.
-- [ ] New migration/seed/recovery checks pass without altering development data.
-- [ ] Unit/API/UI/style/security/concurrency/regression/E2E/performance checks pass on final main; no historical counts presented as new execution.
-- [ ] Visual/keyboard checklist complete at all specified widths with readable screenshots and tested commit.
-- [ ] README setup, environment, migration, seed, tests, recovery and demo instructions verified; .gitignore excludes secrets/generated runtime files.
-- [ ] All sprint Issues Done with actual review identities, PR links, feedback/responses/approvals in reviewer.md.
-- [ ] Genuine 6-10 selected prompts and personal reflection in ai-use.md.
-- [ ] Feature branches reviewed into lab4-staging, then reviewed release into main; final-main SHA captured.
-- [ ] One concise PDF with working links and Answer Part 1 through Answer Part 9, mapped to the worksheet's grading evidence.
+Status checked for this local documentation update. Checked items refer to the linked reviewed increments and their recorded execution scopes; final-main validation remains separate.
+
+- [x] Contract and AC coverage reviewed before feature implementation; PR #46 feedback and approval are recorded in [reviewer.md](reviewer.md).
+- [x] Actions Taken, lifecycle, role dashboards, and drill-downs implemented and peer-reviewed through PRs #54–57; PR #58 regression/safety corrections are also approved and merged into `lab4-staging`. See [reviewer.md](reviewer.md).
+- [x] Additive migration, repeatable seed, and restore-recovery checks recorded on disposable targets, preserving development data. See [tests.md Section 8](tests.md#8-issue-48-foundation-execution) and [Section 10](tests.md#10-issue-50-ticket-workflow-execution) and [Actions foundation](actions-foundation.md).
+- [ ] Unit/API/UI/style/security/concurrency/regression/E2E/performance checks pass on the actual final-main SHA. Historical feature/regression results in [tests.md](tests.md) do not complete this release check.
+- [x] Local rendered visual/keyboard evidence recorded at the specified widths, with contrast, labels, focus, target sizes, long content, and zoom-equivalent reflow checks. See [regression evidence](regression-and-evidence.md) and [rendered results](../../artifacts/lab-04/verification/rendered-accessibility.json). This is scoped evidence, not formal accessibility certification or native toolbar zoom; repeat required checks for final release.
+- [x] README updated for Lab 4 setup, environment, migration, both seeds, tests, recovery, and demo. Commands and local links checked against repository scripts/configuration; `.gitignore` exclusions checked for secrets/generated runtime files. See [README](../../README.md). A fresh installation/database rehearsal was not performed for this documentation-only update; final-main execution remains required above.
+- [ ] All sprint Issues Done, including Issue #53 release work. Actual review identities, PR links, complete feedback/responses, and approvals for completed increments are recorded in [reviewer.md](reviewer.md).
+- [x] Ten selected prompt entries and the student-edited reflection are present in [ai-use.md](ai-use.md); the student remains responsible for the final submission's accuracy.
+- [ ] Reviewed release from `lab4-staging` into `main`, with actual final-main SHA captured. Feature PR integration through #58 is complete; release integration remains open.
+
+Submission after release (outside this documentation PR): once integration into `main` and final-main verification are complete, prepare one concise PDF with working links and Answer Part 1 through Answer Part 9, mapped to the worksheet's grading evidence. The PDF is the last submission step.
 
 ## 11. Assumptions, decisions, and delivery order
 
-Draft decisions needing review before coding: the worksheet gives no action status enum, precise resolution gate, date limits, dashboard window, or terminal edit policy. BR-05/06/07/12/20/23 define these choices, including the narrowly permitted follow-up completion operation on completed work. Rubric Part 6 explicitly requires assign/status/complete/cancel and inactive-assignee rejection, so those are included even though the earlier field list omits them. Part 7 asks for append-only behavior; this contract applies that to transition events and action revisions while permitting the explicitly requested action updates. All action content/history is Requester-visible per Section 8.3; keep private work in Internal Notes.
+### Original planning context
 
-Known baseline gaps from source inspection: Requester status filtering currently accepts only four statuses; Requester sorting lacks updatedAt; Staff lists do not yet accept grouped active-status or action-assignee filters. Implement these extensions explicitly rather than shipping dashboard links that silently drop their filters. Playwright currently discovers only e2e/lab-03; discovery must be expanded deliberately and verified without dropping earlier tests.
+Before implementation, the worksheet left the Action status enum, precise resolution gate, date limits, dashboard window, and terminal edit policy to be defined. BR-05/06/07/12/20/23 record the choices reviewed in PR #46, including the dedicated follow-up completion operation on completed work. Rubric Part 6 requires assign/status/complete/cancel and inactive-assignee rejection. Part 7 requires append-only history; the implementation preserves transition events and Action revisions while permitting the specified Action updates. All Action content/history is Requester-visible per Section 8.3; private work belongs in Internal Notes.
 
-Proposed remaining Issues/branches, after merged feature/lab4-lab3-tech-debt:
+The original baseline inspection identified incomplete Requester status/sort filters, missing grouped active-status and Action-assignee filters, and browser discovery restricted to Lab 3. The dashboard increment implemented the required filter extensions, and the regression increment expanded discovery while preserving authenticated earlier-lab journeys. These are resolved baseline gaps, retained here as design context.
 
-1. feature/lab4-spec-and-tests: this contract and planned traceability.
-2. feature/lab4-actions-foundation: schema, migration/recovery/seed, action APIs, history, authorization and concurrency tests.
-3. feature/lab4-actions-ui: Staff editors, Requester read view, public-history warning, component tests.
-4. feature/lab4-ticket-workflow: resolution gate, metadata/events, compensation guard, backend/UI transition tests.
-5. feature/lab4-dashboards: aggregate APIs, list/filter extensions, both role screens, query oracle and drill-down tests.
-6. test/lab4-regression-and-evidence: E2E discovery, all-lab regression, visual/accessibility and performance evidence.
-7. docs/lab4-final-evidence-release: actual review/AI records, README, release verification and submission.
+### Delivery status
 
-This list is a local plan; no GitHub Issues/PRs or pushes are created by this documentation task.
+| Issue | Branch | Reviewed integration / current status | Evidence |
+| --- | --- | --- | --- |
+| #44 | `feature/lab4-lab3-tech-debt` | PR #45 approved and merged into `lab4-staging`; deferred mobile communication-panel fix completed. | [Review record](reviewer.md) |
+| #47 | `feature/lab4-spec-and-tests` | PR #46 approved and merged; specification, contracts, and planned traceability established before feature implementation. | [Review record](reviewer.md) |
+| #48 | `feature/lab4-actions-foundation` | PR #54 approved and merged; Actions schema, migration, seed/recovery, APIs, authorization, revisions, and concurrency coverage implemented. | [Foundation notes](actions-foundation.md), [tests Section 8](tests.md#8-issue-48-foundation-execution) |
+| #49 | `feature/lab4-actions-ui` | PR #55 approved and merged; Staff editors, Requester read-only views, public history, and draft/conflict recovery implemented. | [UI notes](actions-ui.md), [tests Section 9](tests.md#9-issue-49-actions-ui-execution) |
+| #50 | `feature/lab4-ticket-workflow` | PR #56 approved and merged; resolution gates, metadata, transition history, and workflow integration implemented. | [Workflow notes](ticket-workflow.md), [tests Section 10](tests.md#10-issue-50-ticket-workflow-execution) |
+| #51 | `feature/lab4-dashboards` | PR #57 approved and merged, including refresh/navigation review corrections; aggregate APIs, filter extensions, role dashboards, and drill-downs implemented. | [Dashboard notes](dashboards.md), [tests Sections 11–13](tests.md#11-issue-51-dashboard-execution) |
+| #52 | `test/lab4-regression-and-evidence` | PR #58 approved and merged, including separated-token safety corrections; regression discovery and rendered accessibility/layout evidence completed within recorded verification scopes. | [Regression notes](regression-and-evidence.md), [tests Sections 14–15](tests.md#14-issue-52-regression-accessibility-and-evidence) |
+| #53 | `docs/lab4-final-evidence-release` | Current local documentation work: README, DoD, AI-use/reflection, and the completed review record. Documentation PR/release review and actual final-main execution remain open. | [README](../../README.md), [DoD](#10-product-definition-of-done), [reviewer.md](reviewer.md), [ai-use.md](ai-use.md) |
 
-Issue #48 implementation and migration/recovery details: [Actions foundation](actions-foundation.md). Current executed coverage is recorded in tests.md Section 8; the complete product Definition of Done above remains pending.
-
-Issue #49 shared Actions UI is implemented locally from merged PR #54; see [Actions UI notes](actions-ui.md) and tests.md Section 9. Later Ticket workflow, dashboards and full release verification remain pending.
-
-Issue #51 dashboards are implemented locally from merged PR #56; see [Dashboard notes](dashboards.md) and tests.md Section 11. Final release verification remains pending.
-
-Issue #52 expanded guarded discovery, retained authenticated earlier-lab requirements, corrected rendered accessibility/layout issues and recorded local execution evidence. See [regression runbook](regression-and-evidence.md) and tests.md Section 14; final-main/release checks remain pending.
+Feature integration through PR #58 is complete. The remaining sequence is to review this documentation increment into `lab4-staging`, review the release into `main`, capture the actual final-main SHA, and run the required release checks. Prepare the submission PDF last, after those checks, outside this documentation PR. Earlier test counts remain tied to their recorded snapshots and are not relabelled as final-main results.

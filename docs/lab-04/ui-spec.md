@@ -1,6 +1,6 @@
 # Lab 4 UI Contract - TokTickIT
 
-Status: Lab 4 features merged through PR #57. Issue #52 local rendered checks and corrections are recorded in [regression evidence](regression-and-evidence.md); final-main/release inspection remains pending. Reuse [Lab 2 tokens](../lab-02/ui-spec.md) and [Lab 3 conventions](../lab-03/ui-spec.md). Behavior and scope follow [specification.md](specification.md); exact filters and responses follow [api-spec.md](api-spec.md).
+Status: Lab 4 features and Issue #52 regression/safety corrections are approved and merged through PR #58 into `lab4-staging`. Rendered checks and corrections are recorded in [regression evidence](regression-and-evidence.md); final-main/release inspection remains pending. Reuse [Lab 2 tokens](../lab-02/ui-spec.md) and [Lab 3 conventions](../lab-03/ui-spec.md). Behavior and scope follow [specification.md](specification.md); exact filters and responses follow [api-spec.md](api-spec.md).
 
 ## 1. Shell, navigation, and routes
 
