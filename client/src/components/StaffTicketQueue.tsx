@@ -1,3 +1,4 @@
+import { paginationPages } from "../utils/pagination.js";
 import React, { useState, useEffect } from "react";
 import { fetchCategories, fetchEligibleOwners, fetchStaffTickets } from "../api.js";
 import {
@@ -41,6 +42,10 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
   const [page, setPage] = useState<number>(initialParams?.page ?? 1);
   const [limit, setLimit] = useState<number>(initialParams?.limit ?? 10);
 
+  const [statusGroup, setStatusGroup] = useState(initialParams?.statusGroup);
+  const [resolvedFrom, setResolvedFrom] = useState(initialParams?.resolvedFrom);
+  const [resolvedTo, setResolvedTo] = useState(initialParams?.resolvedTo);
+
   // Tickets & fetch status
   const [tickets, setTickets] = useState<StaffTicketRow[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
@@ -81,7 +86,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
 
   // Check if any non-default filter is active
   const hasActiveFilters = Boolean(
-    debouncedSearch.trim() ||
+    statusGroup || resolvedFrom || resolvedTo || debouncedSearch.trim() ||
       categoryId !== "" ||
       requestedPriority !== "" ||
       itPriority !== "" ||
@@ -91,6 +96,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
   );
 
   const clearFilters = () => {
+    setStatusGroup(undefined); setResolvedFrom(undefined); setResolvedTo(undefined);
     setSearch("");
     setDebouncedSearch("");
     prevSearchRef.current = "";
@@ -112,6 +118,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
     setIsForbidden(false);
 
     const currentParams: FetchStaffTicketsParams = {
+      statusGroup, resolvedFrom, resolvedTo,
       search: debouncedSearch.trim() || undefined,
       category: categoryId === "" ? undefined : Number(categoryId),
       requestedPriority: requestedPriority === "" ? undefined : requestedPriority,
@@ -124,23 +131,14 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
       signal: controller.signal,
     };
 
+    onParamsChange?.(currentParams);
     fetchStaffTickets(currentParams)
       .then((res) => {
         if (isCancelled || controller.signal.aborted) return;
         setTickets(res.tickets);
         setPagination(res.pagination);
         setLoading(false);
-        onParamsChange?.({
-          search: debouncedSearch,
-          category: categoryId === "" ? undefined : Number(categoryId),
-          requestedPriority: requestedPriority === "" ? undefined : requestedPriority,
-          itPriority: itPriority === "" ? undefined : itPriority,
-          status: status === "" ? undefined : status,
-          owner: owner === "" ? undefined : owner,
-          sort,
-          page,
-          limit,
-        });
+
       })
       .catch((err: any) => {
         if (isCancelled || controller.signal.aborted || err?.name === "AbortError") return;
@@ -156,7 +154,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
       isCancelled = true;
       controller.abort();
     };
-  }, [debouncedSearch, categoryId, requestedPriority, itPriority, status, owner, sort, page, limit, retryKey]);
+  }, [debouncedSearch, categoryId, requestedPriority, itPriority, status, owner, sort, page, limit, retryKey, statusGroup, resolvedFrom, resolvedTo]);
 
   // Badge renderers
   const renderPriorityBadge = (p: Priority) => {
@@ -218,6 +216,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
         boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
       }}
     >
+      {(statusGroup || resolvedFrom) && <p className="workflow-feedback">{statusGroup ? "Active Tickets only. " : ""}{resolvedFrom ? `Resolved or Closed from ${resolvedFrom} to ${resolvedTo}. ` : ""}<button type="button" className="btn-secondary" onClick={clearFilters}>Clear All Filters</button></p>}
       {/* Header section */}
       <div
         style={{
@@ -411,7 +410,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
               aria-label="Filter by status"
               value={status}
               onChange={(e) => {
-                setStatus(e.target.value as TicketStatus | "");
+                setStatusGroup(undefined); setStatus(e.target.value as TicketStatus | "");
                 setPage(1);
               }}
             >
@@ -677,7 +676,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
           {tickets.length > 0 && (
             <>
               {/* Desktop Table View */}
-              <div className="tickets-table-container">
+              <div className="tickets-table-container" role="region" aria-label="Scrollable Tickets table" tabIndex={0}>
                 <table className="tickets-table" aria-label="IT Staff Ticket Queue">
                   <thead>
                     <tr>
@@ -729,7 +728,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                           <button
                             type="button"
                             className="btn-secondary"
-                            style={{ padding: "5px 12px", minHeight: "32px", fontSize: "12.5px" }}
+                            style={{ padding: "5px 12px", minHeight: "44px", fontSize: "12.5px" }}
                             onClick={() => onOpenTicket(t.id)}
                             aria-label={`Open ticket ${t.ticketNumber}`}
                           >
@@ -824,26 +823,26 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                 )}
               </div>
 
-              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", maxWidth: "100%", gap: "6px", alignItems: "center" }}>
                 <button
                   type="button"
                   className="btn-secondary"
                   aria-label="Previous page"
-                  style={{ padding: "6px 12px", minHeight: "32px", fontSize: "13px" }}
+                  style={{ padding: "6px 12px", minHeight: "44px", fontSize: "13px" }}
                   disabled={pagination.page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
                   ◀ Previous
                 </button>
 
-                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((pNum) => (
+                {paginationPages(pagination.page, pagination.totalPages).map((pNum) => (
                   <button
                     key={pNum}
                     type="button"
                     aria-label={`Page ${pNum}`}
                     style={{
-                      minWidth: "32px",
-                      height: "32px",
+                      minWidth: "44px",
+                      height: "44px",
                       padding: "0 6px",
                       borderRadius: "6px",
                       border:
@@ -865,7 +864,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                   type="button"
                   className="btn-secondary"
                   aria-label="Next page"
-                  style={{ padding: "6px 12px", minHeight: "32px", fontSize: "13px" }}
+                  style={{ padding: "6px 12px", minHeight: "44px", fontSize: "13px" }}
                   disabled={pagination.page >= pagination.totalPages}
                   onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
                 >

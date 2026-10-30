@@ -5,6 +5,12 @@ import App from "../../src/App.js";
 import * as api from "../../src/api.js";
 import type { AuthResult, StaffTicketDetail, TicketDetail } from "../../src/types.js";
 
+vi.mock("../../src/components/Dashboard.js", () => ({ Dashboard: ({ staff }: { staff: boolean }) => <h1>{staff ? "Staff Dashboard" : "Requester Dashboard"}</h1>, MyActiveActions: () => null }));
+
+vi.mock("../../src/components/TicketHistory.js", () => ({ TicketHistory: () => null, ResolutionSummary: () => null }));
+
+vi.mock("../../src/components/ActionsTaken.js", () => ({ ActionsTaken: () => null }));
+
 vi.mock("../../src/api.js", async (original) => ({
   ...(await original<typeof import("../../src/api.js")>()),
   getSession: vi.fn(),
@@ -171,22 +177,22 @@ describe("Routing & Direct Path Navigation Tests", () => {
       role: "REQUESTER",
       initialProtectedPath: "/staff/tickets",
       session: requesterSession,
-      expectedHome: "/my-tickets",
-      expectedHeading: /My Tickets/i,
+      expectedHome: "/dashboard",
+      expectedHeading: /Requester Dashboard/i,
     },
     {
       role: "IT_STAFF",
       initialProtectedPath: "/admin/users",
       session: staffSession,
-      expectedHome: "/staff/tickets",
-      expectedHeading: /IT Staff Ticket Queue/i,
+      expectedHome: "/staff/dashboard",
+      expectedHeading: /Staff Dashboard/i,
     },
     {
       role: "ADMINISTRATOR",
       initialProtectedPath: "/staff/tickets/201",
       session: adminSession,
-      expectedHome: "/admin/users",
-      expectedHeading: /User Management/i,
+      expectedHome: "/staff/dashboard",
+      expectedHeading: /Staff Dashboard/i,
     },
   ])(
     "protected URL ($initialProtectedPath) redirect synchronizes route state so login as $role routes to $expectedHome",
@@ -220,16 +226,16 @@ describe("Routing & Direct Path Navigation Tests", () => {
     }
   );
 
-  it("authenticated IT Staff visiting /login routes to permitted home /staff/tickets", async () => {
+  it("authenticated IT Staff visiting /login routes to permitted home /staff/dashboard", async () => {
     window.history.pushState(null, "", "/login");
     vi.mocked(api.getSession).mockResolvedValue(staffSession);
 
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /IT Staff Ticket Queue/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /Staff Dashboard/i })).toBeInTheDocument();
     });
-    expect(window.location.pathname).toBe("/staff/tickets");
+    expect(window.location.pathname).toBe("/staff/dashboard");
   });
 
   it("forces password change when mustChangePassword is true", async () => {
@@ -293,9 +299,9 @@ describe("Routing & Direct Path Navigation Tests", () => {
     fireEvent.click(screen.getByTestId("btn-not-found-home"));
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /IT Staff Ticket Queue/i })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /Staff Dashboard/i })).toBeInTheDocument();
     });
-    expect(window.location.pathname).toBe("/staff/tickets");
+    expect(window.location.pathname).toBe("/staff/dashboard");
   });
 
   it("cross-role protection: requester accessing /staff/tickets gets safe forbidden message", async () => {

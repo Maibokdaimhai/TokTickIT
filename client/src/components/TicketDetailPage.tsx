@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { TicketHistory, ResolutionSummary } from "./TicketHistory.js";
+import { ActionsTaken } from "./ActionsTaken.js";
 import { useRequester } from "../context/RequesterContext.js";
 import { TicketDetail, Attachment, Entry } from "../types.js";
 import {
@@ -1168,6 +1170,7 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({ ticketId, on
               <div style={{ marginBottom: "8px" }}>
                 <textarea
                   data-testid="input-public-comment"
+                  aria-label="Public Comment"
                   value={commentDraft}
                   onChange={(e) => {
                     setCommentDraft(e.target.value);
@@ -1219,6 +1222,11 @@ export const TicketDetailPage: React.FC<TicketDetailPageProps> = ({ ticketId, on
           </div>
         </div>
       </div>
+
+      <ActionsTaken ticketId={ticket.id} ticketStatus={ticket.status} ticketCreatedAt={ticket.createdAt} ticketVersion={ticket.version ?? 0} onTicketChanged={reloadTicket} />
+
+      <ResolutionSummary status={ticket.status} resolvedAt={ticket.resolvedAt} estimated={ticket.resolvedAtEstimated} />
+      <TicketHistory ticketId={ticket.id} refreshKey={ticket.version ?? 0} />
 
       {/* Soft-Removal Reason Modal (UI-06 / AC-07, AC-08) */}
       {targetAttachment && (

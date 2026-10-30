@@ -55,6 +55,8 @@ export interface StaffTicketRow {
   version: number;
   attachmentCount: number;
   publicCommentCount: number;
+  resolvedAt?: string | null;
+  resolvedAtEstimated?: boolean;
 }
 
 export interface StaffTicketsResponse {
@@ -71,6 +73,9 @@ export type StaffSortOption =
   | "itPriority_desc";
 
 export interface FetchStaffTicketsParams {
+  statusGroup?: "active";
+  resolvedFrom?: string;
+  resolvedTo?: string;
   search?: string;
   category?: number;
   requestedPriority?: Priority;
@@ -130,6 +135,8 @@ export interface Ticket {
   updatedAt: string;
   attachments?: Attachment[];
   attachmentCount?: number;
+  resolvedAt?: string | null;
+  resolvedAtEstimated?: boolean;
 }
 
 export interface TicketDetail {
@@ -156,6 +163,8 @@ export interface TicketDetail {
   publicComments?: PublicComment[];
   problemAppearsResolvedAt?: string | null;
   problemAppearsResolvedById?: number | null;
+  resolvedAt?: string | null;
+  resolvedAtEstimated?: boolean;
 }
 
 export interface StaffTicketDetail extends TicketDetail {
@@ -187,11 +196,14 @@ export interface TicketsResponse {
 }
 
 export interface FetchTicketsParams {
+  statusGroup?: "active";
+  resolvedFrom?: string;
+  resolvedTo?: string;
   search?: string;
   category?: number;
   priority?: Priority;
   status?: TicketStatus;
-  sort?: "createdAt_desc" | "createdAt_asc" | "ticketNumber_asc" | "ticketNumber_desc";
+  sort?: "createdAt_desc" | "createdAt_asc" | "ticketNumber_asc" | "ticketNumber_desc" | "updatedAt_desc";
   page?: number;
   limit?: number;
   signal?: AbortSignal;
@@ -233,3 +245,53 @@ export interface ResetInitialPasswordPayload {
   initialPassword: string;
   confirmPassword: string;
 }
+
+export type ActionStatus = "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+export interface ActionIdentity { id: number; name: string; role: UserRole; isActive: boolean }
+export interface TicketAction {
+  id: number; ticketId: number; actionAt: string; description: string; result: string | null;
+  performedBy: ActionIdentity; assignee: ActionIdentity; status: ActionStatus; version: number;
+  followUpRequired: boolean; followUpNote: string | null; attachmentNotes: string | null;
+  followUpCompletedAt: string | null; followUpCompletedBy: ActionIdentity | null;
+  followUpCompletionNote: string | null; createdAt: string; updatedAt: string;
+}
+export interface ActionRevision {
+  id: number; actionId: number; version: number; editor: ActionIdentity; createdAt: string;
+  snapshot: {
+    actionAt: string; description: string; result: string | null;
+    performedById: number; assigneeId: number; status: ActionStatus;
+    followUpRequired: boolean; followUpNote: string | null; attachmentNotes: string | null;
+    followUpCompletedAt: string | null; followUpCompletedById: number | null; followUpCompletionNote: string | null;
+  };
+}
+export interface ActionFields {
+  actionAt: string; description: string; assigneeId: number; status: ActionStatus;
+  result: string | null; followUpRequired: boolean; followUpNote: string | null; attachmentNotes: string | null;
+}
+export interface CreateActionPayload extends ActionFields { expectedTicketVersion: number; clientRequestId: string }
+export interface UpdateActionPayload extends ActionFields { expectedTicketVersion: number; expectedActionVersion: number }
+export interface CompleteFollowUpPayload { expectedTicketVersion: number; expectedActionVersion: number; completionNote: string }
+export interface ActionWriteResult { action: TicketAction; ticketVersion: number; replayed?: boolean }
+export interface ActionsPage { actions: TicketAction[]; pagination: PaginationInfo; ticketVersion: number }
+export interface TicketStatusEvent {
+  id: number; ticketId: number; fromStatus: TicketStatus; toStatus: TicketStatus;
+  actor: ActionIdentity; createdAt: string; ticketVersion: number;
+}
+export interface TicketHistoryPage { events: TicketStatusEvent[]; pagination: PaginationInfo; historyStartsAt: string }
+
+export interface TicketPreview {
+  id: number; ticketNumber: string; summary: string; status: TicketStatus; itPriority: Priority;
+  owner: { id: number; name: string } | null; updatedAt: string;
+}
+export type ActionPreview = TicketAction & { ticket: TicketPreview };
+interface DashboardWindow { asOf: string; timeZone: "Asia/Bangkok"; windowStart: string }
+export interface RequesterDashboard extends DashboardWindow {
+  metrics: { activeTickets: number; waitingForRequester: number; recentlyResolved: number };
+  recentlyResolvedIncludesEstimates: boolean; recentTickets: TicketPreview[];
+}
+export interface StaffDashboard extends DashboardWindow {
+  metrics: { unassignedTickets: number; myTickets: number; myActiveActions: number };
+  byStatus: Record<TicketStatus, number>; byItPriority: Record<Priority, number>;
+  recentTickets: TicketPreview[]; myActions: ActionPreview[];
+}
+export interface MyActionsPage { actions: ActionPreview[]; pagination: PaginationInfo }

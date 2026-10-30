@@ -1,0 +1,106 @@
+{
+  "date": "2026-10-28",
+  "pullRequest": "https://github.com/Maibokdaimhai/TokTickIT/pull/57",
+  "branch": "feature/lab4-dashboards",
+  "baseCommit": "5e13a361411030dbb36fa7b0969a3c759d0d42c3",
+  "workingTree": true,
+  "sourceScope": [
+    "client/src",
+    "client/tests",
+    "e2e/lab-04/dashboard-review.spec.ts",
+    "playwright.dashboard-review.config.ts"
+  ],
+  "fingerprintAlgorithm": "SHA-256 of sorted path + NUL + file bytes + NUL for tracked and nonignored untracked source files",
+  "sourceFingerprint": "c667dafd66c3af668678b2cc8d2cb237f497792f958b69fb68d4a985e546f9bc",
+  "results": {
+    "client": {
+      "numPassedTests": 191,
+      "numFailedTests": 0,
+      "numPendingTests": 0
+    },
+    "client-serial": {
+      "numPassedTests": 191,
+      "numFailedTests": 0,
+      "numPendingTests": 0
+    }
+  },
+  "routingStress": [
+    {
+      "run": 1,
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "run": 2,
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "run": 3,
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "run": 4,
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "run": 5,
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "run": 6,
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "run": 7,
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "run": 8,
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "run": 9,
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "run": 10,
+      "passed": 12,
+      "failed": 0
+    }
+  ],
+  "controlledApiChromium": {
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "clientTypecheck": "passed",
+  "clientBuild": "passed",
+  "redEvidence": {
+    "failedTests": 5,
+    "cases": [
+      "Requester and Staff stale refresh retention",
+      "Network failure and retry retention",
+      "Requester and Staff Detail reload list context"
+    ]
+  },
+  "screenshots": [
+    "artifacts/lab-04/screenshots/dashboard-review/requester-stale-390.png",
+    "artifacts/lab-04/screenshots/dashboard-review/staff-stale-390.png"
+  ],
+  "limits": [
+    "Tests ran on the uncommitted source snapshot, matched to implementation commit 06aa3e035edef33ea19331449dc82996ef1a52a9 before publication; PR #57 subsequently received approval from Kawi-HBLI and merged into lab4-staging (https://github.com/Maibokdaimhai/TokTickIT/pull/57#pullrequestreview-5682875135). Test results still describe the original recorded source snapshot.",
+    "Browser checks use controlled HTTP fixtures, not a database. No database or backend code changed; backend/performance results in dashboards.json are prior execution.",
+    "Ten routing repetitions reduce timing uncertainty but do not prove absence of all possible flakes.",
+    "Existing unrelated client/package.json edit preserved and excluded."
+  ],
+  "implementationCommit": "06aa3e035edef33ea19331449dc82996ef1a52a9"
+}

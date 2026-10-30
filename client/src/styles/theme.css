@@ -8,7 +8,7 @@
   --color-text-primary: #1A2E26;
   --color-text-secondary: #4A5568;
   --color-border: #E2E8F0;
-  --color-input-border: #CBD5E1;
+  --color-input-border: #748194;
   --color-read-only-bg: #F1F5F9;
   --color-error: #DC2626;
   --color-warning-bg: #FEF3C7;
@@ -743,7 +743,7 @@ textarea.form-control {
 }
 
 .users-table tbody tr.row-inactive {
-  opacity: 0.7;
+  opacity: 1;
   background-color: #FAFAFA;
 }
 
@@ -835,7 +835,7 @@ textarea.form-control {
 }
 
 .pwd-must-change {
-  color: #D97706;
+  color: #92400E;
 }
 
 .pwd-active {
@@ -862,7 +862,7 @@ textarea.form-control {
 }
 
 .user-card.card-inactive {
-  opacity: 0.75;
+  opacity: 1;
   background-color: #FAFAFA;
 }
 
@@ -1022,7 +1022,7 @@ textarea.form-control {
 }
 
 .rule-unmet {
-  color: #94A3B8;
+  color: #475569;
 }
 
 .rule-icon {
@@ -1099,6 +1099,32 @@ textarea.form-control {
 }
 
 /* Staff Ticket Detail Layout & Controls */
+.staff-communication-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+}
+
+.staff-communication-grid > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.staff-communication-row {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.staff-communication-grid textarea {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.staff-communication-grid button {
+  min-height: 44px;
+  max-width: 100%;
+  white-space: normal;
+}
+
 .ticket-detail-back-bar {
   margin-bottom: 20px;
 }
@@ -1236,4 +1262,128 @@ textarea.form-control {
     width: 100%;
     flex: none;
   }
+}
+
+/* Lab 4: shared Actions Taken cards, inline editors and immutable history. */
+.actions-taken {
+  margin-top: 24px;
+  padding: 24px;
+  background: var(--color-white, #fff);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  color: var(--color-text-primary);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.actions-taken h2 { font-size: 20px; margin: 0; }
+.actions-taken h3 { font-size: 17px; margin: 0 0 12px; }
+.actions-taken h4 { font-size: 16px; }
+.action-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 12px 0; }
+.actions-taken button { min-height: 44px; min-width: 44px; max-width: 100%; white-space: normal; }
+.actions-taken button:disabled { opacity: .6; cursor: not-allowed; }
+.actions-taken button:focus-visible, .actions-taken input:focus-visible,
+.actions-taken select:focus-visible, .actions-taken textarea:focus-visible,
+.actions-taken [tabindex="-1"]:focus { outline: 3px solid var(--color-primary); outline-offset: 3px; }
+.action-card, .action-editor, .action-history { border: 1px solid var(--color-border); border-radius: 8px; padding: 20px; margin-top: 16px; min-width: 0; }
+.action-editor, .action-selected { background: var(--color-pale-green, #eaf6ef); }
+.action-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; }
+.action-field { min-width: 0; display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.action-editor label { display: block; font-weight: 600; margin-bottom: 6px; }
+.action-editor input:not([type="checkbox"]), .action-editor select, .action-editor textarea {
+  width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box;
+  padding: 10px 12px; border: 1px solid #64748b; border-radius: 6px;
+  background: #fff; color: var(--color-text-primary); font: inherit;
+}
+.action-editor input:not([type="checkbox"]), .action-editor select { min-height: 44px; }
+.action-editor textarea { resize: vertical; }
+.action-editor .action-checkbox { display: flex; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; }
+.action-checkbox input { width: 20px; height: 20px; flex-shrink: 0; }
+.action-details { display: grid; grid-template-columns: minmax(120px, .35fr) minmax(0, 1fr); gap: 8px 16px; margin: 12px 0; }
+.action-details dt { font-weight: 600; }
+.action-details dd { min-width: 0; margin: 0; white-space: pre-wrap; }
+.action-meta { display: block; font-size: 13px; color: #475569; }
+.action-badge { display: inline-block; padding: 4px 10px; border-radius: 16px; font-size: 13px; font-weight: 600; }
+.action-planned { background: #e2e8f0; color: #334155; }
+.action-in_progress { background: #dbeafe; color: #1e40af; }
+.action-completed { background: #dcfce7; color: #166534; }
+.action-cancelled { background: #f1f5f9; color: #475569; }
+.action-error { color: #991b1b; }
+.action-success { color: #166534; font-weight: 600; }
+.action-confirmation { border: 2px solid var(--color-primary); padding: 16px; border-radius: 8px; }
+.action-revision { border-bottom: 1px solid var(--color-border); padding: 12px 0; }
+@media (max-width: 600px) {
+  .actions-taken, .action-card, .action-editor, .action-history { padding: 14px; }
+  .action-details { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .action-details dd { margin-bottom: 10px; }
+}
+
+/* Lab 4: workflow feedback and public append-only Ticket history. */
+.resolution-guidance, .resolution-summary { margin-top: 12px; overflow-wrap: anywhere; }
+.resolution-guidance { font-size: 13px; color: #475569; }
+.resolution-summary { color: #166534; }
+.resolution-blockers { padding: 16px; margin: 12px 0; border: 1px solid #fca5a5; border-radius: 8px; background: #fef2f2; color: #991b1b; overflow-wrap: anywhere; }
+.resolution-blockers button { max-width: 100%; min-height: 44px; white-space: normal; }
+.ticket-history-list { padding-left: 24px; }
+.ticket-history-list li { padding: 12px 0; border-bottom: 1px solid var(--color-border); overflow-wrap: anywhere; }
+[data-testid="status-confirmation-dialog"] { max-height: calc(100dvh - 32px); overflow-y: auto; overflow-wrap: anywhere; box-sizing: border-box; }
+[data-testid="status-confirmation-dialog"] > div:last-child { flex-wrap: wrap; }
+[data-testid="status-confirmation-dialog"] button { min-height: 44px; max-width: 100%; white-space: normal; }
+
+.dashboard { overflow-wrap: anywhere; }
+.dashboard-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+.dashboard h1 { font-size:26px; color:var(--color-primary); }
+.dashboard h2 { font-size:20px; margin:24px 0 12px; }
+.dashboard-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:24px 0; }
+.dashboard-card { display:flex; flex-direction:column; gap:12px; background:white; border:1px solid var(--color-border); border-radius:12px; padding:20px; color:var(--color-primary); min-height:120px; }
+.dashboard-card strong { font-size:32px; }
+.dashboard a:focus-visible { outline:3px solid var(--color-primary); outline-offset:3px; }
+.dashboard-distributions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; }
+.dashboard-distributions ul,.dashboard-list { list-style:none; padding:0; }
+.dashboard-distributions a { display:block; padding:10px 0; min-height:44px; }
+.dashboard-list li { background:white; border:1px solid var(--color-border); border-radius:8px; padding:12px; margin-bottom:12px; }
+.dashboard-list a { display:block; min-height:44px; padding:8px 0; font-weight:600; color:var(--color-primary); }
+.dashboard-list p { color:var(--color-text-secondary); }
+.dashboard button { min-height:44px; }
+@media(max-width:640px) { .dashboard-cards,.dashboard-distributions { grid-template-columns:minmax(0,1fr); } }
+
+.dashboard a { color:var(--color-primary); }
+
+/* Lab 4 rendered accessibility regression: controls remain identifiable and usable. */
+main :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea):not(:disabled) { border-color:var(--color-input-border); }
+button { min-height:44px !important; min-width:44px; }
+.ticket-link-button { border:0; padding:4px 0; background:transparent; color:var(--color-primary); text-align:left; text-decoration:underline; font-weight:700; overflow-wrap:anywhere; }
+.ticket-link-button:focus-visible { outline:3px solid var(--color-primary); outline-offset:2px; }
+
+.users-table-container { overflow-x:auto; }
+.app-brand { min-height:44px; }
+.app-header .brand-tagline, .app-header .requester-dept { color:#FFFFFF; }
+.app-header .nav-item { color:#FFFFFF; background-color:transparent; }
+.app-header .nav-item:hover { background-color:rgba(0,0,0,.12); }
+.app-header .nav-item.active { color:#004D2C; background-color:#FFFFFF; }
+main :is(button,a,[role="link"]):focus-visible { outline:3px solid var(--color-primary); outline-offset:3px; }
+.app-header :is(button,[role="button"]):focus-visible { outline:3px solid #FFFFFF; outline-offset:3px; }
+
+.checkbox-label { min-height:44px; }
+
+.tickets-table-container:focus-visible, .users-table-container:focus-visible { outline:3px solid var(--color-primary); outline-offset:3px; }
+
+.account-menu, .requester-info-block { min-width:0; max-width:100%; }
+.requester-badge-btn { max-width:100%; }
+.requester-name { overflow-wrap:anywhere; white-space:normal; }
+.user-card-header > div { min-width:0; flex:1; }
+.user-card-name { overflow-wrap:anywhere; }
+.user-card-header .status-pill { flex-shrink:0; }
+
+.operational-controls-grid { min-width:0; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); }
+.op-control-section { min-width:0; }
+@media(max-width:767px) { .operational-controls-grid { grid-template-columns:minmax(0,1fr); } }
+
+.my-tickets-page { overflow-wrap:anywhere; }
+.my-tickets-page > div:first-child > div { min-width:0; max-width:100%; }
+
+.requester-badge-btn { background:rgba(0,0,0,.08); }
+.requester-badge-btn:hover { background:rgba(0,0,0,.16); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration:0s !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; }
+  .app-brand:hover, .nav-item:hover, .requester-badge-btn:hover { transform:none; }
 }

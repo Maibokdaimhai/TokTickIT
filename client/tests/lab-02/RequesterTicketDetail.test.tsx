@@ -6,6 +6,10 @@ import { TicketDetailPage } from "../../src/components/TicketDetailPage.js";
 import * as api from "../../src/api.js";
 import { TicketDetail } from "../../src/types.js";
 
+vi.mock("../../src/components/TicketHistory.js", () => ({ TicketHistory: () => null, ResolutionSummary: () => null }));
+
+vi.mock("../../src/components/ActionsTaken.js", () => ({ ActionsTaken: () => null }));
+
 vi.mock("../../src/api.js", () => ({
   fetchTicketDetail: vi.fn(),
   removeAttachment: vi.fn(),

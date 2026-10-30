@@ -1,7 +1,7 @@
 export type ErrorBody = {
   code: string;
   message: string;
-  details?: string[];
+  details?: string[] | { field: string; message: string }[];
 };
 
 /** An expected application failure, translated to HTTP only at the boundary. */

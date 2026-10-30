@@ -1,28 +1,34 @@
+import { paginationPages } from "../utils/pagination.js";
 import React, { useState, useEffect, useRef } from "react";
 import { useRequester } from "../context/RequesterContext.js";
 import { fetchCategories, fetchMyTickets } from "../api.js";
-import { Category, Priority, TicketStatus, Ticket, PaginationInfo } from "../types.js";
+import { Category, Priority, TicketStatus, Ticket, PaginationInfo, FetchTicketsParams } from "../types.js";
 
 interface MyTicketsPageProps {
+  initialParams?: FetchTicketsParams;
+  onParamsChange?: (params: FetchTicketsParams) => void;
   onNavigateToCreate?: () => void;
   onSelectTicket?: (ticketId: number) => void;
 }
 
-export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate, onSelectTicket }) => {
+export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ initialParams, onParamsChange, onNavigateToCreate, onSelectTicket }) => {
   const { selectedRequester, openSelector } = useRequester();
 
   // Reference data
   const [categories, setCategories] = useState<Category[]>([]);
 
   // Filter and pagination state
-  const [search, setSearch] = useState<string>("");
-  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
-  const [categoryId, setCategoryId] = useState<number | "">("");
-  const [priority, setPriority] = useState<Priority | "">("");
-  const [status, setStatus] = useState<TicketStatus | "">("");
-  const [sort, setSort] = useState<"createdAt_desc" | "createdAt_asc" | "ticketNumber_asc" | "ticketNumber_desc">("createdAt_desc");
-  const [page, setPage] = useState<number>(1);
-  const limit = 10;
+  const [search, setSearch] = useState<string>(initialParams?.search ?? "");
+  const [debouncedSearch, setDebouncedSearch] = useState<string>(initialParams?.search ?? "");
+  const [categoryId, setCategoryId] = useState<number | "">(initialParams?.category ?? "");
+  const [priority, setPriority] = useState<Priority | "">(initialParams?.priority ?? "");
+  const [status, setStatus] = useState<TicketStatus | "">(initialParams?.status ?? "");
+  const [sort, setSort] = useState<NonNullable<FetchTicketsParams["sort"]>>(initialParams?.sort ?? "createdAt_desc");
+  const [page, setPage] = useState<number>(initialParams?.page ?? 1);
+  const limit = initialParams?.limit ?? 10;
+  const [statusGroup, setStatusGroup] = useState(initialParams?.statusGroup);
+  const [resolvedFrom, setResolvedFrom] = useState(initialParams?.resolvedFrom);
+  const [resolvedTo, setResolvedTo] = useState(initialParams?.resolvedTo);
 
   // Track previous requester ID to reset page when requester changes
   const prevRequesterIdRef = useRef<number | undefined>(selectedRequester?.id);
@@ -46,6 +52,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
 
   // Debounce search input
   useEffect(() => {
+    if (search === debouncedSearch) return;
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
       setPage(1);
@@ -65,6 +72,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
   };
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatusGroup(undefined);
     setStatus(e.target.value ? (e.target.value as TicketStatus) : "");
     setPage(1);
   };
@@ -75,6 +83,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
   };
 
   const clearFilters = () => {
+    setStatusGroup(undefined); setResolvedFrom(undefined); setResolvedTo(undefined);
     setSearch("");
     setDebouncedSearch("");
     setCategoryId("");
@@ -85,7 +94,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
   };
 
   const hasActiveFilters = Boolean(
-    debouncedSearch.trim() ||
+    statusGroup || resolvedFrom || resolvedTo || debouncedSearch.trim() ||
     categoryId !== "" ||
     priority !== "" ||
     status !== "" ||
@@ -116,7 +125,8 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
     setLoading(true);
     setError(null);
 
-    fetchMyTickets({
+    const params: FetchTicketsParams = {
+      statusGroup, resolvedFrom, resolvedTo,
       search: debouncedSearch,
       category: categoryId === "" ? undefined : categoryId,
       priority: priority === "" ? undefined : priority,
@@ -125,7 +135,9 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
       page,
       limit,
       signal: controller.signal,
-    })
+    };
+    onParamsChange?.(params);
+    fetchMyTickets(params)
       .then((res) => {
         if (!isCancelled) {
           setTickets(res.tickets);
@@ -145,7 +157,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
       isCancelled = true;
       controller.abort();
     };
-  }, [selectedRequester?.id, debouncedSearch, categoryId, priority, status, sort, page, retryKey]);
+  }, [selectedRequester?.id, debouncedSearch, categoryId, priority, status, sort, page, retryKey, statusGroup, resolvedFrom, resolvedTo]);
 
   // Helper badge formatters
   const renderPriorityBadge = (p: Priority) => {
@@ -191,7 +203,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
   };
 
   return (
-    <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "12px", border: "1px solid var(--color-border)", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+    <div className="my-tickets-page" style={{ backgroundColor: "white", padding: "24px", borderRadius: "12px", border: "1px solid var(--color-border)", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
       {/* Header section */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px", flexWrap: "wrap", gap: "14px" }}>
         <div>
@@ -221,7 +233,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
             .
           </p>
         </div>
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", maxWidth: "100%", gap: "10px", alignItems: "center" }}>
           <button
             type="button"
             className="btn-secondary"
@@ -368,6 +380,10 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
               >
                 <option value="">All Statuses</option>
                 <option value="NEW">New</option>
+                <option value="OPEN">Open</option>
+                <option value="WAITING_FOR_REQUESTER">Waiting for Requester</option>
+                <option value="REOPENED">Reopened</option>
+                <option value="CANCELLED">Cancelled</option>
                 <option value="IN_PROGRESS">In Progress</option>
                 <option value="RESOLVED">Resolved</option>
                 <option value="CLOSED">Closed</option>
@@ -389,6 +405,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
                 value={sort}
                 onChange={handleSortChange}
               >
+                <option value="updatedAt_desc">Last Updated</option>
                 <option value="createdAt_desc">Newest First</option>
                 <option value="createdAt_asc">Oldest First</option>
                 <option value="ticketNumber_asc">Ticket Number (Asc)</option>
@@ -399,6 +416,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
         </div>
       )}
 
+      {(statusGroup || resolvedFrom) && <p className="workflow-feedback">{statusGroup ? "Active Tickets only. " : ""}{resolvedFrom ? `Resolved or Closed from ${resolvedFrom} to ${resolvedTo}. ` : ""}<button type="button" className="btn-secondary" onClick={clearFilters}>Clear All Filters</button></p>}
       {/* Error Callout */}
       {error && (
         <div style={{ padding: "12px 16px", backgroundColor: "#FEE2E2", border: "1px solid #FCA5A5", borderRadius: "8px", marginBottom: "20px", color: "#991B1B" }}>
@@ -483,7 +501,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
           {tickets.length > 0 && (
             <>
               {/* Desktop Table View */}
-              <div className="tickets-table-container">
+              <div className="tickets-table-container" role="region" aria-label="Scrollable Tickets table" tabIndex={0}>
                 <table className="tickets-table">
                   <thead>
                     <tr>
@@ -507,7 +525,10 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
                         style={{ cursor: onSelectTicket ? "pointer" : "default" }}
                       >
                         <td>
-                          <strong
+                          <button
+                            type="button" className="ticket-link-button"
+                            onClick={event => { event.stopPropagation(); onSelectTicket?.(t.id); }}
+                            aria-label={`Open ticket ${t.ticketNumber}`}
                             style={{
                               color: "var(--color-primary)",
                               textDecoration: onSelectTicket ? "underline" : "none",
@@ -516,7 +537,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
                             data-testid={`ticket-link-${t.id}`}
                           >
                             {t.ticketNumber}
-                          </strong>
+                          </button>
                         </td>
                         <td>{formatDate(t.createdAt)}</td>
                         <td>
@@ -550,6 +571,8 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
                   <div
                     key={t.id}
                     className="ticket-card"
+                    role="link" tabIndex={0} aria-label={`Open ticket ${t.ticketNumber}`}
+                    onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onSelectTicket?.(t.id); } }}
                     data-testid={`ticket-card-${t.id}`}
                     onClick={() => onSelectTicket?.(t.id)}
                     style={{ cursor: onSelectTicket ? "pointer" : "default" }}
@@ -597,25 +620,25 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
                     <strong>{pagination.totalItems}</strong> tickets
                   </div>
 
-                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", maxWidth: "100%", gap: "6px", alignItems: "center" }}>
                     <button
                       type="button"
                       className="btn-secondary"
                       aria-label="Previous page"
-                      style={{ padding: "6px 12px", minHeight: "32px", fontSize: "13px" }}
+                      style={{ padding: "6px 12px", minHeight: "44px", fontSize: "13px" }}
                       disabled={pagination.page <= 1}
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                     >
                       ◀ Previous
                     </button>
 
-                    {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((pNum) => (
+                    {paginationPages(pagination.page, pagination.totalPages).map((pNum) => (
                       <button
                         key={pNum}
                         type="button"
                         style={{
-                          minWidth: "32px",
-                          height: "32px",
+                          minWidth: "44px",
+                          height: "44px",
                           padding: "0 6px",
                           borderRadius: "6px",
                           border: pNum === pagination.page ? "1px solid var(--color-primary)" : "1px solid var(--color-border)",
@@ -634,7 +657,7 @@ export const MyTicketsPage: React.FC<MyTicketsPageProps> = ({ onNavigateToCreate
                       type="button"
                       className="btn-secondary"
                       aria-label="Next page"
-                      style={{ padding: "6px 12px", minHeight: "32px", fontSize: "13px" }}
+                      style={{ padding: "6px 12px", minHeight: "44px", fontSize: "13px" }}
                       disabled={pagination.page >= pagination.totalPages}
                       onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
                     >

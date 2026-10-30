@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
+import { TicketHistory, ResolutionSummary } from "./TicketHistory.js";
+import { ActionsTaken } from "./ActionsTaken.js";
 import {
   StaffTicketDetail as StaffTicketDetailType,
   EligibleOwner,
   Priority,
   TicketStatus,
   Entry,
+  AuthUser,
 } from "../types.js";
 import {
   API_URL,
@@ -23,6 +26,7 @@ import {
 interface StaffTicketDetailProps {
   ticketId: number;
   onBack: () => void;
+  actor?: AuthUser;
 }
 
 const STATUS_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
@@ -52,6 +56,7 @@ const OWNER_REQUIRED_STATUSES: TicketStatus[] = [
 export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
   ticketId,
   onBack,
+  actor,
 }) => {
   // Ticket loading state
   const [ticket, setTicket] = useState<StaffTicketDetailType | null>(null);
@@ -77,12 +82,14 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
 
   const [selectedStatus, setSelectedStatus] = useState<TicketStatus | "">("");
   const [isSavingStatus, setIsSavingStatus] = useState<boolean>(false);
+  const [resolutionErrors, setResolutionErrors] = useState<{ field: string; message: string }[]>([]);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [statusOwnerRequiredError, setStatusOwnerRequiredError] = useState<string | null>(null);
 
   // 409 conflict and refresh failure state
   const [conflictError, setConflictError] = useState<string | null>(null);
   const [refreshFailed, setRefreshFailed] = useState<boolean>(false);
+  const [ticketRefreshing, setTicketRefreshing] = useState(false);
 
   // Status confirmation modal state
   const [statusModalOpen, setStatusModalOpen] = useState<boolean>(false);
@@ -145,24 +152,28 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
   };
 
   const reloadTicket = async () => {
+    setTicketRefreshing(true);
     try {
       const data = await fetchStaffTicketDetail(ticketId);
       setTicket(data);
       setSelectedOwnerId(data.owner?.id ? String(data.owner.id) : "");
       setSelectedItPriority(data.itPriority || "LOW");
       const legalNext = STATUS_TRANSITIONS[data.status] || [];
-      setSelectedStatus(legalNext[0] || "");
+      setSelectedStatus(current => legalNext.includes(current as TicketStatus) ? current : legalNext[0] || "");
       setPublicComments(data.publicComments ?? []);
       setInternalNotes(data.internalNotes ?? []);
       setConflictError(null);
       setRefreshFailed(false);
       setStatusOwnerRequiredError(null);
       setStatusError(null);
+      setResolutionErrors([]);
       setOwnerError(null);
       setItPriorityError(null);
     } catch (err: any) {
       setRefreshFailed(true);
       throw err;
+    } finally {
+      setTicketRefreshing(false);
     }
   };
 
@@ -174,6 +185,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
   // Modal accessibility: ESC key & Tab trap
   useEffect(() => {
     if (!statusModalOpen) return;
+    if (!isConfirmingStatus) statusModalRef.current?.querySelector<HTMLButtonElement>("button:not([disabled])")?.focus();
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (!isConfirmingStatus) {
@@ -182,7 +194,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
       } else if (e.key === "Tab") {
         if (!statusModalRef.current) return;
         const focusables = statusModalRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
         );
         if (focusables.length === 0) return;
         const first = focusables[0];
@@ -360,11 +372,21 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
     }
   };
 
+  const renderResolutionBlockers = () => <div role="alert" className="resolution-blockers">
+    <strong>Resolution blocked by remaining work</strong>
+    <ul>{resolutionErrors.map(detail => <li key={detail.field}>{detail.message}</li>)}</ul>
+    <button type="button" className="btn-secondary" disabled={isConfirmingStatus} onClick={() => {
+      setStatusModalOpen(false); setTargetStatus(null);
+      setTimeout(() => { const heading = document.querySelector<HTMLElement>(".actions-taken[aria-label='Actions Taken'] h2"); heading?.scrollIntoView?.({ block: "center" }); heading?.focus({ preventScroll: true }); }, 0);
+    }}>Review Actions Taken</button>
+  </div>;
+
   // Status Transition Trigger
   const handleStatusChangeClick = async () => {
     if (!ticket || !selectedStatus || selectedStatus === ticket.status) return;
     setStatusError(null);
     setStatusOwnerRequiredError(null);
+    setResolutionErrors([]);
     setConflictError(null);
 
     // Check owner requirement for IN_PROGRESS, WAITING_FOR_REQUESTER, RESOLVED
@@ -431,7 +453,10 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
         statusTriggerRef.current?.focus();
       }, 0);
     } catch (err: any) {
-      if (err?.status === 409 || err?.code === "VERSION_CONFLICT" || err?.code === "STATUS_CONFLICT") {
+      if (err?.code === "RESOLUTION_BLOCKED") {
+        setResolutionErrors(err.details?.length ? err.details : [{ field: "work", message: err.message || "Finish the remaining work before resolving." }]);
+        setStatusError(null);
+      } else if (err?.status === 409 || err?.code === "VERSION_CONFLICT" || err?.code === "STATUS_CONFLICT") {
         setConflictError(err.message || "Conflict: Ticket was modified by another user.");
         setStatusModalOpen(false);
         setTargetStatus(null);
@@ -789,7 +814,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
           data-testid="staff-refresh-failed-banner"
           style={{
             backgroundColor: "#FFFBEB",
-            border: "1px solid #FCD34D",
+            border: "1px solid #B45309",
             borderRadius: "8px",
             padding: "16px 20px",
             marginBottom: "20px",
@@ -972,6 +997,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                 <div className="op-control-row">
                   <select
                     data-testid="select-owner"
+                    aria-label="Ticket Owner"
                     className="op-control-select"
                     value={selectedOwnerId}
                     disabled={ownersLoading || isSavingOwner || refreshFailed}
@@ -1027,6 +1053,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                 <div className="op-control-row">
                   <select
                     data-testid="select-it-priority"
+                    aria-label="IT Priority"
                     className="op-control-select"
                     value={selectedItPriority}
                     disabled={isSavingItPriority || refreshFailed}
@@ -1065,18 +1092,20 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
 
               {/* Status Transition */}
               <div className="op-control-section">
-                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--color-text-secondary)", textTransform: "uppercase", marginBottom: "8px" }}>
+                <label htmlFor="staff-next-status" style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--color-text-secondary)", textTransform: "uppercase", marginBottom: "8px" }}>
                   Next Status
                 </label>
 
                 <div className="op-control-row op-control-row-status">
                   <select
+                    id="staff-next-status"
                     data-testid="select-status"
                     className="op-control-select"
                     value={selectedStatus}
-                    disabled={legalNextStatuses.length === 0 || isSavingStatus || refreshFailed}
+                    disabled={legalNextStatuses.length === 0 || isSavingStatus || refreshFailed || ticketRefreshing}
                     onChange={(e) => {
                       setSelectedStatus(e.target.value as TicketStatus);
+                      setResolutionErrors([]);
                       if (statusError) setStatusError(null);
                       if (statusOwnerRequiredError) setStatusOwnerRequiredError(null);
                     }}
@@ -1101,23 +1130,25 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                     data-testid="btn-save-status"
                     className="op-control-btn"
                     onClick={handleStatusChangeClick}
-                    disabled={legalNextStatuses.length === 0 || isSavingStatus || refreshFailed}
+                    disabled={legalNextStatuses.length === 0 || isSavingStatus || refreshFailed || ticketRefreshing}
                     style={{
-                      cursor: legalNextStatuses.length === 0 || isSavingStatus || refreshFailed ? "not-allowed" : "pointer",
-                      opacity: legalNextStatuses.length === 0 || isSavingStatus || refreshFailed ? 0.6 : 1,
+                      cursor: legalNextStatuses.length === 0 || isSavingStatus || refreshFailed || ticketRefreshing ? "not-allowed" : "pointer",
+                      opacity: legalNextStatuses.length === 0 || isSavingStatus || refreshFailed || ticketRefreshing ? 0.6 : 1,
                     }}
                   >
                     {isSavingStatus ? "Updating..." : "Update Status"}
                   </button>
                 </div>
 
+                {selectedStatus === "RESOLVED" && <p className="resolution-guidance">Resolution requires completed work with a result, no planned/in-progress Actions, and no outstanding follow-up. The Requester's indication is advisory.</p>}
+                {resolutionErrors.length > 0 && !statusModalOpen && renderResolutionBlockers()}
                 {statusOwnerRequiredError && (
                   <div data-testid="status-owner-required-error" style={{ color: "var(--color-error)", fontSize: "12px", marginTop: "6px" }}>
                     {statusOwnerRequiredError}
                   </div>
                 )}
 
-                {statusError && (
+                {statusError && !statusModalOpen && (
                   <div style={{ color: "var(--color-error)", fontSize: "12px", marginTop: "6px" }}>
                     {statusError}
                   </div>
@@ -1325,9 +1356,9 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
 
           {/* Communication Sections: Public Comments & Internal Notes */}
           <div
+            className="staff-communication-grid"
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))",
               gap: "24px",
               borderTop: "1px solid var(--color-border)",
               paddingTop: "24px",
@@ -1343,7 +1374,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
               }}
               data-testid="staff-public-comments-section"
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+              <div className="staff-communication-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
                 <h3 style={{ fontSize: "15px", fontWeight: 700, margin: 0, color: "#166534" }}>
                   Public Comments ({publicComments.length})
                 </h3>
@@ -1369,7 +1400,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                         padding: "10px 12px",
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
+                      <div className="staff-communication-row" style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
                         <strong>{c.author?.name || (c as any).authorName || "User"} {c.author?.role ? `(${c.author.role})` : (c as any).authorRole ? `(${(c as any).authorRole})` : ""}</strong>
                         <span style={{ color: "#64748B" }}>{formatDate(c.createdAt)}</span>
                       </div>
@@ -1385,6 +1416,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
               <form onSubmit={handleSubmitPublicComment}>
                 <textarea
                   data-testid="input-staff-public-comment"
+                  aria-label="Public Comment"
                   value={publicCommentDraft}
                   onChange={(e) => {
                     setPublicCommentDraft(e.target.value);
@@ -1397,13 +1429,13 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                     width: "100%",
                     padding: "8px 10px",
                     borderRadius: "6px",
-                    border: publicCommentError ? "1px solid var(--color-error)" : "1px solid #86EFAC",
+                    border: publicCommentError ? "1px solid var(--color-error)" : "1px solid #15803D",
                     fontSize: "13px",
                     fontFamily: "inherit",
                     resize: "vertical",
                   }}
                 />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px" }}>
+                <div className="staff-communication-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px" }}>
                   <span style={{ fontSize: "11.5px", color: "#166534" }}>
                     {Array.from(publicCommentDraft.trim()).length} / 2000
                   </span>
@@ -1444,7 +1476,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
               }}
               data-testid="staff-internal-notes-section"
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+              <div className="staff-communication-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
                 <h3 style={{ fontSize: "15px", fontWeight: 700, margin: 0, color: "#92400E" }}>
                   Internal Notes ({internalNotes.length})
                 </h3>
@@ -1470,7 +1502,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                         padding: "10px 12px",
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
+                      <div className="staff-communication-row" style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
                         <strong>{n.author?.name || (n as any).authorName || "Staff"} {n.author?.role ? `(${n.author.role})` : (n as any).authorRole ? `(${(n as any).authorRole})` : ""}</strong>
                         <span style={{ color: "#64748B" }}>{formatDate(n.createdAt)}</span>
                       </div>
@@ -1486,6 +1518,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
               <form onSubmit={handleSubmitInternalNote}>
                 <textarea
                   data-testid="input-internal-note"
+                  aria-label="Internal Note"
                   value={internalNoteDraft}
                   onChange={(e) => {
                     setInternalNoteDraft(e.target.value);
@@ -1498,13 +1531,13 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                     width: "100%",
                     padding: "8px 10px",
                     borderRadius: "6px",
-                    border: internalNoteError ? "1px solid var(--color-error)" : "1px solid #FCD34D",
+                    border: internalNoteError ? "1px solid var(--color-error)" : "1px solid #B45309",
                     fontSize: "13px",
                     fontFamily: "inherit",
                     resize: "vertical",
                   }}
                 />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px" }}>
+                <div className="staff-communication-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px" }}>
                   <span style={{ fontSize: "11.5px", color: "#92400E" }}>
                     {Array.from(internalNoteDraft.trim()).length} / 2000
                   </span>
@@ -1537,6 +1570,11 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
           </div>
         </div>
       </div>
+
+      <ActionsTaken ticketId={ticket.id} ticketStatus={ticket.status} ticketCreatedAt={ticket.createdAt} ticketVersion={ticket.version ?? 0} actor={actor} onTicketChanged={reloadTicket} ticketRefreshFailed={refreshFailed} />
+
+      <ResolutionSummary status={ticket.status} resolvedAt={ticket.resolvedAt} estimated={ticket.resolvedAtEstimated} />
+      <TicketHistory ticketId={ticket.id} refreshKey={ticket.version ?? 0} />
 
       {/* Accessible Status Confirmation Dialog */}
       {statusModalOpen && targetStatus && (
@@ -1586,6 +1624,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
               This state transition requires formal confirmation.
             </p>
 
+            {resolutionErrors.length > 0 && renderResolutionBlockers()}
             {statusError && (
               <div
                 style={{

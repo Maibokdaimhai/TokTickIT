@@ -1,3 +1,4 @@
+import { unauditedFixtureTickets, removeUnreferencedFixtureUsers } from "../audit-fixture-cleanup.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import app from "../../src/app.js";
@@ -92,14 +93,15 @@ describe("API-14, API-15, API-16, API-20: Administrator User Management Integrat
 
   afterAll(async () => {
     const prisma = getPrisma();
-    if (createdTicketIds.length > 0) {
-      await prisma.internalNote.deleteMany({ where: { ticketId: { in: createdTicketIds } } });
-      await prisma.publicComment.deleteMany({ where: { ticketId: { in: createdTicketIds } } });
-      await prisma.ticket.deleteMany({ where: { id: { in: createdTicketIds } } });
+    const removableIds = await unauditedFixtureTickets(prisma, createdTicketIds);
+    if (removableIds.length > 0) {
+      await prisma.internalNote.deleteMany({ where: { ticketId: { in: removableIds } } });
+      await prisma.publicComment.deleteMany({ where: { ticketId: { in: removableIds } } });
+      await prisma.ticket.deleteMany({ where: { id: { in: removableIds } } });
     }
     if (createdUserIds.length > 0) {
       await prisma.session.deleteMany({ where: { userId: { in: createdUserIds } } });
-      await prisma.user.deleteMany({ where: { id: { in: createdUserIds } } });
+      await removeUnreferencedFixtureUsers(prisma, createdUserIds);
     }
   });
 

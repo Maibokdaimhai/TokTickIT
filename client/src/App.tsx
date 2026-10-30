@@ -10,13 +10,15 @@ import { TicketDetailPage } from "./components/TicketDetailPage.js";
 import { StaffTicketQueue } from "./components/StaffTicketQueue.js";
 import { StaffTicketDetail } from "./components/StaffTicketDetail.js";
 import { UserManagement } from "./components/UserManagement.js";
-import { FetchStaffTicketsParams } from "./types.js";
+import { Dashboard, MyActiveActions } from "./components/Dashboard.js";
+import { readTicketQuery, rememberTicketQuery, ticketListState, ticketListReturn } from "./utils/ticket-query.js";
 
-type TabType = "my-tickets" | "create-ticket" | "ticket-queue" | "user-management";
+type TabType = "dashboard" | "my-tickets" | "create-ticket" | "ticket-queue" | "user-management";
 
 interface MainContentProps {
   pathname: string;
-  navigate: (path: string, replace?: boolean) => void;
+  search: string;
+  navigate: (path: string, replace?: boolean, state?: unknown) => void;
 }
 
 const parsePositiveId = (val: string): number | null => {
@@ -133,25 +135,21 @@ const NotFoundView: React.FC<{ pathname: string; onHome: () => void }> = ({ path
   </div>
 );
 
-const MainContent: React.FC<MainContentProps> = ({ pathname, navigate }) => {
+const MainContent: React.FC<MainContentProps> = ({ pathname, search, navigate }) => {
   const { session } = useAuth();
   const { selectedRequester } = useRequester();
-  const [staffQueueParams, setStaffQueueParams] = useState<FetchStaffTicketsParams>({
-    page: 1,
-    limit: 10,
-    sort: "updatedAt_desc",
-  });
 
+  const savedReturn = session ? ticketListReturn(session.user) : null;
+  const staffListQuery = React.useRef(savedReturn?.startsWith("/staff/tickets?") ? savedReturn.slice("/staff/tickets".length) : "");
+  const requesterListQuery = React.useRef(savedReturn?.startsWith("/my-tickets?") ? savedReturn.slice("/my-tickets".length) : "");
   const role = session?.user.role;
   const getHomePath = () => {
-    if (role === "IT_STAFF") return "/staff/tickets";
-    if (role === "ADMINISTRATOR") return "/admin/users";
-    return "/my-tickets";
+    return role === "REQUESTER" ? "/dashboard" : "/staff/dashboard";
   };
   const homePath = getHomePath();
 
-  let activeTab: TabType = "my-tickets";
-  if (pathname === "/staff/tickets" || pathname.startsWith("/staff/tickets/")) {
+  let activeTab: TabType = "dashboard";
+  if (pathname === "/staff/actions" || pathname === "/staff/tickets" || pathname.startsWith("/staff/tickets/")) {
     activeTab = "ticket-queue";
   } else if (pathname === "/admin/users") {
     activeTab = "user-management";
@@ -163,8 +161,11 @@ const MainContent: React.FC<MainContentProps> = ({ pathname, navigate }) => {
 
   const handleTabChange = (tab: TabType) => {
     switch (tab) {
+      case "dashboard":
+        navigate(homePath);
+        break;
       case "ticket-queue":
-        navigate("/staff/tickets");
+        navigate("/staff/tickets" + staffListQuery.current);
         break;
       case "user-management":
         navigate("/admin/users");
@@ -174,7 +175,7 @@ const MainContent: React.FC<MainContentProps> = ({ pathname, navigate }) => {
         break;
       case "my-tickets":
       default:
-        navigate("/my-tickets");
+        navigate("/my-tickets" + requesterListQuery.current);
         break;
     }
   };
@@ -203,6 +204,11 @@ const MainContent: React.FC<MainContentProps> = ({ pathname, navigate }) => {
 
       <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px 16px" }}>
         {/* Route Dispatching */}
+        {(pathname === "/dashboard" || pathname === "/staff/dashboard") && (
+          (pathname === "/dashboard" && role === "REQUESTER") || (pathname === "/staff/dashboard" && (role === "IT_STAFF" || role === "ADMINISTRATOR")) ?
+            <Dashboard staff={role !== "REQUESTER"} navigate={navigate} /> : <ForbiddenView message="This Dashboard is not available for your role." onHome={() => navigate(homePath)} />
+        )}
+        {pathname === "/staff/actions" && (role === "IT_STAFF" || role === "ADMINISTRATOR" ? <MyActiveActions search={search} navigate={navigate} /> : <ForbiddenView message="Actions are available to Staff and Administrators." onHome={() => navigate(homePath)} />)}
         {pathname === "/change-password" && (
           <AuthPage change onDone={() => navigate(homePath)} />
         )}
@@ -210,11 +216,8 @@ const MainContent: React.FC<MainContentProps> = ({ pathname, navigate }) => {
         {/* 1. Staff Ticket Queue */}
         {pathname === "/staff/tickets" && (
           role === "IT_STAFF" || role === "ADMINISTRATOR" ? (
-            <StaffTicketQueue
-              initialParams={staffQueueParams}
-              onParamsChange={setStaffQueueParams}
-              onOpenTicket={(id) => navigate(`/staff/tickets/${id}`)}
-            />
+            (() => { try { return <StaffTicketQueue key={search} initialParams={readTicketQuery(search, true)} onParamsChange={p => { rememberTicketQuery("/staff/tickets", p); staffListQuery.current = window.location.search; }} onOpenTicket={id => navigate(`/staff/tickets/${id}`, false, ticketListState(session!.user))} />; }
+              catch { return <div role="alert">Invalid Ticket filters. <button type="button" onClick={() => navigate("/staff/tickets", true)}>Clear filters</button></div>; } })()
           ) : (
             <ForbiddenView
               message="You do not have permission to access the staff ticket queue."
@@ -235,7 +238,8 @@ const MainContent: React.FC<MainContentProps> = ({ pathname, navigate }) => {
               return (
                 <StaffTicketDetail
                   ticketId={ticketId}
-                  onBack={() => navigate("/staff/tickets")}
+                  actor={session?.user}
+                  onBack={() => navigate(ticketListReturn(session!.user) ?? "/staff/tickets" + staffListQuery.current)}
                 />
               );
             })()
@@ -262,10 +266,8 @@ const MainContent: React.FC<MainContentProps> = ({ pathname, navigate }) => {
         {/* 4. Requester Tickets List */}
         {pathname === "/my-tickets" && (
           role === "REQUESTER" ? (
-            <MyTicketsPage
-              onNavigateToCreate={() => navigate("/tickets/new")}
-              onSelectTicket={(id) => navigate(`/tickets/${id}`)}
-            />
+            (() => { try { return <MyTicketsPage key={search} initialParams={readTicketQuery(search, false)} onParamsChange={p => { rememberTicketQuery("/my-tickets", p); requesterListQuery.current = window.location.search; }} onNavigateToCreate={() => navigate("/tickets/new")} onSelectTicket={id => navigate(`/tickets/${id}`, false, ticketListState(session!.user))} />; }
+              catch { return <div role="alert">Invalid Ticket filters. <button type="button" onClick={() => navigate("/my-tickets", true)}>Clear filters</button></div>; } })()
           ) : (
             <ForbiddenView
               message="Staff and administrators manage tickets through the staff queue."
@@ -300,7 +302,7 @@ const MainContent: React.FC<MainContentProps> = ({ pathname, navigate }) => {
               return (
                 <TicketDetailPage
                   ticketId={ticketId}
-                  onBack={() => navigate("/my-tickets")}
+                  onBack={() => navigate(ticketListReturn(session!.user) ?? "/my-tickets" + requesterListQuery.current)}
                 />
               );
             })()
@@ -313,7 +315,7 @@ const MainContent: React.FC<MainContentProps> = ({ pathname, navigate }) => {
         )}
 
         {/* 7. Unknown route */}
-        {pathname !== "/change-password" &&
+        {pathname !== "/dashboard" && pathname !== "/staff/dashboard" && pathname !== "/staff/actions" && pathname !== "/change-password" &&
           pathname !== "/staff/tickets" &&
           !pathname.startsWith("/staff/tickets/") &&
           pathname !== "/admin/users" &&
@@ -338,19 +340,31 @@ export default function App() {
 function SessionGate() {
   const { session, loading } = useAuth();
   const [pathname, setPathname] = useState<string>(() => window.location.pathname || "/");
+  const [search, setSearch] = useState(() => window.location.search);
+  const acceptedLocation = React.useRef(window.location.pathname + window.location.search);
+  const acceptedState = React.useRef(window.history.state);
+
+  useEffect(() => { acceptedLocation.current = window.location.pathname + window.location.search; acceptedState.current = window.history.state; }, [pathname]);
 
   const getHomePath = () => {
-    if (session?.user.role === "IT_STAFF") return "/staff/tickets";
-    if (session?.user.role === "ADMINISTRATOR") return "/admin/users";
-    return "/my-tickets";
+    return session?.user.role === "REQUESTER" ? "/dashboard" : "/staff/dashboard";
   };
 
   useEffect(() => {
     const onPopState = () => {
+      if (!window.dispatchEvent(new Event("app:before-navigate", { cancelable: true }))) {
+        window.history.pushState(acceptedState.current, "", acceptedLocation.current);
+        return;
+      }
+      acceptedLocation.current = window.location.pathname + window.location.search;
+      acceptedState.current = window.history.state;
       setPathname(window.location.pathname || "/");
+      setSearch(window.location.search);
     };
+    const rememberLocation = () => { acceptedLocation.current = window.location.pathname + window.location.search; acceptedState.current = window.history.state; };
     window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
+    window.addEventListener("app:location-changed", rememberLocation);
+    return () => { window.removeEventListener("popstate", onPopState); window.removeEventListener("app:location-changed", rememberLocation); };
   }, []);
 
   useEffect(() => {
@@ -379,13 +393,17 @@ function SessionGate() {
     }
   }, [loading, session, pathname]);
 
-  const navigate = (newPath: string, replace = false) => {
+  const navigate = (newPath: string, replace = false, state: unknown = null) => {
+    if (newPath !== window.location.pathname + window.location.search && !window.dispatchEvent(new Event("app:before-navigate", { cancelable: true }))) return;
     if (replace) {
-      window.history.replaceState(null, "", newPath);
+      window.history.replaceState(state, "", newPath);
     } else {
-      window.history.pushState(null, "", newPath);
+      window.history.pushState(state, "", newPath);
     }
-    setPathname(newPath);
+    setPathname(window.location.pathname);
+    setSearch(window.location.search);
+    acceptedLocation.current = window.location.pathname + window.location.search;
+    acceptedState.current = window.history.state;
   };
 
   if (loading) {
@@ -415,6 +433,7 @@ function SessionGate() {
       <MainContent
         key={session.user.id}
         pathname={activePathname}
+        search={search}
         navigate={navigate}
       />
     </RequesterProvider>

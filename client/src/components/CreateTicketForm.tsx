@@ -296,7 +296,7 @@ export const CreateTicketForm: React.FC<CreateTicketFormProps> = ({ onTicketCrea
 
       <form onSubmit={handleSubmit} noValidate>
         {/* Read-Only Ticket Header Info */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", padding: "16px", backgroundColor: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "8px", marginBottom: "24px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", overflowWrap: "anywhere", gap: "16px", padding: "16px", backgroundColor: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "8px", marginBottom: "24px" }}>
           <div>
             <span style={{ fontSize: "12px", fontWeight: "700", color: "#475569", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "2px" }}>Ticket Number</span>
             <strong style={{ fontSize: "15px", color: "var(--color-primary)" }}>TKT-2026-AUTO (Assigned on Submit)</strong>

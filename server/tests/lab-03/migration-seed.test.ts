@@ -1,3 +1,4 @@
+import { assertSafeDatabaseUrl } from "../../../e2e/lab-03/db-guard.js";
 import { beforeAll, afterAll, describe, expect, it, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
 import { execFileSync } from "node:child_process";
@@ -14,6 +15,7 @@ import * as database from "../../src/prisma.js";
 
 // Real SQL rehearsal in a unique schema of the configured disposable test database.
 // Every target below is created here; ordinary application schemas are never reset.
+assertSafeDatabaseUrl(process.env.DATABASE_URL, process.env.E2E_ALLOW_DB_WRITE);
 const schema = `migration_test_${randomUUID().replaceAll("-", "")}`;
 const url = new URL(process.env.DATABASE_URL!); url.searchParams.set("schema", schema);
 const prisma = new PrismaClient({ datasources: { db: { url: url.toString() } } });
@@ -22,6 +24,8 @@ let directory: string;
 let fileHash: string;
 let migrated = false;
 const migrations = fs.readdirSync("prisma/migrations").filter(value => /^\d/.test(value)).sort();
+const lab3Migration = "20260914040000_lab3_users_auth";
+const laterMigrations = migrations.filter(name => name > lab3Migration);
 const runMigration = (name: string) => execFileSync(process.execPath, ["node_modules/prisma/build/index.js", "db", "execute", "--url", url.toString(), "--file", `prisma/migrations/${name}/migration.sql`], { stdio: "pipe" });
 const checksum = (file: string) => createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 beforeAll(async () => {
@@ -29,7 +33,7 @@ beforeAll(async () => {
   directory = fs.mkdtempSync(path.join(os.tmpdir(), "toktickit-migration-"));
   fs.writeFileSync(path.join(directory, "legacy.pdf"), "%PDF-1.4 preserved attachment bytes");
   fileHash = checksum(path.join(directory, "legacy.pdf"));
-  for (const name of migrations.slice(0, -1)) runMigration(name);
+  for (const name of migrations.filter(name => name < lab3Migration)) runMigration(name);
   await prisma.$executeRaw`INSERT INTO "RequesterUser" (id,name,email,department,"isActive","createdAt","updatedAt") VALUES
     (41,'Migrated active','  MIGRATED@example.com  ','Support',true,'2026-01-01','2026-02-01'),
     (42,'Migrated inactive','inactive@example.com','Support',false,'2026-01-01','2026-02-01')`;
@@ -65,14 +69,18 @@ describe.sequential("Lab 2 migration and idempotent Lab 3 fixtures", () => {
   }, 30000);
   it("aborts normalized email collisions without partial changes", async () => {
     await prisma.$executeRaw`INSERT INTO "RequesterUser" (id,name,email,department,"updatedAt") VALUES (43,'Collision','migrated@example.com','Support',now())`;
-    expect(() => runMigration(migrations.at(-1)!)).toThrow();
+    expect(() => runMigration(lab3Migration)).toThrow();
     expect(await prisma.$queryRaw`SELECT 1 FROM information_schema.tables WHERE table_schema = ${schema} AND table_name = 'User'`).toEqual([]);
     const before = await prisma.$queryRaw<{ itPriority: string | null }[]>`SELECT "itPriority" FROM "Ticket" WHERE id=1`;
     expect(before[0].itPriority).toBeNull();
     await prisma.$executeRaw`DELETE FROM "RequesterUser" WHERE id=43`;
   });
   it("preserves identities/tickets/files, fills only null priority, fails closed then bootstraps once", async () => {
-    runMigration(migrations.at(-1)!); migrated = true;
+    runMigration(lab3Migration);
+    // Prisma projects the current schema; keep the Lab 3 rehearsal assertions while
+    // applying later additive migrations before reading through the generated client.
+    for (const name of laterMigrations) runMigration(name);
+    migrated = true;
     await expect(ensureAuthReady(prisma)).rejects.toThrow("bootstrap");
     expect(await bootstrapPasswords(password, prisma)).toBe(2); await ensureAuthReady(prisma);
     const users = await prisma.user.findMany({ orderBy: { id: "asc" } });

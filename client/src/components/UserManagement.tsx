@@ -1111,7 +1111,7 @@ export const UserManagement: React.FC = () => {
       ) : (
         <>
           {/* Desktop Table */}
-          <div className="users-table-container desktop-only">
+          <div className="users-table-container desktop-only" role="region" aria-label="Scrollable Users table" tabIndex={0}>
             <table className="users-table" aria-label="Users">
               <thead>
                 <tr>

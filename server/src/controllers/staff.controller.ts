@@ -1,5 +1,10 @@
 import * as service from "../services/staff.service.js";
 import { asyncHandler } from "../middleware/async-handler.js";
+import { ApiError } from "../errors/api-error.js";
+
+function noWorkflowQuery(query: Record<string, unknown>) {
+  if (Object.keys(query).length) throw new ApiError(400, { code: "BAD_REQUEST", message: "Invalid query parameters" });
+}
 
 export const listStaffTickets = asyncHandler(async (req, res) => {
   res.status(200).json(await service.listStaffTickets(req.query, res.locals.user.id));
@@ -14,6 +19,7 @@ export const getStaffTicketDetail = asyncHandler(async (req, res) => {
 }, "Failed to retrieve staff ticket detail");
 
 export const claimTicket = asyncHandler(async (req, res) => {
+  noWorkflowQuery(req.query);
   res.status(200).json(await service.claimTicket(req.params.id, req.body, res.locals.user));
 }, "Failed to claim ticket");
 
@@ -26,5 +32,6 @@ export const updateItPriority = asyncHandler(async (req, res) => {
 }, "Failed to update IT priority");
 
 export const updateStatus = asyncHandler(async (req, res) => {
+  noWorkflowQuery(req.query);
   res.status(200).json(await service.updateStatus(req.params.id, req.body, res.locals.user));
 }, "Failed to update ticket status");

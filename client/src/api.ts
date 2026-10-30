@@ -30,13 +30,13 @@ export class AuthError extends Error {
 }
 
 export class ApiClientError extends Error {
-  constructor(message: string, public status: number, public code?: string) {
+  constructor(message: string, public status: number, public code?: string, public details?: { field: string; message: string }[]) {
     super(message);
     this.name = "ApiClientError";
   }
 }
 // All browser requests use the HttpOnly session cookie, never localStorage credentials.
-async function apiFetch(url: string, init?: RequestInit) {
+export async function apiFetch(url: string, init?: RequestInit) {
   const response = await fetch(url, { ...init, credentials: "include" });
   if (!url.includes("/api/auth/") && (response.status === 401 || response.status === 403)) {
     if (response.status === 401) window.dispatchEvent(new Event("auth:expired"));
@@ -155,6 +155,7 @@ export async function uploadAttachment(ticketId: number, file: File): Promise<an
 
 export async function fetchMyTickets(params: FetchTicketsParams): Promise<TicketsResponse> {
   const query = new URLSearchParams();
+  for (const key of ["statusGroup", "resolvedFrom", "resolvedTo"] as const) if (params[key] !== undefined) query.set(key, params[key]!);
   if (params.search && params.search.trim()) {
     query.append("search", params.search.trim());
   }
@@ -180,7 +181,7 @@ export async function fetchMyTickets(params: FetchTicketsParams): Promise<Ticket
   const res = await apiFetch(`${API_URL}/api/tickets?${query.toString()}`, { signal: params.signal });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data?.error?.message || "Failed to fetch tickets");
+    throw new ApiClientError(data?.error?.message || "Failed to fetch tickets", res.status, data?.error?.code);
   }
 
   return data;
@@ -227,6 +228,7 @@ export async function downloadAttachmentByUrl(url: string): Promise<Response> {
 
 export async function fetchStaffTickets(params: FetchStaffTicketsParams = {}): Promise<StaffTicketsResponse> {
   const query = new URLSearchParams();
+  for (const key of ["statusGroup", "resolvedFrom", "resolvedTo"] as const) if (params[key] !== undefined) query.set(key, params[key]!);
   if (params.search && params.search.trim()) {
     query.append("search", params.search.trim());
   }
@@ -376,7 +378,8 @@ export async function updateStaffTicketStatus(
   });
   const data = await res.json().catch(() => null);
   if (!res.ok) {
-    throw new ApiClientError(data?.error?.message || "Failed to update ticket status", res.status, data?.error?.code);
+    const details = Array.isArray(data?.error?.details) ? data.error.details.filter((detail: any) => typeof detail?.field === "string" && typeof detail?.message === "string") : undefined;
+    throw new ApiClientError(data?.error?.message || "Failed to update ticket status", res.status, data?.error?.code, details);
   }
   return data;
 }
