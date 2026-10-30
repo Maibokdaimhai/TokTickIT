@@ -1,0 +1,1502 @@
+{
+  "testedCommit": "51d0d7aeef13097376a9e3fd98bcaea670d8f191",
+  "dateLocal": "2026-10-31",
+  "timeZone": "Asia/Bangkok",
+  "scenarios": 65,
+  "checkedText": 7407,
+  "checkedControls": 1717,
+  "checkedBoundaries": 245,
+  "records": [
+    {
+      "scenario": "login-320",
+      "viewport": {
+        "width": 320,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 320,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 5,
+      "checkedControls": 4,
+      "checkedBoundaries": 2,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "login-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cssViewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 5,
+      "checkedControls": 4,
+      "checkedBoundaries": 2,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "login-820",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "cssViewport": {
+        "width": 820,
+        "height": 1180,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 5,
+      "checkedControls": 4,
+      "checkedBoundaries": 2,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "login-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 5,
+      "checkedControls": 4,
+      "checkedBoundaries": 2,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "login-zoom-equivalent-200",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 720,
+        "height": 450,
+        "deviceScaleFactor": 2
+      },
+      "overflowElements": [],
+      "checkedText": 5,
+      "checkedControls": 4,
+      "checkedBoundaries": 2,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "requester-dashboard-320",
+      "viewport": {
+        "width": 320,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 320,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 36,
+      "checkedControls": 10,
+      "checkedBoundaries": 0,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "requester-dashboard-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cssViewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 36,
+      "checkedControls": 10,
+      "checkedBoundaries": 0,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "requester-dashboard-820",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "cssViewport": {
+        "width": 820,
+        "height": 1180,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 36,
+      "checkedControls": 10,
+      "checkedBoundaries": 0,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "requester-dashboard-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 36,
+      "checkedControls": 10,
+      "checkedBoundaries": 0,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "requester-dashboard-zoom-equivalent-200",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 720,
+        "height": 450,
+        "deviceScaleFactor": 2
+      },
+      "overflowElements": [],
+      "checkedText": 36,
+      "checkedControls": 10,
+      "checkedBoundaries": 0,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "my-tickets-320",
+      "viewport": {
+        "width": 320,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 320,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 42,
+      "checkedControls": 12,
+      "checkedBoundaries": 5,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "my-tickets-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cssViewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 42,
+      "checkedControls": 12,
+      "checkedBoundaries": 5,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "my-tickets-820",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "cssViewport": {
+        "width": 820,
+        "height": 1180,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 48,
+      "checkedControls": 13,
+      "checkedBoundaries": 5,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "my-tickets-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 48,
+      "checkedControls": 13,
+      "checkedBoundaries": 5,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "my-tickets-zoom-equivalent-200",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 720,
+        "height": 450,
+        "deviceScaleFactor": 2
+      },
+      "overflowElements": [],
+      "checkedText": 42,
+      "checkedControls": 12,
+      "checkedBoundaries": 5,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "create-ticket-320",
+      "viewport": {
+        "width": 320,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 320,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 36,
+      "checkedControls": 12,
+      "checkedBoundaries": 5,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "create-ticket-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cssViewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 36,
+      "checkedControls": 12,
+      "checkedBoundaries": 5,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "create-ticket-820",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "cssViewport": {
+        "width": 820,
+        "height": 1180,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 36,
+      "checkedControls": 12,
+      "checkedBoundaries": 5,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "create-ticket-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 36,
+      "checkedControls": 12,
+      "checkedBoundaries": 5,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "create-ticket-zoom-equivalent-200",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 720,
+        "height": 450,
+        "deviceScaleFactor": 2
+      },
+      "overflowElements": [],
+      "checkedText": 36,
+      "checkedControls": 12,
+      "checkedBoundaries": 5,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "requester-detail-history-320",
+      "viewport": {
+        "width": 320,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 320,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [
+        {
+          "element": "div.",
+          "right": 610.546875
+        },
+        {
+          "element": "div.",
+          "right": 610.546875
+        }
+      ],
+      "checkedText": 103,
+      "checkedControls": 12,
+      "checkedBoundaries": 1,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "requester-detail-history-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cssViewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [
+        {
+          "element": "div.",
+          "right": 610.546875
+        },
+        {
+          "element": "div.",
+          "right": 610.546875
+        }
+      ],
+      "checkedText": 103,
+      "checkedControls": 12,
+      "checkedBoundaries": 1,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "requester-detail-history-820",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "cssViewport": {
+        "width": 820,
+        "height": 1180,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 103,
+      "checkedControls": 12,
+      "checkedBoundaries": 1,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "requester-detail-history-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 103,
+      "checkedControls": 12,
+      "checkedBoundaries": 1,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "requester-detail-history-zoom-equivalent-200",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 720,
+        "height": 450,
+        "deviceScaleFactor": 2
+      },
+      "overflowElements": [],
+      "checkedText": 103,
+      "checkedControls": 12,
+      "checkedBoundaries": 1,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "staff-dashboard-320",
+      "viewport": {
+        "width": 320,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 320,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 116,
+      "checkedControls": 26,
+      "checkedBoundaries": 0,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "staff-dashboard-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cssViewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 116,
+      "checkedControls": 26,
+      "checkedBoundaries": 0,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "staff-dashboard-820",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "cssViewport": {
+        "width": 820,
+        "height": 1180,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 116,
+      "checkedControls": 26,
+      "checkedBoundaries": 0,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "staff-dashboard-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 116,
+      "checkedControls": 26,
+      "checkedBoundaries": 0,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "staff-dashboard-zoom-equivalent-200",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 720,
+        "height": 450,
+        "deviceScaleFactor": 2
+      },
+      "overflowElements": [],
+      "checkedText": 116,
+      "checkedControls": 26,
+      "checkedBoundaries": 0,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "my-active-actions-320",
+      "viewport": {
+        "width": 320,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 320,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 23,
+      "checkedControls": 6,
+      "checkedBoundaries": 0,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "my-active-actions-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cssViewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 23,
+      "checkedControls": 6,
+      "checkedBoundaries": 0,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "my-active-actions-820",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "cssViewport": {
+        "width": 820,
+        "height": 1180,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 23,
+      "checkedControls": 6,
+      "checkedBoundaries": 0,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "my-active-actions-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 23,
+      "checkedControls": 6,
+      "checkedBoundaries": 0,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "my-active-actions-zoom-equivalent-200",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 720,
+        "height": 450,
+        "deviceScaleFactor": 2
+      },
+      "overflowElements": [],
+      "checkedText": 23,
+      "checkedControls": 6,
+      "checkedBoundaries": 0,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "staff-queue-320",
+      "viewport": {
+        "width": 320,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 320,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 194,
+      "checkedControls": 28,
+      "checkedBoundaries": 8,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "staff-queue-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cssViewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 194,
+      "checkedControls": 28,
+      "checkedBoundaries": 8,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "staff-queue-820",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "cssViewport": {
+        "width": 820,
+        "height": 1180,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 133,
+      "checkedControls": 28,
+      "checkedBoundaries": 8,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "staff-queue-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 133,
+      "checkedControls": 28,
+      "checkedBoundaries": 8,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "staff-queue-zoom-equivalent-200",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 720,
+        "height": 450,
+        "deviceScaleFactor": 2
+      },
+      "overflowElements": [],
+      "checkedText": 194,
+      "checkedControls": 28,
+      "checkedBoundaries": 8,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "staff-detail-320",
+      "viewport": {
+        "width": 320,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 320,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [
+        {
+          "element": "div.",
+          "right": 345.734375
+        },
+        {
+          "element": "div.",
+          "right": 345.734375
+        },
+        {
+          "element": "span.",
+          "right": 345.734375
+        },
+        {
+          "element": "div.",
+          "right": 345.734375
+        }
+      ],
+      "checkedText": 97,
+      "checkedControls": 18,
+      "checkedBoundaries": 5,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "staff-detail-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cssViewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 97,
+      "checkedControls": 18,
+      "checkedBoundaries": 5,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "staff-detail-820",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "cssViewport": {
+        "width": 820,
+        "height": 1180,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 97,
+      "checkedControls": 18,
+      "checkedBoundaries": 5,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "staff-detail-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 97,
+      "checkedControls": 18,
+      "checkedBoundaries": 5,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "staff-detail-zoom-equivalent-200",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 720,
+        "height": 450,
+        "deviceScaleFactor": 2
+      },
+      "overflowElements": [],
+      "checkedText": 97,
+      "checkedControls": 18,
+      "checkedBoundaries": 5,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "action-editor-320",
+      "viewport": {
+        "width": 320,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 320,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [
+        {
+          "element": "div.",
+          "right": 345.734375
+        },
+        {
+          "element": "div.",
+          "right": 345.734375
+        },
+        {
+          "element": "span.",
+          "right": 345.734375
+        },
+        {
+          "element": "div.",
+          "right": 345.734375
+        }
+      ],
+      "checkedText": 126,
+      "checkedControls": 28,
+      "checkedBoundaries": 12,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "action-editor-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cssViewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 126,
+      "checkedControls": 28,
+      "checkedBoundaries": 12,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "action-editor-820",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "cssViewport": {
+        "width": 820,
+        "height": 1180,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 126,
+      "checkedControls": 28,
+      "checkedBoundaries": 12,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "action-editor-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 126,
+      "checkedControls": 28,
+      "checkedBoundaries": 12,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "action-editor-zoom-equivalent-200",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 720,
+        "height": 450,
+        "deviceScaleFactor": 2
+      },
+      "overflowElements": [],
+      "checkedText": 126,
+      "checkedControls": 28,
+      "checkedBoundaries": 12,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "user-management-320",
+      "viewport": {
+        "width": 320,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 320,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 366,
+      "checkedControls": 86,
+      "checkedBoundaries": 2,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "user-management-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cssViewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 366,
+      "checkedControls": 86,
+      "checkedBoundaries": 2,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "user-management-820",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "cssViewport": {
+        "width": 820,
+        "height": 1180,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 294,
+      "checkedControls": 86,
+      "checkedBoundaries": 2,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "user-management-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 294,
+      "checkedControls": 86,
+      "checkedBoundaries": 2,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "user-management-zoom-equivalent-200",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 720,
+        "height": 450,
+        "deviceScaleFactor": 2
+      },
+      "overflowElements": [],
+      "checkedText": 366,
+      "checkedControls": 86,
+      "checkedBoundaries": 2,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "create-user-dialog-320",
+      "viewport": {
+        "width": 320,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 320,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 394,
+      "checkedControls": 95,
+      "checkedBoundaries": 6,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "create-user-dialog-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cssViewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 394,
+      "checkedControls": 95,
+      "checkedBoundaries": 6,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "create-user-dialog-820",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "cssViewport": {
+        "width": 820,
+        "height": 1180,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 322,
+      "checkedControls": 95,
+      "checkedBoundaries": 6,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "create-user-dialog-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 322,
+      "checkedControls": 95,
+      "checkedBoundaries": 6,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "create-user-dialog-zoom-equivalent-200",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 720,
+        "height": 450,
+        "deviceScaleFactor": 2
+      },
+      "overflowElements": [],
+      "checkedText": 394,
+      "checkedControls": 95,
+      "checkedBoundaries": 6,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "change-password-320",
+      "viewport": {
+        "width": 320,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 320,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 23,
+      "checkedControls": 6,
+      "checkedBoundaries": 3,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "change-password-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cssViewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 23,
+      "checkedControls": 6,
+      "checkedBoundaries": 3,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "change-password-820",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "cssViewport": {
+        "width": 820,
+        "height": 1180,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 23,
+      "checkedControls": 6,
+      "checkedBoundaries": 3,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "change-password-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "overflowElements": [],
+      "checkedText": 23,
+      "checkedControls": 6,
+      "checkedBoundaries": 3,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    },
+    {
+      "scenario": "change-password-zoom-equivalent-200",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cssViewport": {
+        "width": 720,
+        "height": 450,
+        "deviceScaleFactor": 2
+      },
+      "overflowElements": [],
+      "checkedText": 23,
+      "checkedControls": 6,
+      "checkedBoundaries": 3,
+      "contrastFailures": [],
+      "boundsFailures": [],
+      "targetFailures": [],
+      "nameFailures": [],
+      "pageOverflow": false,
+      "reducedMotion": true
+    }
+  ],
+  "selectedScreenshots": [
+    "artifacts/lab-04/screenshots/final-main/requester-dashboard-390.png",
+    "artifacts/lab-04/screenshots/final-main/requester-dashboard-1440.png",
+    "artifacts/lab-04/screenshots/final-main/staff-dashboard-390.png",
+    "artifacts/lab-04/screenshots/final-main/staff-dashboard-1440.png",
+    "artifacts/lab-04/screenshots/final-main/action-editor-390.png",
+    "artifacts/lab-04/screenshots/final-main/user-management-320.png"
+  ],
+  "limits": "Computed/sample browser checks and zoom-equivalent reflow; not formal accessibility certification or native toolbar zoom."
+}
