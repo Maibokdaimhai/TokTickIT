@@ -4,7 +4,7 @@ IT Service Desk application built with React, TypeScript, Vite, Express, Prisma,
 
 Lab 4 adds Actions Taken with revision history and follow-up completion, enforced Ticket resolution, public status history, and role-scoped dashboards with filtered drill-downs. Session-based ownership, Public Comments, private Internal Notes, attachments, and Administrator account safeguards from earlier labs remain in place.
 
-Lab 4 staging increments and documentation were integrated into `main` through [release PR #60](https://github.com/Maibokdaimhai/TokTickIT/pull/60). Verification on `51d0d7aeef13097376a9e3fd98bcaea670d8f191` has executed: suites/builds passed, but compiled API startup failed. This branch fixes the build layout and records separate correction results; see [final-main verification](docs/lab-04/final-main-verification.md). [Issue #53](https://github.com/Maibokdaimhai/TokTickIT/issues/53) remains open until the correction is merged and verified on the updated main SHA. The PDF follows that verification.
+Lab 4 release and the production-start correction are merged into `main`. All executed release checks passed on `351cfa7833e8a7b5ffb2778df0d12c255e92f66a` after [PR #61](https://github.com/Maibokdaimhai/TokTickIT/pull/61) merged: see [corrected-main confirmation](docs/lab-04/final-main-verification.md#corrected-main-confirmation--31-october-2026). This final evidence PR changes documentation/artifacts only. PDF preparation follows as the final submission step.
 
 ## Backend Structure
 
@@ -186,7 +186,9 @@ Screenshots default to the regression evidence directories. To preserve committe
 
 The [test record](docs/lab-04/tests.md), [regression runbook](docs/lab-04/regression-and-evidence.md), and [sanitized verification artifacts](artifacts/lab-04/verification/) identify the actual tested snapshots. Recorded regression results include 384 backend tests, 195 client tests, 38 real-browser cases, 14 controlled-browser cases, and 65 rendered scenarios. Performance was separately measured with 10,000 Tickets/30,000 Actions. A later PR #58 guard correction passed 56 focused tests without database operations.
 
-The preceding counts describe historical staging executions. A new [actual-main run](docs/lab-04/final-main-verification.md) records 424 backend, 195 client, 38 real-browser, 14 controlled-browser, 65 rendered scenarios, and separately passed performance/restore checks; compiled startup failed. The correction separately passes 425 backend tests including compiled startup. It awaits verification on the updated merged-main SHA. Historical phase limits follow: The final motion-only follow-up was checked with client/controlled-browser suites after test-DB cleanup; the full database/browser suites were not rerun for that change. PR #58's guard-only checks likewise do not replace a complete release run. Preserve those phase limits when reporting results.
+The preceding counts describe historical staging executions. The [corrected-main confirmation](docs/lab-04/final-main-verification.md#corrected-main-confirmation--31-october-2026) records **425 backend, 195 client, 38 real-browser, 14 controlled-browser, and 65 rendered scenarios**, plus separately passed performance and actual restore/startup checks, all on main `351cfa7`. Both packages' typechecks/builds passed. The default performance skip is explicitly covered by its separate enabled run.
+
+The earlier main startup failure and branch-only correction remain documented as history. They are superseded by the successful corrected-main run rather than silently relabelled. Existing dependencies were reused; no fresh npm installation, deployment, production SLA, or formal accessibility certification is claimed.
 
 ## Demo Walkthrough
 
@@ -210,4 +212,4 @@ Stop writes and retain the failed/post-migration database for investigation. Res
 - [Tests and traceability](docs/lab-04/tests.md) and [actual-main results/correction](docs/lab-04/final-main-verification.md)
 - [Peer-review record](docs/lab-04/reviewer.md) and [AI-use/reflection](docs/lab-04/ai-use.md)
 
-Current sequence: review/merge the compiled-startup correction into `main`, record and verify the updated main SHA, complete the remaining DoD/Issue #53 status, then prepare the nine-part submission PDF last. The previous release integration and main test execution are complete; a fully passing updated main release is not yet claimed.
+Release integration and corrected-main verification are complete. Review/merge this documentation-only evidence PR, then prepare the nine-part submission PDF last. Issue #53 is currently closed on GitHub; PDF completion is not claimed by these technical verification results.

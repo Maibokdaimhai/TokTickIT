@@ -1,6 +1,6 @@
 # Lab 4 UI Contract - TokTickIT
 
-Status: Lab 4 features and Issue #52 regression/safety corrections are approved and merged through PR #58 into `lab4-staging`. Rendered checks and corrections are recorded in [regression evidence](regression-and-evidence.md); the actual-main rendered/browser checks are recorded in [final-main verification](final-main-verification.md). The separate compiled-startup blocker awaits corrected-main verification. Reuse [Lab 2 tokens](../lab-02/ui-spec.md) and [Lab 3 conventions](../lab-03/ui-spec.md). Behavior and scope follow [specification.md](specification.md); exact filters and responses follow [api-spec.md](api-spec.md).
+Status: Lab 4 features and Issue #52 regression/safety corrections are approved and merged through PR #58 into `lab4-staging`. Rendered checks and corrections are recorded in [regression evidence](regression-and-evidence.md); the actual-main rendered/browser checks are recorded in [final-main verification](final-main-verification.md). PR #61 fixed compiled startup; corrected-main confirmation at `351cfa7` passes the full release checks. Reuse [Lab 2 tokens](../lab-02/ui-spec.md) and [Lab 3 conventions](../lab-03/ui-spec.md). Behavior and scope follow [specification.md](specification.md); exact filters and responses follow [api-spec.md](api-spec.md).
 
 ## 1. Shell, navigation, and routes
 
@@ -68,7 +68,7 @@ Test 320x900, 390x844, 820x1180, 1440x900. Cards use an auto-fit grid whose mini
 
 Semantic headings/landmarks, native labelled controls, explicit button types, visible keyboard focus, accessible loading/error/success announcements, text-only status cues, and logical tab order are required. Any existing confirmation modal must trap focus, support Escape where cancellation is allowed, label itself and return focus on close. Respect reduced motion. Focus must not disappear when a saved item changes layout.
 
-## 8. Evidence checklist (rendered checks executed; release startup blocked)
+## 8. Evidence checklist (corrected-main checks completed)
 
 - [x] Dashboard/role navigation, login home and deep links for all three roles (component tests and real Chromium feature scope; actual-main rendered/browser inspection recorded in final-main-verification.md).
 - [x] Requester/Staff dashboards: accurate nonzero/zero data, loading, failure, forbidden and drill-down (SQL-oracle/API/component tests plus three real browser scenarios; tests.md Section 11).
@@ -78,4 +78,4 @@ Semantic headings/landmarks, native labelled controls, explicit button types, vi
 - [x] Long content/names, sampled keyboard flows/modal focus, accessible names, rendered contrast, 44px targets, reduced motion and 200% equivalent reflow checked locally; scope/limits in regression-and-evidence.md.
 - [x] Safe failure/draft retention and links exercised; no uncaught page errors in new Requester/Staff render journeys. Expected HTTP failures and final-main limits are recorded explicitly.
 
-Store new evidence under `artifacts/lab-04/screenshots/{staff-dashboard,requester-dashboard,actions-taken,ticket-workflow,regression}/`. Record tested commit, role, viewport, scenario, browser and result in tests.md. Actions, workflow and dashboard screenshots now exist for their documented local scope; selected fresh actual-main captures are under `artifacts/lab-04/screenshots/final-main/`; the compiled-startup correction remains a separate release blocker.
+Store new evidence under `artifacts/lab-04/screenshots/{staff-dashboard,requester-dashboard,actions-taken,ticket-workflow,regression}/`. Record tested commit, role, viewport, scenario, browser and result in tests.md. Actions, workflow and dashboard screenshots now exist for their documented local scope; selected fresh actual-main captures are under `artifacts/lab-04/screenshots/final-main/`; corrected-main captures are under `artifacts/lab-04/screenshots/final-main-confirmed/`, and startup verification has passed on main.

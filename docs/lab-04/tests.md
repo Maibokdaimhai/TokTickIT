@@ -1,6 +1,6 @@
 # Lab 4 Test Plan and Traceability - TokTickIT
 
-Status: release PR #60 merged into `main` at `51d0d7aeef13097376a9e3fd98bcaea670d8f191`. Main verification has executed; Section 16 records passing suites and the compiled-startup failure, followed by separately tested branch correction. Final all-pass status awaits the corrected merged-main SHA. Sections 8–15 remain historical evidence. PDF preparation follows final verification.
+Status: corrected main `351cfa7833e8a7b5ffb2778df0d12c255e92f66a` after PR #61 passed all executed release checks. Section 17 records confirmation; Sections 8–16 retain historical executions and the earlier startup failure/correction. PDF preparation follows last and is outside this technical evidence update.
 
 ## 1. Strategy and evidence rules
 
@@ -292,7 +292,7 @@ Markers are exact case-insensitive tokens separated by `_` or `-` (or the full n
 
 Review completion: [PR #58](https://github.com/Maibokdaimhai/TokTickIT/pull/58) was approved by Kawi-HBLI ([approval review](https://github.com/Maibokdaimhai/TokTickIT/pull/58#pullrequestreview-5685046992)) and merged into `lab4-staging`. These approvals do not change the source snapshots, test counts, or verification limits above.
 
-## 16. Actual-main verification and compiled-startup correction
+## 16. Historical first-main verification and compiled-startup correction
 
 See [the full execution record](final-main-verification.md), [sanitized results](../../artifacts/lab-04/verification/final-main.json), [source manifests](../../artifacts/lab-04/verification/final-main-source-snapshots.json), [performance](../../artifacts/lab-04/verification/final-main-performance.json), and [rendered checks](../../artifacts/lab-04/verification/final-main-rendered-accessibility.json).
 
@@ -307,4 +307,20 @@ See [the full execution record](final-main-verification.md), [sanitized results]
 | Correction `30d436a` regression | 1 failed before fix, 1 passed after fix; health, login, protected Dashboard verified |
 | Correction complete backend / server types/build | 425 passed; 1 separately executed performance opt-in skipped; typecheck/build passed |
 
-RELEASE-01 has executed on main and found a blocker; AC-17 is not all-pass. The new `server/tests/lab-04/production-start.test.ts` is opt-in through `LAB4_PRODUCTION_SMOKE=1`, checks a clean build and actual `npm start`, and uses only an isolated migrated test schema. Correction results are not presented as merged-main results. The named main-test database/uploads were removed after explicit approval; development storage and container were preserved. Issue #53 remains open for the correction's reviewed integration, updated-main checks, and the later PDF.
+At this earlier main execution, RELEASE-01 found a blocker and AC-17 was not all-pass; Section 17 now records the passing corrected-main repeat. The new `server/tests/lab-04/production-start.test.ts` is opt-in through `LAB4_PRODUCTION_SMOKE=1`, checks a clean build and actual `npm start`, and uses only an isolated migrated test schema. Correction results are not presented as merged-main results. The named main-test database/uploads were removed after explicit approval; development storage and container were preserved. At that stage, Issue #53 remained open for integration/updated-main checks and submission. The corrected-main checks are now complete, and GitHub currently records the Issue as closed; PDF preparation remains a later submission task.
+
+## 17. Corrected-main confirmation after PR #61
+
+All checks below ran on actual merged main `351cfa7833e8a7b5ffb2778df0d12c255e92f66a`, before this documentation-only evidence branch was created. See [the confirmation record](final-main-verification.md#corrected-main-confirmation--31-october-2026), [sanitized results and source fingerprint](../../artifacts/lab-04/verification/final-main-confirmed.json), [performance](../../artifacts/lab-04/verification/final-main-confirmed-performance.json), and [rendered checks](../../artifacts/lab-04/verification/final-main-confirmed-rendered.json).
+
+| Check | Result |
+| --- | --- |
+| Complete backend, production smoke and restore enabled | 425 passed, 0 failed; 1 performance opt-in skipped and separately passed |
+| Client | 195 passed, 0 failed/skipped |
+| Real API/PostgreSQL Chromium | 38 passed, 0 failed/skipped/flaky |
+| Controlled-API Chromium | 14 passed, 0 failed/skipped/flaky |
+| Rendered audit | 65 successful scenarios; 7,407 text samples, 1,717 controls, 245 boundaries |
+| Migrations/bootstrap/both seeds, both package typechecks/builds | Passed |
+| Separate dashboard performance | 1 passed; 10,000 Tickets / 30,000 Actions, 20 warm reads/role; p95 6.73/13.81/20.69 ms, max 5,131 bytes |
+
+The actual compiled command served health, authenticated login and a protected Staff Dashboard from a clean build in an isolated migrated schema. The earlier main startup blocker is resolved on main. RELEASE-01 and AC-17's technical release verification are complete within the recorded scope; the submission PDF is a later step. No application/test/config changes follow this run in the evidence PR. The newly named database/uploads were removed after explicit user approval; development data/container were preserved. Existing dependencies were reused; compiled HTTP smoke uses NODE_ENV=test and does not claim a deployment, HTTPS check, production SLA, or formal accessibility certification.
